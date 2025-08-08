@@ -1,0 +1,21 @@
+[project]
+name = "news-rs"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "chromadb>=1.0.15",
+    "github-ai-chat-model",
+    "langchain-chroma>=0.2.5",
+    "openai>=1.98.0",
+    "pytest>=8.4.1",
+    "requests>=2.32.4",
+]
+
+[tool.uv.sources]
+github-ai-chat-model = { path = "../github_ai_chat_model" }
+
+[project.optional-dependencies]
+dev = ["ipykernel", "scikit-learn", "matplotlib"]
+api = ["fastapi>=0.104.1", "uvicorn>=0.24.0", "pydantic>=2.0.0"]

@@ -1,0 +1,2 @@
+
+ // uv pip install '.[dev]'
