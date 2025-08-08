@@ -12,3 +12,4 @@ wheels/
 db/news_v1
 db/news_v2
 db/topics.db
+.env
