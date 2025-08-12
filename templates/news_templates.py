@@ -35,10 +35,24 @@ Topic:
 topic_generation_template = """You are a topic assignor.
 
 Given the following documents, you have to propose a single topic that fits
-the documents content. The topic should be a single word.
+the documents content. The topic should be a single word without containing the quote "topic:" . 
+You should try to propose the following general topics but if you can not, you can propose your own topic.
+
+The general topics are:
+{initial_topics}
 
 Documents:
 {documents}
 
 Proposed topic:
+"""
+
+topic_description_template = """You are a topic descriptor.
+
+Given a single topic, you will provide a description of it in 10 words approx.
+
+Topic:
+{topic}
+
+Proposed description:
 """

@@ -15,24 +15,25 @@ class TopicsDBClient:
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS topics (
             topic TEXT PRIMARY KEY,
+            description TEXT,
             date TEXT NOT NULL
         )
         ''')
         self.conn.commit()
 
-    def upsert_topic(self, topic, date=None):
+    def upsert_topic(self, topic, description, date=None):
         if date is None:
             date = datetime.utcnow().isoformat()
         cursor = self.conn.cursor()
         cursor.execute('''
-        INSERT INTO topics (topic, date) VALUES (?, ?)
+        INSERT INTO topics (topic, description, date) VALUES (?, ?, ?)
         ON CONFLICT(topic) DO UPDATE SET date=excluded.date
-        ''', (topic, date))
+        ''', (topic, date, description))
         self.conn.commit()
 
     def get_all_topics(self):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT topic, date FROM topics ORDER BY topic")
+        cursor.execute("SELECT topic, description, date FROM topics ORDER BY topic")
         return cursor.fetchall()
     
     def get_topics_grouped_by_date(self):
