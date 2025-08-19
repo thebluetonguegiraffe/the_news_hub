@@ -13,7 +13,23 @@ from templates.news_templates import rag_rs_template
 from langchain.schema.runnable import RunnableLambda
 
 
+
+
 class RecommenderSystem():
+
+    def serialize_docs_json(self, docs):
+        return json.dumps([
+            {
+                "id": d.id,
+                "url": d.metadata.get("url"),
+                "topic": d.metadata.get("topic"),
+                "source": d.metadata.get("source"),
+                "date": d.metadata.get("date"),
+                "content": d.page_content
+            }
+            for d in docs
+        ], ensure_ascii=False)
+
     def ask_by_query(self, question: str):
         project_root = Path(__file__).resolve().parent.parent
         db_path = db_configuration["db_path"]
@@ -29,7 +45,7 @@ class RecommenderSystem():
 
         rag_chain = (
             {
-            "context": RunnableLambda(lambda x: retriever.invoke(x["question"])),
+            "context": lambda x: self.serialize_docs_json(retriever.invoke(x["question"])),
             "question": lambda x: x["question"]
             }
             | prompt_template
@@ -48,6 +64,7 @@ if __name__=="__main__":
 
     rs = RecommenderSystem()
     response = rs.ask_by_query(question=args.question[0])
+    print(response)
 
 
 

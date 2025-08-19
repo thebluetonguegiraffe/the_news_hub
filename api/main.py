@@ -1,3 +1,4 @@
+from collections import defaultdict
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -16,6 +17,7 @@ from scripts.recomender_system import RecommenderSystem
 from src.sql_client import TopicsDBClient
 from src.vectorized_database import VectorizedDatabase
 from src.config import db_configuration
+from src.get_news_info_by_link import NewsScrapper
 
 load_dotenv()
 
@@ -114,30 +116,38 @@ async def get_topics_by_date_range(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@app.get("/articles/{topic}", response_model=ArticleResponse)
-async def get_articles_by_topic(topic: str, limit: int = 10):
-    """
-    Get articles for a specific topic from ChromaDB.
-    
-    Args:
-        topic: The topic to search for
-        limit: Maximum number of articles to return (default: 10)
-    
-    Returns:
-        Articles matching the topic
-    """
+@app.get("/articles/{topic}")
+async def get_articles_by_topic(topic: str):
     try:
-        
         results = collection.get(
             where={"topic": topic},
-            include=["documents", "metadatas", "ids"]
+            include=["metadatas"]
         )
-        return ArticleResponse(
-            documents=results.get("documents", []),
-            metadatas=results.get("metadatas", []),
-            ids=results.get("ids", [])
-        )
-    
+        # TODO: topics by day
+        scrapper = NewsScrapper()
+        articles = []
+        for i, result in enumerate(results['metadatas']):
+            if result.get("source") in ["www.nytimes.com", "www.washingtonpost.com"]:  # TODO: filter sources
+                continue
+            article = defaultdict(dict)
+            article["date"] = result.get("date")
+            article["topic"] = result.get("topic")
+            article["topic"] = result.get("topic")
+            article["source"] = result.get("source")
+            article["url"] = result.get("url")
+            print(article["url"])
+            
+            scrapped_data = scrapper.extract(article["url"])
+            article["image"] = scrapped_data.get("image", None)
+            article["excerpt"] = scrapped_data.get("excerpt", "")
+            article["title"] = scrapped_data.get("title", None)
+            article["id"] = i
+            articles.append(article)
+
+        return {
+        "articles": articles
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
@@ -146,16 +156,61 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
-@app.get("/answer-question")
-async def news_rs_by_question(
-    question: str = Query(
-        description="Question to be asked to the Recommender System"
-    )
-):
+
+class QuestionPayload(BaseModel):
+    question: str
+
+@app.post("/question")
+async def news_rs_by_question(payload: QuestionPayload):
     """Recommends articles based on input query"""
     rs = RecommenderSystem()
-    return rs.ask_by_query(question=question)
-    
+
+    response = rs.ask_by_query(question=payload.question)
+    articles = response.get("articles", [])
+    if articles:
+        scrapper = NewsScrapper()
+        for i, article in enumerate(articles):
+            url = article.get("url")
+            scrapped_data = scrapper.extract(url)
+            article["image"] = scrapped_data.get("image", None)
+            article["excerpt"] = scrapped_data.get("excerpt", "")
+            article["title"] = scrapped_data.get("title", None)
+            article["id"] = i
+
+
+    return {
+        "summary": response.get("summary", ""),
+        "articles": articles
+    }
+
+
+@app.get("/latest_news")
+async def get_latest_news():
+    """Retrieves 6 random articles from the database"""
+    results = collection.get(limit=6)
+    scrapper = NewsScrapper()
+    articles = []
+    for i, result in enumerate(results['metadatas']):
+        if result.get("source") == "www.nytimes.com": # TODO
+            continue
+        article = defaultdict(dict)
+        article["date"] = result.get("date")
+        article["topic"] = result.get("topic")
+        article["topic"] = result.get("topic")
+        article["source"] = result.get("source")
+        article["url"] = result.get("url")
+        
+        scrapped_data = scrapper.extract(article["url"])
+        article["image"] = scrapped_data.get("image", None)
+        article["excerpt"] = scrapped_data.get("excerpt", "")
+        article["title"] = scrapped_data.get("title", None)
+        article["id"] = i
+        articles.append(article)
+
+
+    return {
+        "articles": articles
+    }
 
 
 if __name__ == "__main__":

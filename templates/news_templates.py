@@ -8,7 +8,12 @@ Your task is to:
 question, do not add the bullet list and reply using the following structure: 
 "There is no relevant information about your question this week".
 
-Format the output as a dictionary with "summary" and "articles" as keys. "Respond in strict JSON format with a 'summary' string and an 'articles' array of URLs. 
+Format the output as a dictionary with "summary" and "articles" as keys. 
+Respond in strict JSON format with a 'summary' string, an array of 'articles' dict. YThose dicts should contain:
+    - url
+    - topic
+    - source
+    - date
 No markdown or extra formatting."
 
 
