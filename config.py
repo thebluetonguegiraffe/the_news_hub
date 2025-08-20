@@ -1,42 +1,31 @@
-
-
 project_root = "./"
 
-db_configuration = {
-    "db_path": "news",
-    "collection_name": "news"
+db_configuration = {"db_path": "test_db", "collection_name": "news"}
+
+mongo_configuration = {
+    "url": "mongodb://localhost:27017/",
+    "db": "news_hub",
+    "collection": "topics",
 }
 
-sql_db_configuration = {
-    "db_path": "topics.db",
-}
+db_configuration_old = {"db_path": "news_v1", "collection_name": "cnn_es_news"}
 
-db_configuration_old = {
-    "db_path": "news_v1",
-    "collection_name": "cnn_es_news"
-}
-
-embeddings_configuration ={
-    "endpoint":  "https://models.github.ai/inference",
+embeddings_configuration = {
+    "endpoint": "https://models.github.ai/inference",
     "model": "openai/text-embedding-3-small",
 }
 
 # news_api_configuration = {
-#     "url" : "https://newsapi.org/v2", 
+#     "url" : "https://newsapi.org/v2",
 #     "endpoint" : "top-headlines/"
 # }
 
-news_api_configuration = {
-    "url" : "https://api.finlight.me/v2/", 
-    "endpoint" : "articles/"
-}
+news_api_configuration = {"url": "https://api.finlight.me/v2/", "endpoint": "articles/"}
 
-chat_configuration ={
+chat_configuration = {
     "endpoint": "https://models.github.ai/inference/chat/completions",
-    "model": "openai/gpt-4.1-mini"
+    "model": "openai/gpt-4.1-mini",
 }
 
 
-clustering_config = {
-    "cluster_method": "DBSCAN"
-}
+clustering_config = {"cluster_method": "DBSCAN"}

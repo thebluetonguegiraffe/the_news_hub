@@ -6,9 +6,7 @@ from typing import List, Optional, Dict, Any
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableConfig
 from langchain.chat_models.base import BaseChatModel
-from langchain.schema import (
-    AIMessage, ChatMessage, ChatGeneration, ChatResult, BaseMessage
-)
+from langchain.schema import AIMessage, ChatMessage, ChatGeneration, ChatResult, BaseMessage
 from config import chat_configuration
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
