@@ -1,12 +1,13 @@
+from datetime import datetime, timedelta
 import logging
 
 from collections import defaultdict
+from pymongo import MongoClient
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
-from config import db_configuration, project_root
+from config import db_configuration, project_root, mongo_configuration
 
-from scripts.db_population.constants import TOPICS
 from src.custom_chatmodel import CustomChatModel
 from src.vectorized_database import VectorizedDatabase
 
@@ -18,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 PCA_COMPONENTS = 50
 KMEANS_CLUSTERS = 15
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Generate topics for clustered news articles.")
@@ -30,6 +30,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-d", "--date", required=True, help="Date for the news articles in format YYYY-MM-DDTHH:MM"
+    )
+    parser.add_argument(
+        "--topics-history", required=True, choices=["LATEST", "DEFAULT"],
     )
     args = parser.parse_args()
     dry_run = args.dry_run
@@ -81,6 +84,25 @@ if __name__ == "__main__":
     chain = prompt | llm
 
     label_map = {}
+
+    with MongoClient(mongo_configuration["url"]) as client:
+        db = client[mongo_configuration["db"]]
+        collection = db[mongo_configuration["collection"]]
+
+        if args.topics_history == "DEFAULT":
+            result = collection.find({"default": True}, {"_id": 1})
+        if args.topics_history == "LATEST":
+            previous_date = datetime.strptime(args.date, "%Y-%m-%dT%H:%M") + timedelta(days=-1)
+            if collection.count_documents({"dates": previous_date}, limit=1) > 0:
+                result = collection.find({"dates": previous_date}, {"_id": 1})
+            else:
+                result = collection.find({"default": True}, {"_id": 1})
+
+        else:
+            raise ValueError("Invalid TOPICS_HISTORY_CONFIG. Use 'LATEST' or 'DEFAULT'.")
+
+        topics = [topic["_id"] for topic in result]
+
     for cluster_id, cluster_content in clusters.items():
         documents = [content["document"] for content in cluster_content]
         ids = [content["id"] for content in cluster_content]
@@ -88,7 +110,7 @@ if __name__ == "__main__":
         topic = chain.invoke(
             {
                 "documents": ", ".join(documents),
-                "initial_topics": ", ".join(TOPICS.keys()),
+                "initial_topics": ", ".join(topics),
             }
         )
 

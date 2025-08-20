@@ -21,3 +21,6 @@ AIRFLOW_SCRIPT := ./airflow/airflow_setup.sh
 start-airflow:
 	@echo "Starting Airflow..."
 	@exec bash $(AIRFLOW_SCRIPT)
+
+download-mongo:
+	@docker-compose -f ./db/mongo-container.yml up -d

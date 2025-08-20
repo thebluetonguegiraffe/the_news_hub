@@ -1,0 +1,89 @@
+import argparse
+from datetime import datetime
+import logging
+
+from pymongo import MongoClient
+from config import db_configuration, project_root, mongo_configuration
+from src.custom_chatmodel import CustomChatModel
+from src.vectorized_database import VectorizedDatabase
+from templates.news_templates import topic_description_template
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Generate topics for clustered news articles.")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run the script without updating the database.",
+        default=False,
+    )
+    parser.add_argument(
+        "-d",
+        "--date",
+        required=True,
+        help="Date for the news articles in format YYYY-MM-DDTHH:MM",
+    )
+    args = parser.parse_args()
+    dry_run = args.dry_run
+
+    db_path = db_configuration["db_path"]
+    collection_name = db_configuration["collection_name"]
+
+    logger.info("Initializing vectorized database")
+    chroma = VectorizedDatabase(
+        persist_directory=f"{project_root}/db/{db_path}",
+        collection_name=collection_name,
+    )
+
+    collection = chroma.get_collection()
+
+    start_date = args.date + ":00.000000Z"
+    metadatas = collection.get(
+        where={"date": start_date}, include=["metadatas"]
+        )["metadatas"]
+    topics = set([metadata["topic"].lower() for metadata in metadatas])
+
+    if not topics:
+        raise ValueError(f"No topics found for date {args.date}.")
+
+    logger.info(f"{len(topics)} topics retrieved for day {start_date}")
+
+    start_date = datetime.strptime(args.date, "%Y-%m-%dT%H:%M")
+
+    if not dry_run:
+        with MongoClient(mongo_configuration["url"]) as client:
+            db = client[mongo_configuration["db"]]
+            collection = db[mongo_configuration["collection"]]
+
+            llm_description = CustomChatModel.from_config()
+            description_prompt = CustomChatModel.create_prompt_template(topic_description_template)
+            description_chain = description_prompt | llm_description
+
+            for topic in topics:
+                results = collection.find_one(filter={"_id": topic})
+                if not results:
+                    logger.info(f"Generating description for: {topic}")
+                    description = description_chain.invoke(
+                        {
+                            "topic": topic,
+                        }
+                    ).content
+
+                    collection.insert_one(
+                        {
+                            "_id": topic,
+                            "description": description,
+                            "dates": [start_date],
+                        }
+                    )
+                else:
+                    logger.info(f"Description found for: {topic}")
+                    collection.update_one(
+                        filter={"_id": topic},
+                        update={"$addToSet": {"dates": start_date}},
+                        upsert=True,
+                    )
