@@ -7,13 +7,8 @@ from dotenv import load_dotenv
 
 from src.vectorized_database import VectorizedDatabase
 from src.config import db_configuration
-from src.llm_resources import LLMResources
+from news_rs.src.custom_chatmodel import CustomChatModel
 from templates.news_templates import rag_rs_template
-
-from langchain.schema.runnable import RunnableLambda
-
-
-
 
 class RecommenderSystem():
 
@@ -40,8 +35,8 @@ class RecommenderSystem():
         collection_name=collection_name
         )
         
-        prompt_template = LLMResources.create_prompt_template(rag_rs_template)
-        llm = LLMResources.create_llm()
+        prompt_template = CustomChatModel.create_prompt_template(rag_rs_template)
+        llm = CustomChatModel.from_config()
 
         rag_chain = (
             {

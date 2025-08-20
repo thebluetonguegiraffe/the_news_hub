@@ -9,7 +9,7 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
 from scripts.constants import TOPICS
-from src.llm_resources import LLMResources
+from news_rs.src.custom_chatmodel import CustomChatModel
 from src.config import db_configuration, sql_db_configuration
 from src.sql_client import TopicsDBClient
 from src.vectorized_database import VectorizedDatabase
@@ -63,8 +63,8 @@ if __name__ == "__main__":
 
     logger.info('Clusters Generated')
 
-    prompt = LLMResources.create_prompt_template(topic_generation_template)
-    llm = LLMResources.create_llm()
+    prompt = CustomChatModel.create_prompt_template(topic_generation_template)
+    llm = CustomChatModel.from_config()
 
     chain = prompt | llm
 

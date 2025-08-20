@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 
 from src.config import db_configuration, sql_db_configuration
-from src.llm_resources import LLMResources
+from news_rs.src.custom_chatmodel import CustomChatModel
 from src.sql_client import TopicsDBClient
 from src.vectorized_database import VectorizedDatabase
 from templates.news_templates import topic_description_template
@@ -46,8 +46,8 @@ if __name__ == "__main__":
             db_path=f"{project_root}/db/{db_path}"
         )
         
-        llm_description = LLMResources.create_llm()
-        description_prompt = LLMResources.create_prompt_template(topic_description_template)
+        llm_description = CustomChatModel.from_config()
+        description_prompt = CustomChatModel.create_prompt_template(topic_description_template)
         description_chain = description_prompt | llm_description
         
         for topic in topics:
