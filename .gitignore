@@ -12,5 +12,6 @@ wheels/
 
 db/*
 !db/run_chroma_server.py
+!db/mongo-container.yml
 airflow/*
 !airflow/dags/
