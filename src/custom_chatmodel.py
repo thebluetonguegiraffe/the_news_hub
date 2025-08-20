@@ -16,10 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class CustomChatModel(BaseChatModel, Runnable):
-    def __init__(self, openai_api_key: str, openai_api_base: str, model_name: str):
-        self.openai_api_key = openai_api_key
-        self.openai_api_base = openai_api_base
-        self.model_name = model_name
+    openai_api_key: str
+    openai_api_base: str
+    model_name: str
 
     def _generate(
         self,
@@ -60,7 +59,7 @@ class CustomChatModel(BaseChatModel, Runnable):
         return ChatPromptTemplate.from_messages([("human", message)])
 
     @classmethod
-    def from_config(cls) -> "GitHubAIChatModel":
+    def from_config(cls) -> "CustomChatModel":
         """Factory method to create the model from config/env vars."""
         logger.info(f'Creating LLM with model: {chat_configuration["model"]}')
         return cls(

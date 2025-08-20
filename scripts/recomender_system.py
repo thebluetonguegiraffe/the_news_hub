@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from src.vectorized_database import VectorizedDatabase
 from src.config import db_configuration
-from news_rs.src.custom_chatmodel import CustomChatModel
+from src.custom_chatmodel import CustomChatModel
 from templates.news_templates import rag_rs_template
 
 class RecommenderSystem():

@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 
 from src.config import db_configuration, sql_db_configuration
-from news_rs.src.custom_chatmodel import CustomChatModel
+from src.custom_chatmodel import CustomChatModel
 from src.sql_client import TopicsDBClient
 from src.vectorized_database import VectorizedDatabase
 from templates.news_templates import topic_description_template
