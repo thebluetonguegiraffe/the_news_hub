@@ -1,8 +1,9 @@
 
 
+project_root = "./"
 
 db_configuration = {
-    "db_path": "news_v2",
+    "db_path": "news",
     "collection_name": "news"
 }
 

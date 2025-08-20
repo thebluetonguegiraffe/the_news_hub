@@ -1,5 +1,5 @@
 import subprocess
-from src.config import db_configuration
+from config import db_configuration
 
 def run_chroma():
     path = db_configuration['db_path']

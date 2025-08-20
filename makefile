@@ -3,7 +3,7 @@ run-chroma:
 	@python db/run_chroma_server.py
 
 run-client:
-	@chroma browse $(shell python3 -c "from src.config import db_configuration; print(db_configuration['collection_name'])") --local
+	@chroma browse $(shell python3 -c "from config import db_configuration; print(db_configuration['collection_name'])") --local
 
 run-api:
 	@echo "Starting FastAPI server..."

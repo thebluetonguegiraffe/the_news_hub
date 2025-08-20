@@ -6,9 +6,8 @@ from typing import List
 from chromadb import PersistentClient
 from langchain_chroma import Chroma
 
-from src.config import embeddings_configuration
+from config import embeddings_configuration
 from src.custom_embedder import CustomEmbedder
-from src.config import db_configuration, embeddings_configuration
 
 
 class VectorizedDatabase:
@@ -34,16 +33,6 @@ class VectorizedDatabase:
         )
 
         return collection
-
-    # def add(collection, documents: List, ids :List, metadatas: List):
-    #     collection.add(
-    #         documents=documents,
-    #         ids=ids,
-    #         metadatas=metadatas,
-    #     )
-
-    # def get_docs(collection):
-    #     return collection.get()
 
     def get_retriever(self):
         vectorstore = Chroma(
