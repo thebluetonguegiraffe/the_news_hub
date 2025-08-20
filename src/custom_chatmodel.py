@@ -9,7 +9,7 @@ from langchain.chat_models.base import BaseChatModel
 from langchain.schema import (
     AIMessage, ChatMessage, ChatGeneration, ChatResult, BaseMessage
 )
-from src.config import chat_configuration
+from config import chat_configuration
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)

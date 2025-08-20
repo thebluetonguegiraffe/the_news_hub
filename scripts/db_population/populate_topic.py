@@ -1,37 +1,39 @@
 
 
-import json
 import logging
 
 from collections import defaultdict
-from pathlib import Path
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
+from config import db_configuration, project_root
+
 from scripts.constants import TOPICS
 from src.custom_chatmodel import CustomChatModel
-from src.config import db_configuration, sql_db_configuration
-from src.sql_client import TopicsDBClient
 from src.vectorized_database import VectorizedDatabase
 
-from templates.news_templates import topic_generation_template, topic_description_template
+from templates.news_templates import topic_generation_template
 import argparse
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+PCA_COMPONENTS = 50
+KMEANS_CLUSTERS = 15
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Generate topics for clustered news articles.")
     parser.add_argument("--dry-run", action="store_true", help="Run the script without updating the database.", default=False)
+    parser.add_argument("-d", "--date", required=True, help="Date for the news articles in format YYYY-MM-DDTHH:MM")
 
     args = parser.parse_args()
     dry_run = args.dry_run
 
-    project_root = Path(__file__).resolve().parent.parent
     db_path = db_configuration["db_path"]
     collection_name = db_configuration["collection_name"]
 
+    logger.info('Initializing vectorized database')
     chroma = VectorizedDatabase(
         persist_directory=f"{project_root}/db/{db_path}",
         collection_name=collection_name
@@ -39,23 +41,33 @@ if __name__ == "__main__":
 
     collection = chroma.get_collection()
 
-    documents_dict = collection.get(include=["embeddings", "metadatas", "documents"])
+    start_date =  args.date + ":00.000000Z"
+
+    documents_dict = collection.get(
+        where={
+            "date": start_date
+        },
+        include=["embeddings", "metadatas", "documents"]
+    )
+
+    if not documents_dict["documents"]:
+        raise ValueError(f"No documents found for date {args.date}.")
 
     documents = documents_dict["documents"]
     ids = documents_dict["ids"]
     embeddings = documents_dict["embeddings"]
 
-    date = documents_dict["metadatas"][0]["date"]
-
     logger.info('Documents retrieved from Chroma DB')
 
-    n_components = 90
+    n_components = PCA_COMPONENTS
     pca = PCA(n_components=n_components)
     embeddings_reduced = pca.fit_transform(embeddings)
 
-    n_clusters = 15
+    n_clusters = KMEANS_CLUSTERS
     kmeans = KMeans(n_clusters=n_clusters, random_state=42)
     labels = kmeans.fit_predict(embeddings_reduced)
+
+    logger.info('PCA computed and KMeans clustering applied')
 
     clusters = defaultdict(list)
     for doc, _id, label in zip(documents, ids, labels):
@@ -88,7 +100,4 @@ if __name__ == "__main__":
             logger.info(f'Topic updated for cluster {cluster_id}: {topic.content}')
         label_map[int(cluster_id)] = topic.content
 
-    clusters_named = {
-        label_map[cluster_id]: docs
-        for cluster_id, docs in clusters.items()
-    }
+    logger.info('Topics applied to Chroma DB')

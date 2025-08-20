@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Dict, List, Union
 import requests
 import uuid
@@ -23,11 +24,12 @@ class FinlightAPIClient:
         return response.json()
     
     @staticmethod
-    def parse_finlight_article(input_data: Dict) -> Union[str, str, List]:
+    def parse_finlight_article(input_data: Dict, date: datetime) -> Union[str, str, List]:
         document = input_data.get("summary")
         doc_id = str(uuid.uuid4())
         metadata =  {
-                "date": input_data.get("publishDate"),
+                "publish_date": input_data.get("publishDate"),
+                "date": date.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "source": input_data.get("source"),
                 "url": input_data.get("link"),
                 "title": input_data.get("title"),

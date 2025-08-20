@@ -79,7 +79,7 @@ if __name__=="__main__":
             unique_articles[title] = article
 
      
-    documents, ids, metadatas = map(list, zip(*(news_api_client.parse_finlight_article(article) for article in list(unique_articles.values()))))
+    documents, ids, metadatas = map(list, zip(*(news_api_client.parse_finlight_article(article, start_date) for article in list(unique_articles.values()))))
 
     # add documents to the vectorized database
     collection = db_client.get_collection()
