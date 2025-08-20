@@ -8,8 +8,8 @@ from sklearn.decomposition import PCA
 
 from config import db_configuration, project_root, mongo_configuration
 
-from src.custom_chatmodel import CustomChatModel
 from src.vectorized_database import VectorizedDatabase
+from src.llm_engine import create_prompt_template, create_llm
 
 from templates.news_templates import topic_generation_template
 import argparse
@@ -78,8 +78,8 @@ if __name__ == "__main__":
 
     logger.info("Clusters Generated")
 
-    prompt = CustomChatModel.create_prompt_template(topic_generation_template)
-    llm = CustomChatModel.from_config()
+    prompt = create_prompt_template(topic_generation_template)
+    llm = create_llm()
 
     chain = prompt | llm
 

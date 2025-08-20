@@ -3,7 +3,7 @@ from chromadb import PersistentClient
 from langchain_chroma import Chroma
 
 from config import embeddings_configuration
-from src.custom_embedder import CustomEmbedder
+from src.custom_modules.custom_embedder import CustomEmbedder
 
 
 class VectorizedDatabase:

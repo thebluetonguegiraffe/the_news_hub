@@ -1,11 +1,13 @@
 import argparse
 from datetime import datetime
 import logging
-
 from pymongo import MongoClient
+
 from config import db_configuration, project_root, mongo_configuration
-from src.custom_chatmodel import CustomChatModel
+
+from src.llm_engine import create_prompt_template, create_llm
 from src.vectorized_database import VectorizedDatabase
+
 from templates.news_templates import topic_description_template
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -59,8 +61,8 @@ if __name__ == "__main__":
             db = client[mongo_configuration["db"]]
             collection = db[mongo_configuration["collection"]]
 
-            llm_description = CustomChatModel.from_config()
-            description_prompt = CustomChatModel.create_prompt_template(topic_description_template)
+            llm_description = create_llm()
+            description_prompt = create_prompt_template(topic_description_template)
             description_chain = description_prompt | llm_description
 
             for topic in topics:
