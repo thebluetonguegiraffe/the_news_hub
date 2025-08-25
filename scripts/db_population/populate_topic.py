@@ -1,5 +1,7 @@
-from datetime import datetime, timedelta
 import logging
+import os
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
 from collections import defaultdict
 from pymongo import MongoClient
@@ -21,6 +23,8 @@ PCA_COMPONENTS = 50
 KMEANS_CLUSTERS = 15
 if __name__ == "__main__":
 
+    load_dotenv()
+    
     parser = argparse.ArgumentParser(description="Generate topics for clustered news articles.")
     parser.add_argument(
         "--dry-run",
@@ -45,11 +49,11 @@ if __name__ == "__main__":
         persist_directory=f"{project_root}/db/{db_path}", collection_name=collection_name
     )
 
-    collection = chroma.get_collection()
+    chroma_collection = chroma.get_collection()
 
     start_date = args.date + ":00.000000Z"
 
-    documents_dict = collection.get(
+    documents_dict = chroma_collection.get(
         where={"date": start_date}, include=["embeddings", "metadatas", "documents"]
     )
 
@@ -85,19 +89,24 @@ if __name__ == "__main__":
 
     label_map = {}
 
-    with MongoClient(mongo_configuration["url"]) as client:
+    with MongoClient(
+            host=mongo_configuration["host"],
+            port=mongo_configuration.get("port", 27017),
+            username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),
+            password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"),
+            authSource=mongo_configuration.get("database", "admin"),
+        ) as client:
         db = client[mongo_configuration["db"]]
-        collection = db[mongo_configuration["collection"]]
+        mongo_collection = db[mongo_configuration["collection"]]
 
         if args.topics_history == "DEFAULT":
-            result = collection.find({"default": True}, {"_id": 1})
-        if args.topics_history == "LATEST":
+            result = mongo_collection.find({"default": True}, {"_id": 1})
+        elif args.topics_history == "LATEST":
             previous_date = datetime.strptime(args.date, "%Y-%m-%dT%H:%M") + timedelta(days=-1)
-            if collection.count_documents({"dates": previous_date}, limit=1) > 0:
-                result = collection.find({"dates": previous_date}, {"_id": 1})
+            if mongo_collection.count_documents({"dates": previous_date}, limit=1) > 0:
+                result = mongo_collection.find({"dates": previous_date}, {"_id": 1})
             else:
-                result = collection.find({"default": True}, {"_id": 1})
-
+                result = mongo_collection.find({"default": True}, {"_id": 1})
         else:
             raise ValueError("Invalid TOPICS_HISTORY_CONFIG. Use 'LATEST' or 'DEFAULT'.")
 
@@ -115,7 +124,7 @@ if __name__ == "__main__":
         )
 
         if not dry_run:
-            collection.update(ids=ids, metadatas=[{"topic": topic.content}] * len(ids))
+            chroma_collection.update(ids=ids, metadatas=[{"topic": topic.content}] * len(ids))
             logger.info(f"Topic updated for cluster {cluster_id}: {topic.content}")
         label_map[int(cluster_id)] = topic.content
 

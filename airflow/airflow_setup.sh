@@ -10,7 +10,7 @@ echo "Setting AIRFLOW_HOME to $AIRFLOW_HOME"
 export AIRFLOW__CORE__DAGS_FOLDER=$AIRFLOW_HOME/dags
 echo "Setting AIRFLOW__CORE__DAGS_FOLDER to $AIRFLOW__CORE__DAGS_FOLDER"
 
-export AIRFLOW__CORE__SQL_ALCHEMY_CONN="sqlite:///$AIRFLOW_HOME/airflow.db"
+export AIRFLOW__CORE__SQL_ALCHEMY_CONN="mysql+mysqldb://airflow:${MYSQL_PASSWORD}@127.0.0.1:3306/airflow"
 export AIRFLOW__CORE__LOAD_EXAMPLES=False
 
 # Verify the configuration is correct

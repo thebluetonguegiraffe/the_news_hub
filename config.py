@@ -1,9 +1,9 @@
 project_root = "./"
 
-db_configuration = {"db_path": "test_db", "collection_name": "news"}
+db_configuration = {"db_path": "news_v1", "collection_name": "news"}
 
 mongo_configuration = {
-    "url": "mongodb://localhost:27017/",
+    "host": "mongodb://localhost:27017/",
     "db": "news_hub",
     "collection": "topics",
 }

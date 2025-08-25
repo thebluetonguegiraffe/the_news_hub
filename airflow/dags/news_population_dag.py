@@ -20,7 +20,7 @@ dag = DAG(
     "news_population_dag",
     default_args=default_args,
     description="DAG for news ingestion and topic enrichment",
-    schedule_interval=timedelta(days=1),
+    schedule=timedelta(days=1),
     start_date=datetime(2025, 8, 1),
     catchup=False,
     tags=["ingestion", "news"],
@@ -29,25 +29,24 @@ dag = DAG(
 ingest_news = BashOperator(
     task_id="ingest_news",
     bash_command=(
-        "python ../scripts/db_population/ingest_news.py "
-        "--source www.nytimes.com,www.bbc.com,www.theguardian.com,www.washingtonpost.com "
-        "--date {{ params.ingest_date }}"
+        "cd /home/ubuntu/the_news_hub/news_rs && "
+        "export PYTHONPATH=. && "
+        "python scripts/db_population/ingest_news.py "
+        "--source www.nytimes.com www.bbc.com www.theguardian.com www.washingtonpost.com "
+        "--date {{ macros.ds_add(ds, -1) }}T00:00"
     ),
-    params={
-        "ingest_date": "{{ execution_date.strftime('%Y-%m-%dT00:00') }}"
-    },
     dag=dag,
 )
 
 enrich_with_topic = BashOperator(
     task_id="enrich_with_topic",
     bash_command=(
-        "python ../scripts/db_population/populate_topic.py "
-        "--date {{ params.ingest_date }}"
+        "cd /home/ubuntu/the_news_hub/news_rs && "
+        "export PYTHONPATH=. && "
+        "python scripts/db_population/populate_topic.py "
+        "--date {{ macros.ds_add(ds, -1) }}T00:00 "
+        "--topics-history DEFAULT"
     ),
-    params={
-        "ingest_date": "{{ execution_date.strftime('%Y-%m-%dT00:00') }}"
-    },
     dag=dag,
 )
 

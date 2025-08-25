@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -1957,6 +1957,7 @@ dependencies = [
     { name = "pymongo" },
     { name = "pytest" },
     { name = "requests" },
+    { name = "scikit-learn" },
 ]
 
 [package.optional-dependencies]
@@ -1987,6 +1988,7 @@ requires-dist = [
     { name = "pymongo", specifier = ">=4.14.1" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "requests", specifier = ">=2.32.4" },
+    { name = "scikit-learn", specifier = ">=1.7.1" },
     { name = "scikit-learn", marker = "extra == 'dev'" },
     { name = "uvicorn", marker = "extra == 'api'", specifier = ">=0.24.0" },
 ]

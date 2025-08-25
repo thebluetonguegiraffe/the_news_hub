@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime
 import logging
+from dotenv import load_dotenv
 from pymongo import MongoClient
 
 from config import db_configuration, project_root, mongo_configuration
@@ -15,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 if __name__ == "__main__":
+
+    load_dotenv()
 
     parser = argparse.ArgumentParser(description="Generate topics for clustered news articles.")
     parser.add_argument(
