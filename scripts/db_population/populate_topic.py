@@ -113,7 +113,6 @@ if __name__ == "__main__":
         topics = [topic["_id"] for topic in result]
 
     for cluster_id, cluster_content in clusters.items():
-    
         documents = [content["document"] for content in cluster_content]
         ids = [content["id"] for content in cluster_content]
 
