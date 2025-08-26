@@ -50,8 +50,8 @@ if __name__ == "__main__":
     )
 
     # Query news API
-    start_date = datetime.strptime(args.date, "%Y-%m-%dT%H:%M")
-    end_date = start_date + timedelta(days=1)
+    end_date = datetime.strptime(args.date, "%Y-%m-%dT%H:%M")
+    start_date = end_date - timedelta(days=1)
     try:
         response = news_api_client.post(
             endpoint=news_api_configuration["endpoint"],
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         list,
         zip(
             *(
-                news_api_client.parse_finlight_article(article, start_date)
+                news_api_client.parse_finlight_article(article, end_date)
                 for article in list(unique_articles.values())
             )
         ),

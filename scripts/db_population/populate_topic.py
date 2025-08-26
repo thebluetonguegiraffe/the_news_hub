@@ -58,7 +58,7 @@ if __name__ == "__main__":
     )
 
     if not documents_dict["documents"]:
-        raise ValueError(f"No documents found for date {args.date}.")
+        raise ValueError(f"No documents found for date {start_date}.")
 
     documents = documents_dict["documents"]
     ids = documents_dict["ids"]
@@ -113,6 +113,7 @@ if __name__ == "__main__":
         topics = [topic["_id"] for topic in result]
 
     for cluster_id, cluster_content in clusters.items():
+    
         documents = [content["document"] for content in cluster_content]
         ids = [content["id"] for content in cluster_content]
 
@@ -122,10 +123,11 @@ if __name__ == "__main__":
                 "initial_topics": ", ".join(topics),
             }
         )
+        logger.info(f"Topic updated for cluster {cluster_id}: {topic.content.lower()}")
 
         if not dry_run:
-            chroma_collection.update(ids=ids, metadatas=[{"topic": topic.content}] * len(ids))
-            logger.info(f"Topic updated for cluster {cluster_id}: {topic.content}")
-        label_map[int(cluster_id)] = topic.content
+            chroma_collection.update(ids=ids, metadatas=[{"topic": topic.content.lower()}] * len(ids))
+        label_map[int(cluster_id)] = topic.content.lower()
 
-    logger.info("Topics applied to Chroma DB")
+    if not dry_run:
+        logger.info("Topics applied to Chroma DB")

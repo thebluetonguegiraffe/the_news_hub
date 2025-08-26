@@ -22,8 +22,18 @@ airflow config get-value core load_examples
 mkdir -p $AIRFLOW__CORE__DAGS_FOLDER
 mkdir -p $AIRFLOW_HOME/logs
 
-# Reset database
-airflow db reset --yes
+# Set up mail server configuration
+export AIRFLOW__SMTP__SMTP_HOST=smtp.gmail.com
+export AIRFLOW__SMTP__SMTP_STARTTLS=True
+export AIRFLOW__SMTP__SMTP_SSL=False
+export AIRFLOW__SMTP__SMTP_PORT=587
+export AIRFLOW__SMTP__SMTP_MAIL_FROM=thebluetonguegiraffe@gmail.com
+export AIRFLOW__SMTP__SMTP_USER=thebluetonguegiraffe@gmail.com
+export AIRFLOW__SMTP__SMTP_PASSWORD=${GMAIL_PWD}
+
+# Initialize the databases
+airflow db migrate
+# airflow db reset --yes
 
 # Start scheduler
 echo "Starting scheduler..."
