@@ -1,6 +1,6 @@
 project_root = "./"
 
-db_configuration = {"db_path": "news_v1", "collection_name": "news"}
+db_configuration = {"db_path": "news_v2", "collection_name": "news"}
 
 mongo_configuration = {
     "host": "mongodb://localhost:27017/",
@@ -24,8 +24,5 @@ news_api_configuration = {"url": "https://api.finlight.me/v2/", "endpoint": "art
 
 chat_configuration = {
     "endpoint": "https://models.github.ai/inference/chat/completions",
-    "model": "openai/gpt-4.1-mini",
+    "model": "xai/grok-3-mini",
 }
-
-
-clustering_config = {"cluster_method": "DBSCAN"}

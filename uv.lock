@@ -1948,6 +1948,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "apache-airflow" },
+    { name = "apache-airflow-providers-smtp" },
     { name = "bs4" },
     { name = "chromadb" },
     { name = "langchain" },
@@ -1975,6 +1976,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "apache-airflow", specifier = ">=3.0.4" },
+    { name = "apache-airflow-providers-smtp", specifier = ">=2.2.0" },
     { name = "bs4", specifier = ">=0.0.2" },
     { name = "chromadb", specifier = ">=1.0.15" },
     { name = "fastapi", marker = "extra == 'api'", specifier = ">=0.104.1" },

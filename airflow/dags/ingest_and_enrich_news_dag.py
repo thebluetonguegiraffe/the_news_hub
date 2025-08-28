@@ -1,14 +1,16 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.providers.standard.operators.bash import BashOperator
+from airflow.providers.standard.operators.python import PythonOperator
 
+from scripts.utils.mail_sender import send_email
 
 default_args = {
     "owner": "the_blue_tongue_giraffe_dev",
     "depends_on_past": False,
-    "email": ["thebluetonguegiraffe+dev@gmail.com"],
+    "email": ["thebluetonguegiraffe@gmail.com"],
     "email_on_failure": True,
-    "email_on_retry": False,
+    "email_on_retry": False
 }
 
 dag = DAG(
@@ -81,5 +83,15 @@ enrich_with_topic = BashOperator(
     dag=dag,
 )
 
+notify_success = PythonOperator(
+    task_id='notify_success',
+    python_callable=send_email,
+    op_kwargs={
+        "to_email": "thebluetonguegiraffe@gmail.com",
+        "subject": "News ingestion and enrichment Dag Success ✅",
+        "body": "Your task finished successfully!",
+    },
+    dag=dag
+)
 
-ingest_news_tnyt >> ingest_news_bbc >> ingest_news_guardian >> ingest_news_twp >> enrich_with_topic
+ingest_news_tnyt >> ingest_news_bbc >> ingest_news_guardian >> ingest_news_twp >> enrich_with_topic >> notify_success

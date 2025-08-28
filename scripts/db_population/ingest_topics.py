@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime
 import logging
+import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
@@ -60,7 +61,13 @@ if __name__ == "__main__":
     start_date = datetime.strptime(args.date, "%Y-%m-%dT%H:%M")
 
     if not dry_run:
-        with MongoClient(mongo_configuration["url"]) as client:
+        with MongoClient(
+                mongo_configuration["host"],
+                port=mongo_configuration.get("port", 27017),
+                username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),
+                password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"),
+                authSource=mongo_configuration.get("database", "admin"),
+            ) as client:
             db = client[mongo_configuration["db"]]
             collection = db[mongo_configuration["collection"]]
 

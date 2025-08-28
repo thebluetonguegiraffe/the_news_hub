@@ -15,7 +15,10 @@ class CustomChatModel(BaseChatModel, Runnable):
     openai_api_key: str
     openai_api_base: str
     model_name: str
-    _last_request_time: float = 0  # initialize here
+    last_request_time: float = 0  # Fixed the asterisks
+    min_request_interval: float = 10.0  # Minimum seconds between requests
+    max_retries: int = 10  # Maximum retry attempts
+    retry_delay: float = 5.0  # Base delay for exponential backoff
     
     def _generate(
         self,
@@ -24,6 +27,17 @@ class CustomChatModel(BaseChatModel, Runnable):
         config: Optional[RunnableConfig] = None,
     ) -> ChatResult:
         """Generate a chat response from GitHub AI endpoint."""
+
+        # Rate limiting: ensure minimum time between requests
+        current_time = time.time()
+        time_since_last = current_time - self.last_request_time
+        if time_since_last < self.min_request_interval:
+            sleep_time = self.min_request_interval - time_since_last
+            time.sleep(sleep_time)
+        
+        # Update last request time
+        self.last_request_time = time.time()
+
         chat_messages = [
             {"role": m.type if isinstance(m, ChatMessage) else "user", "content": m.content}
             for m in messages
@@ -38,13 +52,40 @@ class CustomChatModel(BaseChatModel, Runnable):
 
         headers = {"Authorization": f"Bearer {self.openai_api_key}"}
 
-        response = self._post_with_rate_limit(
-            url = self.openai_api_base, 
-            headers=headers, 
-            body=body
-        )
-        response.raise_for_status()  # raise exception if request fails
-
+        # Retry logic with exponential backoff
+        for attempt in range(self.max_retries):
+            try:
+                response = requests.post(
+                    url=self.openai_api_base,
+                    headers=headers,
+                    json=body,
+                    timeout=30  # Add timeout
+                )
+                response.raise_for_status()
+                break  # Success, exit retry loop
+                
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 429:  # Rate limit error
+                    if attempt < self.max_retries - 1:  # Not the last attempt
+                        wait_time = self.retry_delay * (2 ** attempt)  # Exponential backoff
+                        logger.info(f"Rate limit hit (429). Retrying in {wait_time} seconds... (attempt {attempt + 1}/{self.max_retries})")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        raise Exception(f"Rate limit exceeded after {self.max_retries} attempts") from e
+                elif e.response.status_code == 400:  
+                    logger.info(f"Bad request: {e.response.text}")
+                    break
+                else:
+                    raise  # Re-raise non-rate-limit errors immediately
+            except Exception as e:
+                if attempt < self.max_retries - 1:
+                    wait_time = self.retry_delay * (2 ** attempt)
+                    logger.info(f"Request failed: {e}. Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    raise
         data = response.json()
         content = data["choices"][0]["message"]["content"]
 
@@ -53,18 +94,3 @@ class CustomChatModel(BaseChatModel, Runnable):
 
     def _llm_type(self) -> str:
         return "github-openai"
-
-    def _post_with_rate_limit(self, url: str, headers: dict, body:dict, rate_limit_rpm=15):
-        min_interval = 60 / rate_limit_rpm  # seconds per request
-        now = time.time()
-
-        if self._last_request_time:
-            elapsed = now - self._last_request_time
-            if elapsed < min_interval:
-                time.sleep(min_interval - elapsed)
-
-        response = requests.post(url, headers=headers, json=body)
-        response.raise_for_status()
-
-        self._last_request_time = time.time()
-        return response
