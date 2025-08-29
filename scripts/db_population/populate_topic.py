@@ -63,6 +63,7 @@ if __name__ == "__main__":
     documents = documents_dict["documents"]
     ids = documents_dict["ids"]
     embeddings = documents_dict["embeddings"]
+    metadatas = documents_dict["metadatas"]
 
     logger.info("Documents retrieved from Chroma DB")
 
@@ -77,8 +78,8 @@ if __name__ == "__main__":
     logger.info("PCA computed and KMeans clustering applied")
 
     clusters = defaultdict(list)
-    for doc, _id, label in zip(documents, ids, labels):
-        clusters[label].append({"document": doc, "id": _id})
+    for doc, _id, metadata, label in zip(documents, ids, metadatas, labels):
+        clusters[label].append({"document": doc, "id": _id, "metadatas": metadata})
 
     logger.info("Clusters Generated")
 
@@ -115,6 +116,12 @@ if __name__ == "__main__":
     for cluster_id, cluster_content in clusters.items():
         documents = [content["document"] for content in cluster_content]
         ids = [content["id"] for content in cluster_content]
+        metadatas = [content["metadatas"] for content in cluster_content]
+
+        if metadatas[0].get("topic"):
+            logger.info(f"Cluster {cluster_id} already has a topic assigned: {metadatas[0].get('topic')}. Skipping...")
+            label_map[int(cluster_id)] = metadatas[0].get("topic")
+            continue
 
         topic = chain.invoke(
             {
@@ -128,5 +135,3 @@ if __name__ == "__main__":
             chroma_collection.update(ids=ids, metadatas=[{"topic": topic.content.lower()}] * len(ids))
         label_map[int(cluster_id)] = topic.content.lower()
 
-    if not dry_run:
-        logger.info("Topics applied to Chroma DB")

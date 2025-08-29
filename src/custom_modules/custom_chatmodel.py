@@ -1,3 +1,4 @@
+import json
 import logging
 import time
 import requests
@@ -75,7 +76,14 @@ class CustomChatModel(BaseChatModel, Runnable):
                         raise Exception(f"Rate limit exceeded after {self.max_retries} attempts") from e
                 elif e.response.status_code == 400:  
                     logger.info(f"Bad request: {e.response.text}")
-                    break
+                    error_text = e.response.text
+                    error_dict = json.loads(error_text)
+                    error = error_dict.get('error', {}).get("innererror", {}).get("code", "")
+                    if error == "ResponsibleAIPolicyViolation":
+                        logger.info(f"ResponsibleAIPolicyViolation error. Query skiped")
+                        return ChatResult(generations=[ChatGeneration(message=AIMessage(content="NO_TOPIC"))])
+                    else:
+                        break
                 else:
                     raise  # Re-raise non-rate-limit errors immediately
             except Exception as e:
