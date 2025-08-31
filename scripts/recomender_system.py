@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from config import db_configuration
 from src.vectorized_database import VectorizedDatabase
 from src.llm_engine import create_prompt_template, create_llm
-from templates.news_templates import rag_rs_template
+from templates.news_templates import rag_rs_template, asked_frecuency_template
 
 
 class RecommenderSystem:
@@ -32,12 +32,19 @@ class RecommenderSystem:
         db_path = db_configuration["db_path"]
         collection_name = db_configuration["collection_name"]
 
-        retriever = VectorizedDatabase.from_config(
-            persist_directory=f"{project_root}/db/{db_path}", collection_name=collection_name
-        )
-
-        prompt_template = create_prompt_template(rag_rs_template)
         llm = create_llm()
+        preprocessing = create_prompt_template(asked_frecuency_template)
+
+        preprocessing_chain =  preprocessing | llm
+        preprocessing_response = preprocessing_chain.invoke(
+            {
+                "question": question,
+            }
+        )
+        prompt_template = create_prompt_template(rag_rs_template)
+        retriever = VectorizedDatabase.from_config(
+            persist_directory=f"{project_root}/db/{db_path}", collection_name=collection_name, time_window=preprocessing_response.content
+        )
 
         rag_chain = (
             {

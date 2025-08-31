@@ -36,5 +36,6 @@ class FinlightAPIClient:
             "title": input_data.get("title"),
             "excerpt": input_data.get("summary"),
             "image": " ".join(input_data.get("images")),
+            "timestamp": date.timestamp(),
         }
         return document, doc_id, metadata
