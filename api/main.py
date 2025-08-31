@@ -2,22 +2,21 @@ from collections import defaultdict
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from datetime import datetime, date
+from datetime import datetime, date, timedelta, timezone
 from typing import List, Dict, Any
 import sys
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from pymongo import MongoClient
 
 # Add the parent directory to sys.path so 'src' can be imported
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '..')))
 
 from scripts.recomender_system import RecommenderSystem
-from src.sql_client import TopicsDBClient
 from src.vectorized_database import VectorizedDatabase
-from src.config import db_configuration
-from src.get_news_info_by_link import NewsScrapper
+from config import db_configuration, mongo_configuration
 
 load_dotenv()
 
@@ -44,9 +43,6 @@ project_root = Path(__file__).resolve().parent.parent
 sql_db_path = f"{project_root}/db/topics.db"
 chroma_db_path = f"{project_root}/db/{db_configuration['db_path']}"
 
-# Initialize SQL client
-sql_client = TopicsDBClient(sql_db_path)
-
 # Initialize ChromaDB client
 chroma_client = VectorizedDatabase(
     persist_directory=chroma_db_path,
@@ -57,7 +53,7 @@ collection = chroma_client.get_collection()
 
 
 class TopicResponse(BaseModel):
-    topics: List[Dict]
+    topics: List[str]
     date: str
 
 class ArticleResponse(BaseModel):
@@ -82,8 +78,8 @@ async def get_topics_by_date_range(
     """
 
     try:
-        start = datetime.fromisoformat(from_date).date()
-        end = datetime.fromisoformat(to_date).date()
+        start = datetime.fromisoformat(from_date)
+        end = datetime.fromisoformat(to_date)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
@@ -91,25 +87,24 @@ async def get_topics_by_date_range(
         raise HTTPException(status_code=400, detail="'from' date must be before or equal to 'to' date")
 
     try:
-        all_topics = sql_client.get_all_topics()
         period_topics = []
-        for topic, topic_date, description in all_topics:
-            try:
-                topic_datetime = datetime.fromisoformat(topic_date).date()
-                if start <= topic_datetime <= end:
-                    results = collection.get(
-                        where={"topic": topic},
-                    )
-                    topic = {
-                        "name": topic,
-                        "count": len(results['ids']),
-                        "description": description,
-                    }   
-                    period_topics.append(topic)
+        with MongoClient(
+            host=mongo_configuration["host"],
+            port=mongo_configuration.get("port", 27017),
+            username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),
+            password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"),
+            authSource=mongo_configuration.get("database", "admin"),
+        ) as client:
+            db = client[mongo_configuration["db"]]
+            mongo_collection = db[mongo_configuration["collection"]]
 
-            except ValueError:
-                # Skip topics with invalid date format
-                continue
+            results = mongo_collection.find(
+                filter={"dates": {"$gte": start, "$lte": end}}, 
+                projection={"_id": 1}
+            )
+
+            for topic_doc in list(results):
+                period_topics.append(topic_doc["_id"])       
         return TopicResponse(topics=period_topics, date=f"{start.isoformat()} to {end.isoformat()}")
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
@@ -124,23 +119,17 @@ async def get_articles_by_topic(topic: str):
             include=["metadatas"]
         )
         # TODO: topics by day
-        scrapper = NewsScrapper()
         articles = []
         for i, result in enumerate(results['metadatas']):
-            if result.get("source") in ["www.nytimes.com", "www.washingtonpost.com"]:  # TODO: filter sources
-                continue
+            # TODO: filter sources
             article = defaultdict(dict)
-            article["date"] = result.get("date")
-            article["topic"] = result.get("topic")
+            article["date"] = result.get("publish_date")
             article["topic"] = result.get("topic")
             article["source"] = result.get("source")
             article["url"] = result.get("url")
-            print(article["url"])
-            
-            scrapped_data = scrapper.extract(article["url"])
-            article["image"] = scrapped_data.get("image", None)
-            article["excerpt"] = scrapped_data.get("excerpt", "")
-            article["title"] = scrapped_data.get("title", None)
+            article["image"] = result.get("image", "").split(' ')
+            article["excerpt"] = result.get("excerpt", "")
+            article["title"] = result.get("title", None)
             article["id"] = i
             articles.append(article)
 
@@ -168,13 +157,11 @@ async def news_rs_by_question(payload: QuestionPayload):
     response = rs.ask_by_query(question=payload.question)
     articles = response.get("articles", [])
     if articles:
-        scrapper = NewsScrapper()
         for i, article in enumerate(articles):
-            url = article.get("url")
-            scrapped_data = scrapper.extract(url)
-            article["image"] = scrapped_data.get("image", None)
-            article["excerpt"] = scrapped_data.get("excerpt", "")
-            article["title"] = scrapped_data.get("title", None)
+            article["url"] = article.get("url")
+            article["image"] = article.get("image", "").split(' ')
+            article["excerpt"] = article.get("excerpt", "")
+            article["title"] = article.get("title", None)
             article["id"] = i
 
 
@@ -187,23 +174,25 @@ async def news_rs_by_question(payload: QuestionPayload):
 @app.get("/latest_news")
 async def get_latest_news():
     """Retrieves 6 random articles from the database"""
-    results = collection.get(limit=6)
-    scrapper = NewsScrapper()
+    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+    dt = yesterday.replace(hour=23, minute=55, second=0, microsecond=0)
+    date = dt.isoformat().replace('+00:00', '.000000Z')
+    results = collection.get(
+        where={"date": date},
+        limit=6
+    )
     articles = []
     for i, result in enumerate(results['metadatas']):
-        if result.get("source") == "www.nytimes.com": # TODO
-            continue
+
         article = defaultdict(dict)
         article["date"] = result.get("date")
         article["topic"] = result.get("topic")
         article["topic"] = result.get("topic")
         article["source"] = result.get("source")
         article["url"] = result.get("url")
-        
-        scrapped_data = scrapper.extract(article["url"])
-        article["image"] = scrapped_data.get("image", None)
-        article["excerpt"] = scrapped_data.get("excerpt", "")
-        article["title"] = scrapped_data.get("title", None)
+        article["image"] = result.get("image", "").split(' ')
+        article["excerpt"] = result.get("excerpt", "")
+        article["title"] = result.get("title", None)
         article["id"] = i
         articles.append(article)
 
