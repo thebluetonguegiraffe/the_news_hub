@@ -6,12 +6,12 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
 .venv
 .vscode
-db/news_v1
-db/news_v2
-db/topics.db
 .env
+
+db/*
+!db/run_chroma_server.py
+!db/mongo-container.yml
 airflow/*
 !airflow/dags/

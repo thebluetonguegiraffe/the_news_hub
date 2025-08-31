@@ -1,9 +1,9 @@
-run-chroma:
+run-chroma-server:
 	@echo "Starting ChromaDB in background..."
 	@python db/run_chroma_server.py
 
-run-client:
-	@chroma browse $(shell python3 -c "from src.config import db_configuration; print(db_configuration['collection_name'])") --local
+run-chroma-client:
+	@chroma browse $(shell python3 -c "from config import db_configuration; print(db_configuration['collection_name'])") --local
 
 run-api:
 	@echo "Starting FastAPI server..."
@@ -21,3 +21,9 @@ AIRFLOW_SCRIPT := ./airflow/airflow_setup.sh
 start-airflow:
 	@echo "Starting Airflow..."
 	@exec bash $(AIRFLOW_SCRIPT)
+
+build-mongo.container:
+	@docker compose --env-file ./.env -f ./db/mongo-container.yml up -d
+
+build-mysql-container:
+	@docker compose --env-file ./.env -f ./db/mongo-container.yml up -d
