@@ -4,13 +4,17 @@ set -e
 # Make sure we're in the right directory
 cd ~/the_news_hub/news_rs
 
+export GMAIL_PWD=$(grep '^GMAIL_PWD=' "$(pwd)/.env" | cut -d '=' -f2-)
+export GMAIL_PWD_NO_SPACES=$(grep '^GMAIL_PWD_NO_SPACES=' "$(pwd)/.env" | cut -d '=' -f2-)
+echo $GMAIL_PWD
+
 export AIRFLOW_HOME=$(pwd)/airflow
 echo "Setting AIRFLOW_HOME to $AIRFLOW_HOME"
 
 export AIRFLOW__CORE__DAGS_FOLDER=$AIRFLOW_HOME/dags
 echo "Setting AIRFLOW__CORE__DAGS_FOLDER to $AIRFLOW__CORE__DAGS_FOLDER"
 
-export AIRFLOW__CORE__SQL_ALCHEMY_CONN="mysql+mysqldb://airflow:${MYSQL_PASSWORD}@127.0.0.1:3306/airflow"
+export AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////home/ubuntu/the_news_hub/news_rs/airflow/airflow.db
 export AIRFLOW__CORE__LOAD_EXAMPLES=False
 
 # Verify the configuration is correct
@@ -47,6 +51,12 @@ sleep 15
 echo "Listing DAGs..."
 airflow dags reserialize
 airflow dags list
+
+echo "Email configuration..."
+airflow config get-value smtp smtp_host
+airflow config get-value smtp smtp_user
+airflow config get-value smtp smtp_password
+airflow connections get smtp_default
 
 # Check for any import errors
 echo "Checking for import errors..."

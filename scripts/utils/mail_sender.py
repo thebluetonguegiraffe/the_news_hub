@@ -43,6 +43,7 @@ def send_email(to_email, subject, body, cc=None, bcc=None):
 
     except Exception as e:
         print(f"❌ Error sending email: {e}")
+        raise
 
 # Example usage
 if __name__ == "__main__":

@@ -24,5 +24,7 @@ news_api_configuration = {"url": "https://api.finlight.me/v2/", "endpoint": "art
 
 chat_configuration = {
     "endpoint": "https://models.github.ai/inference/chat/completions",
-    "model": "xai/grok-3-mini",
+    # "model": "xai/grok-3-mini",
+    # "model": "xai/grok-3",
+    "model": "openai/gpt-4.1-nano",
 }
