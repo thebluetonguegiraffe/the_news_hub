@@ -38,7 +38,7 @@ class VectorizedDatabase:
 
         today = datetime.now(timezone.utc).replace(hour=23, minute=55, second=0, microsecond=0)
         today_iso = today.isoformat().replace('+00:00', '.000000')
-        today_ts  =datetime.fromisoformat(today_iso).timestamp()
+        today_ts = datetime.fromisoformat(today_iso).timestamp()
         
         start = today - timedelta(days=self.time_window)
         start_iso = start.isoformat().replace('+00:00', '.000000')
