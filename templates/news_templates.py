@@ -14,6 +14,9 @@ Respond in strict JSON format with a 'summary' string, an array of 'articles' di
     - topic
     - source
     - date
+    - title
+    - excerpt
+    - image
 No markdown or extra formatting."
 
 

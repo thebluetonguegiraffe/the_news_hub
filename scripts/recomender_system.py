@@ -21,6 +21,8 @@ class RecommenderSystem:
                     "source": d.metadata.get("source"),
                     "date": d.metadata.get("date"),
                     "content": d.page_content,
+                    "excerpt": d.metadata.get("excerpt"),
+                    "image": d.metadata.get("image"),
                 }
                 for d in docs
             ],
