@@ -53,7 +53,7 @@ collection = chroma_client.get_collection()
 
 
 class TopicResponse(BaseModel):
-    topics: List[str]
+    topics: List[Dict]
     date: str
 
 class ArticleResponse(BaseModel):
@@ -78,8 +78,8 @@ async def get_topics_by_date_range(
     """
 
     try:
-        start = datetime.fromisoformat(from_date)
-        end = datetime.fromisoformat(to_date)
+        start = datetime.fromisoformat(from_date).replace(hour=23, minute=55, second=0, microsecond=0)
+        end = datetime.fromisoformat(to_date).replace(hour=23, minute=55, second=0, microsecond=0)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
@@ -99,12 +99,21 @@ async def get_topics_by_date_range(
             mongo_collection = db[mongo_configuration["collection"]]
 
             results = mongo_collection.find(
-                filter={"dates": {"$gte": start, "$lte": end}}, 
-                projection={"_id": 1}
+                filter={"topics_per_day.date": {"$gte": start, "$lte": end}}, 
+                projection={"_id": 1, "description": 1, "topics_per_day": 1}
             )
-
             for topic_doc in list(results):
-                period_topics.append(topic_doc["_id"])       
+                topics_per_day = topic_doc["topics_per_day"]
+                matched_topics_per_day = {}
+                for date_entry in topics_per_day:
+                    if start <= date_entry['date'] <= end:
+                        matched_topics_per_day[date_entry['date']] = date_entry['docs_number']
+                topic = {
+                        "name": topic_doc["_id"],
+                        "description": topic_doc["description"],
+                        "topics_per_day": matched_topics_per_day,
+                }
+                period_topics.append(topic)   
         return TopicResponse(topics=period_topics, date=f"{start.isoformat()} to {end.isoformat()}")
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
@@ -163,8 +172,6 @@ async def news_rs_by_question(payload: QuestionPayload):
             article["excerpt"] = article.get("excerpt", "")
             article["title"] = article.get("title", None)
             article["id"] = i
-
-
     return {
         "summary": response.get("summary", ""),
         "articles": articles

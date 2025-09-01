@@ -1,4 +1,5 @@
 import argparse
+from collections import Counter
 from datetime import datetime
 import logging
 import os
@@ -45,13 +46,15 @@ if __name__ == "__main__":
         collection_name=collection_name,
     )
 
-    collection = chroma.get_collection()
+    chroma_collection = chroma.get_collection()
 
     start_date = args.date + ":00.000000Z"
-    metadatas = collection.get(
+    metadatas = chroma_collection.get(
         where={"date": start_date}, include=["metadatas"]
         )["metadatas"]
-    topics = set([metadata["topic"].lower() for metadata in metadatas])
+
+    topics = [doc["topic"].lower() for doc in metadatas]
+    topic_counts = dict(Counter(topics))
 
     if not topics:
         raise ValueError(f"No topics found for date {args.date}.")
@@ -69,14 +72,14 @@ if __name__ == "__main__":
                 authSource=mongo_configuration.get("database", "admin"),
             ) as client:
             db = client[mongo_configuration["db"]]
-            collection = db[mongo_configuration["collection"]]
+            mongo_collection = db[mongo_configuration["collection"]]
 
             llm_description = create_llm()
             description_prompt = create_prompt_template(topic_description_template)
             description_chain = description_prompt | llm_description
 
-            for topic in topics:
-                results = collection.find_one(filter={"_id": topic})
+            for topic, n in topic_counts.items():
+                results = mongo_collection.find_one(filter={"_id": topic})
                 if not results:
                     logger.info(f"Generating description for: {topic}")
                     description = description_chain.invoke(
@@ -85,17 +88,17 @@ if __name__ == "__main__":
                         }
                     ).content
 
-                    collection.insert_one(
+                    mongo_collection.insert_one(
                         {
                             "_id": topic,
                             "description": description,
-                            "dates": [start_date],
+                            "topics_per_day": {'date': start_date, "docs_number": n},
                         }
                     )
                 else:
                     logger.info(f"Description found for: {topic}")
-                    collection.update_one(
+                    mongo_collection.update_one(
                         filter={"_id": topic},
-                        update={"$addToSet": {"dates": start_date}},
+                        update={"$addToSet": {"topics_per_day": {'date': start_date, "docs_number": n},}},
                         upsert=True,
                     )
