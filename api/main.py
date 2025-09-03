@@ -99,7 +99,16 @@ async def get_topics_by_date_range(
             mongo_collection = db[mongo_configuration["collection"]]
 
             results = mongo_collection.find(
-                filter={"topics_per_day.date": {"$gte": start, "$lte": end}}, 
+                filter={
+                    "topics_per_day": {
+                        "$elemMatch": {
+                            "date": {
+                                "$gte": start,
+                                "$lte": end
+                            }
+                        }
+                    }
+                },
                 projection={"_id": 1, "description": 1, "topics_per_day": 1}
             )
             for topic_doc in list(results):
@@ -110,11 +119,11 @@ async def get_topics_by_date_range(
                         matched_topics_per_day[date_entry['date']] = date_entry['docs_number']
                 if topic_doc["_id"] != "no_topic":
                     topic = {
-                            "name": topic_doc["_id"],
-                            "description": topic_doc["description"],
-                            "topics_per_day": matched_topics_per_day,
+                        "name": topic_doc["_id"],
+                        "description": topic_doc["description"],
+                        "topics_per_day": matched_topics_per_day,
                     }
-                    period_topics.append(topic)   
+                    period_topics.append(topic) 
         return TopicResponse(topics=period_topics, date=f"{start.isoformat()} to {end.isoformat()}")
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
