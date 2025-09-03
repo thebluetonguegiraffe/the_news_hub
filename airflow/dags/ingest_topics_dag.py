@@ -3,7 +3,7 @@ from airflow import DAG
 from airflow.providers.standard.operators.bash import BashOperator
 from airflow.providers.standard.operators.python import PythonOperator
 
-from scripts.utils.mail_sender import send_email
+from src.utils.mail_sender import send_email
 
 default_args = {
     "owner": "the_blue_tongue_giraffe_dev",

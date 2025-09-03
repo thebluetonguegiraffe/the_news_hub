@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     logger.info("Documents retrieved from Chroma DB")
 
-    n_components = PCA_COMPONENTS
+    n_components = min(PCA_COMPONENTS, len(ids))
     pca = PCA(n_components=n_components)
     embeddings_reduced = pca.fit_transform(embeddings)
 

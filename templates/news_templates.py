@@ -1,7 +1,7 @@
 rag_rs_template = """You are a news recommender system.
 
 Your task is to:
-- Provide a brief summary of the provided context.
+- Provide a brief summary of the provided context. Do not mention it is a summary, you should act as a journalist
 - Return a bullet list of the URLs found in the context. If you came to the conclusion that the
  context is not related to the
 question, do not add the bullet list and reply using the following structure:
@@ -10,10 +10,14 @@ question, do not add the bullet list and reply using the following structure:
 Format the output as a dictionary with "summary" and "articles" as keys.
 Respond in strict JSON format with a 'summary' string, an array of 'articles' dict. Those dicts
  should contain:
-    - url
+    - chroma_id
+    - date
     - topic
     - source
-    - date
+    - url
+    - image
+    - excerpt
+    - title
 No markdown or extra formatting."
 
 
@@ -61,4 +65,18 @@ Topic:
 {topic}
 
 Proposed description:
+"""
+
+asked_frecuency_template = """You are a linguistic expert.
+
+You should determined the time window descrived by the user in the input question.
+Examples
+- What has happen during this week? -> 7
+- What has happen today? ->  1
+If you are not sure of the anwser, say 0
+
+Question:
+{question}
+
+time_window:
 """

@@ -1,23 +1,27 @@
 from collections import defaultdict
+import logging
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from datetime import datetime, date
+from datetime import datetime, date, timedelta, timezone
 from typing import List, Dict, Any
 import sys
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from pymongo import MongoClient
 
 # Add the parent directory to sys.path so 'src' can be imported
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '..')))
 
+from api.api_utils import parse_chroma_results, parse_dict_results
 from scripts.recomender_system import RecommenderSystem
-from src.sql_client import TopicsDBClient
 from src.vectorized_database import VectorizedDatabase
-from src.config import db_configuration
-from src.get_news_info_by_link import NewsScrapper
+from config import db_configuration, mongo_configuration
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -43,9 +47,6 @@ app.add_middleware(
 project_root = Path(__file__).resolve().parent.parent
 sql_db_path = f"{project_root}/db/topics.db"
 chroma_db_path = f"{project_root}/db/{db_configuration['db_path']}"
-
-# Initialize SQL client
-sql_client = TopicsDBClient(sql_db_path)
 
 # Initialize ChromaDB client
 chroma_client = VectorizedDatabase(
@@ -82,8 +83,8 @@ async def get_topics_by_date_range(
     """
 
     try:
-        start = datetime.fromisoformat(from_date).date()
-        end = datetime.fromisoformat(to_date).date()
+        start = datetime.fromisoformat(from_date).replace(hour=23, minute=55, second=0, microsecond=0)
+        end = datetime.fromisoformat(to_date).replace(hour=23, minute=55, second=0, microsecond=0)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
@@ -91,25 +92,43 @@ async def get_topics_by_date_range(
         raise HTTPException(status_code=400, detail="'from' date must be before or equal to 'to' date")
 
     try:
-        all_topics = sql_client.get_all_topics()
         period_topics = []
-        for topic, topic_date, description in all_topics:
-            try:
-                topic_datetime = datetime.fromisoformat(topic_date).date()
-                if start <= topic_datetime <= end:
-                    results = collection.get(
-                        where={"topic": topic},
-                    )
-                    topic = {
-                        "name": topic,
-                        "count": len(results['ids']),
-                        "description": description,
-                    }   
-                    period_topics.append(topic)
+        with MongoClient(
+            host=mongo_configuration["host"],
+            port=mongo_configuration.get("port", 27017),
+            username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),
+            password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"),
+            authSource=mongo_configuration.get("database", "admin"),
+        ) as client:
+            db = client[mongo_configuration["db"]]
+            mongo_collection = db[mongo_configuration["collection"]]
 
-            except ValueError:
-                # Skip topics with invalid date format
-                continue
+            results = mongo_collection.find(
+                filter={
+                    "topics_per_day": {
+                        "$elemMatch": {
+                            "date": {
+                                "$gte": start,
+                                "$lte": end
+                            }
+                        }
+                    }
+                },
+                projection={"_id": 1, "description": 1, "topics_per_day": 1}
+            )
+            for topic_doc in list(results):
+                topics_per_day = topic_doc["topics_per_day"]
+                matched_topics_per_day = {}
+                for date_entry in topics_per_day:
+                    if start <= date_entry['date'] <= end:
+                        matched_topics_per_day[date_entry['date']] = date_entry['docs_number']
+                if topic_doc["_id"] != "no_topic":
+                    topic = {
+                        "name": topic_doc["_id"],
+                        "description": topic_doc["description"],
+                        "topics_per_day": matched_topics_per_day,
+                    }
+                    period_topics.append(topic) 
         return TopicResponse(topics=period_topics, date=f"{start.isoformat()} to {end.isoformat()}")
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
@@ -117,36 +136,39 @@ async def get_topics_by_date_range(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @app.get("/articles/{topic}")
-async def get_articles_by_topic(topic: str):
+async def get_articles_by_topic(
+    topic: str,
+    from_date: str = Query(..., alias="from"),
+    to_date: str = Query(..., alias="to"),
+):
     try:
+        from_date = datetime.fromisoformat(from_date).replace(hour=23, minute=55, second=0, microsecond=0)
+        to_date = datetime.fromisoformat(to_date).replace(hour=23, minute=55, second=0, microsecond=0)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    try:
+        from_date_ts = from_date.timestamp()
+        to_date_ts = to_date.timestamp()
+
         results = collection.get(
-            where={"topic": topic},
+            where={
+                "$and": [
+                    {"topic": topic},
+                    {"timestamp": {"$gte": from_date_ts}},
+                    {"timestamp": {"$lte": to_date_ts}}
+                ]
+            },
             include=["metadatas"]
         )
-        # TODO: topics by day
-        scrapper = NewsScrapper()
-        articles = []
-        for i, result in enumerate(results['metadatas']):
-            if result.get("source") in ["www.nytimes.com", "www.washingtonpost.com"]:  # TODO: filter sources
-                continue
-            article = defaultdict(dict)
-            article["date"] = result.get("date")
-            article["topic"] = result.get("topic")
-            article["topic"] = result.get("topic")
-            article["source"] = result.get("source")
-            article["url"] = result.get("url")
-            print(article["url"])
-            
-            scrapped_data = scrapper.extract(article["url"])
-            article["image"] = scrapped_data.get("image", None)
-            article["excerpt"] = scrapped_data.get("excerpt", "")
-            article["title"] = scrapped_data.get("title", None)
-            article["id"] = i
-            articles.append(article)
+        articles, enriched_metadata = parse_chroma_results(results)
+        if enriched_metadata:
+            collection.update(
+                ids=list(enriched_metadata.keys()),                 
+                metadatas=list(enriched_metadata.values()),     
+            )
+            logger.info(f"{len(enriched_metadata)} updated in Chroma DB.")
 
-        return {
-        "articles": articles
-        }
+        return {"articles": articles}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
@@ -166,18 +188,11 @@ async def news_rs_by_question(payload: QuestionPayload):
     rs = RecommenderSystem()
 
     response = rs.ask_by_query(question=payload.question)
-    articles = response.get("articles", [])
-    if articles:
-        scrapper = NewsScrapper()
-        for i, article in enumerate(articles):
-            url = article.get("url")
-            scrapped_data = scrapper.extract(url)
-            article["image"] = scrapped_data.get("image", None)
-            article["excerpt"] = scrapped_data.get("excerpt", "")
-            article["title"] = scrapped_data.get("title", None)
-            article["id"] = i
-
-
+    results = response.get("articles", [])
+    if not results:
+        return {}
+    articles = parse_dict_results(results)
+    
     return {
         "summary": response.get("summary", ""),
         "articles": articles
@@ -187,30 +202,22 @@ async def news_rs_by_question(payload: QuestionPayload):
 @app.get("/latest_news")
 async def get_latest_news():
     """Retrieves 6 random articles from the database"""
-    results = collection.get(limit=6)
-    scrapper = NewsScrapper()
-    articles = []
-    for i, result in enumerate(results['metadatas']):
-        if result.get("source") == "www.nytimes.com": # TODO
-            continue
-        article = defaultdict(dict)
-        article["date"] = result.get("date")
-        article["topic"] = result.get("topic")
-        article["topic"] = result.get("topic")
-        article["source"] = result.get("source")
-        article["url"] = result.get("url")
-        
-        scrapped_data = scrapper.extract(article["url"])
-        article["image"] = scrapped_data.get("image", None)
-        article["excerpt"] = scrapped_data.get("excerpt", "")
-        article["title"] = scrapped_data.get("title", None)
-        article["id"] = i
-        articles.append(article)
+    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+    dt = yesterday.replace(hour=23, minute=55, second=0, microsecond=0)
+    date = dt.isoformat().replace('+00:00', '.000000Z')
+    results = collection.get(
+        where={"date": date},
+        limit=6
+    )
+    articles, enriched_metadata = parse_chroma_results(results)
+    if enriched_metadata:
+        collection.update(
+            ids=list(enriched_metadata.keys()),                 
+            metadatas=list(enriched_metadata.values()),     
+        )
+        logger.info(f"{len(enriched_metadata)} updated in Chroma DB.")
 
-
-    return {
-        "articles": articles
-    }
+    return {"articles": articles}
 
 
 if __name__ == "__main__":

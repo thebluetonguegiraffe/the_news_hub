@@ -34,6 +34,9 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
+        "--new-field",
+    )
+    parser.add_argument(
         "--runnable",
         required=False,
     )
@@ -57,6 +60,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     filter_dict = args.filter if args.filter else {}
     runnable = eval(args.runnable) if args.runnable else None
+    field = args.new_field or args.field
 
     db_path = db_configuration["db_path"]
     collection_name = db_configuration["collection_name"]
@@ -79,8 +83,8 @@ if __name__ == "__main__":
     for i, metadata in enumerate(docs["metadatas"]):
         field_to_modify = metadata[args.field]
         result = runnable(field_to_modify) if runnable else args.value
-        docs['metadatas'][i][args.field] = result
-        logger.info(f"Updated {args.field} from {field_to_modify} to {result}")
+        docs['metadatas'][i][field] = result
+        logger.info(f"Updated {field} from {field_to_modify} to {result}")
     
 
     if not args.dry_run:

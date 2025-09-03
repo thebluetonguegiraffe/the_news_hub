@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from config import db_configuration
 from src.vectorized_database import VectorizedDatabase
 from src.llm_engine import create_prompt_template, create_llm
-from templates.news_templates import rag_rs_template
+from templates.news_templates import rag_rs_template, asked_frecuency_template
 
 
 class RecommenderSystem:
@@ -15,12 +15,14 @@ class RecommenderSystem:
         return json.dumps(
             [
                 {
-                    "id": d.id,
-                    "url": d.metadata.get("url"),
+                    "chroma_id": d.id,
+                    "publish_date": d.metadata.get("publish_date"),
                     "topic": d.metadata.get("topic"),
                     "source": d.metadata.get("source"),
-                    "date": d.metadata.get("date"),
-                    "content": d.page_content,
+                    "url": d.metadata.get("url"),
+                    "image": d.metadata.get("image"),
+                    "excerpt": d.metadata.get("excerpt"),
+                    "title": d.metadata.get("title"),
                 }
                 for d in docs
             ],
@@ -32,12 +34,19 @@ class RecommenderSystem:
         db_path = db_configuration["db_path"]
         collection_name = db_configuration["collection_name"]
 
-        retriever = VectorizedDatabase.from_config(
-            persist_directory=f"{project_root}/db/{db_path}", collection_name=collection_name
-        )
-
-        prompt_template = create_prompt_template(rag_rs_template)
         llm = create_llm()
+        preprocessing = create_prompt_template(asked_frecuency_template)
+
+        preprocessing_chain =  preprocessing | llm
+        preprocessing_response = preprocessing_chain.invoke(
+            {
+                "question": question,
+            }
+        )
+        prompt_template = create_prompt_template(rag_rs_template)
+        retriever = VectorizedDatabase.from_config(
+            persist_directory=f"{project_root}/db/{db_path}", collection_name=collection_name, time_window=preprocessing_response.content
+        )
 
         rag_chain = (
             {
@@ -60,5 +69,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     rs = RecommenderSystem()
-    response = rs.ask_by_query(question=args.question[0])
+    response = rs.ask_by_query(question="What has happened this week in EEUU")
     print(response)
