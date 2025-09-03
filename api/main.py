@@ -1,4 +1,5 @@
 from collections import defaultdict
+import logging
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -14,9 +15,13 @@ from pymongo import MongoClient
 # Add the parent directory to sys.path so 'src' can be imported
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '..')))
 
+from api.api_utils import parse_chroma_results, parse_dict_results
 from scripts.recomender_system import RecommenderSystem
 from src.vectorized_database import VectorizedDatabase
 from config import db_configuration, mongo_configuration
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -155,23 +160,15 @@ async def get_articles_by_topic(
             },
             include=["metadatas"]
         )
-        articles = []
-        for i, result in enumerate(results['metadatas']):
-            # TODO: filter sources
-            article = defaultdict(dict)
-            article["date"] = result.get("publish_date")
-            article["topic"] = result.get("topic")
-            article["source"] = result.get("source")
-            article["url"] = result.get("url")
-            article["image"] = result.get("image", "").split(' ')
-            article["excerpt"] = result.get("excerpt", "")
-            article["title"] = result.get("title", None)
-            article["id"] = i
-            articles.append(article)
+        articles, enriched_metadata = parse_chroma_results(results)
+        if enriched_metadata:
+            collection.update(
+                ids=list(enriched_metadata.keys()),                 
+                metadatas=list(enriched_metadata.values()),     
+            )
+            logger.info(f"{len(enriched_metadata)} updated in Chroma DB.")
 
-        return {
-        "articles": articles
-        }
+        return {"articles": articles}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
@@ -191,14 +188,11 @@ async def news_rs_by_question(payload: QuestionPayload):
     rs = RecommenderSystem()
 
     response = rs.ask_by_query(question=payload.question)
-    articles = response.get("articles", [])
-    if articles:
-        for i, article in enumerate(articles):
-            article["url"] = article.get("url")
-            article["image"] = article.get("image", "").split(' ')
-            article["excerpt"] = article.get("excerpt", "")
-            article["title"] = article.get("title", None)
-            article["id"] = i
+    results = response.get("articles", [])
+    if not results:
+        return {}
+    articles = parse_dict_results(results)
+    
     return {
         "summary": response.get("summary", ""),
         "articles": articles
@@ -215,25 +209,15 @@ async def get_latest_news():
         where={"date": date},
         limit=6
     )
-    articles = []
-    for i, result in enumerate(results['metadatas']):
+    articles, enriched_metadata = parse_chroma_results(results)
+    if enriched_metadata:
+        collection.update(
+            ids=list(enriched_metadata.keys()),                 
+            metadatas=list(enriched_metadata.values()),     
+        )
+        logger.info(f"{len(enriched_metadata)} updated in Chroma DB.")
 
-        article = defaultdict(dict)
-        article["date"] = result.get("date")
-        article["topic"] = result.get("topic")
-        article["topic"] = result.get("topic")
-        article["source"] = result.get("source")
-        article["url"] = result.get("url")
-        article["image"] = result.get("image", "").split(' ')
-        article["excerpt"] = result.get("excerpt", "")
-        article["title"] = result.get("title", None)
-        article["id"] = i
-        articles.append(article)
-
-
-    return {
-        "articles": articles
-    }
+    return {"articles": articles}
 
 
 if __name__ == "__main__":

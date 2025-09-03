@@ -10,13 +10,14 @@ question, do not add the bullet list and reply using the following structure:
 Format the output as a dictionary with "summary" and "articles" as keys.
 Respond in strict JSON format with a 'summary' string, an array of 'articles' dict. Those dicts
  should contain:
-    - url
+    - chroma_id
+    - date
     - topic
     - source
-    - date
-    - title
-    - excerpt
+    - url
     - image
+    - excerpt
+    - title
 No markdown or extra formatting."
 
 

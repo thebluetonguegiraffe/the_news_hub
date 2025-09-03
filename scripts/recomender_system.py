@@ -15,14 +15,14 @@ class RecommenderSystem:
         return json.dumps(
             [
                 {
-                    "id": d.id,
-                    "url": d.metadata.get("url"),
+                    "chroma_id": d.id,
+                    "publish_date": d.metadata.get("publish_date"),
                     "topic": d.metadata.get("topic"),
                     "source": d.metadata.get("source"),
-                    "date": d.metadata.get("date"),
-                    "content": d.page_content,
-                    "excerpt": d.metadata.get("excerpt"),
+                    "url": d.metadata.get("url"),
                     "image": d.metadata.get("image"),
+                    "excerpt": d.metadata.get("excerpt"),
+                    "title": d.metadata.get("title"),
                 }
                 for d in docs
             ],
@@ -69,5 +69,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     rs = RecommenderSystem()
-    response = rs.ask_by_query(question=args.question[0])
+    response = rs.ask_by_query(question="What has happened this week in EEUU")
     print(response)
