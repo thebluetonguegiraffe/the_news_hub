@@ -42,7 +42,7 @@ class VectorizedDatabase:
         
         start = today - timedelta(days=self.time_window)
         start_iso = start.isoformat().replace('+00:00', '.000000')
-        start_ts  =datetime.fromisoformat(start_iso).timestamp()
+        start_ts = datetime.fromisoformat(start_iso).timestamp()
 
         retriever = vectorstore.as_retriever(
             search_type="similarity", 

@@ -108,12 +108,13 @@ async def get_topics_by_date_range(
                 for date_entry in topics_per_day:
                     if start <= date_entry['date'] <= end:
                         matched_topics_per_day[date_entry['date']] = date_entry['docs_number']
-                topic = {
-                        "name": topic_doc["_id"],
-                        "description": topic_doc["description"],
-                        "topics_per_day": matched_topics_per_day,
-                }
-                period_topics.append(topic)   
+                if topic_doc["_id"] != "no_topic":
+                    topic = {
+                            "name": topic_doc["_id"],
+                            "description": topic_doc["description"],
+                            "topics_per_day": matched_topics_per_day,
+                    }
+                    period_topics.append(topic)   
         return TopicResponse(topics=period_topics, date=f"{start.isoformat()} to {end.isoformat()}")
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
@@ -121,13 +122,30 @@ async def get_topics_by_date_range(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @app.get("/articles/{topic}")
-async def get_articles_by_topic(topic: str):
+async def get_articles_by_topic(
+    topic: str,
+    from_date: str = Query(..., alias="from"),
+    to_date: str = Query(..., alias="to"),
+):
     try:
+        from_date = datetime.fromisoformat(from_date).replace(hour=23, minute=55, second=0, microsecond=0)
+        to_date = datetime.fromisoformat(to_date).replace(hour=23, minute=55, second=0, microsecond=0)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    try:
+        from_date_ts = from_date.timestamp()
+        to_date_ts = to_date.timestamp()
+
         results = collection.get(
-            where={"topic": topic},
+            where={
+                "$and": [
+                    {"topic": topic},
+                    {"timestamp": {"$gte": from_date_ts}},
+                    {"timestamp": {"$lte": to_date_ts}}
+                ]
+            },
             include=["metadatas"]
         )
-        # TODO: topics by day
         articles = []
         for i, result in enumerate(results['metadatas']):
             # TODO: filter sources
