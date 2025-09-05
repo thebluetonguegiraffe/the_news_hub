@@ -25,5 +25,5 @@ start-airflow:
 build-mongo.container:
 	@docker compose --env-file ./.env -f ./db/mongo-container.yml up -d
 
-build-mysql-container:
-	@docker compose --env-file ./.env -f ./db/mongo-container.yml up -d
+build-frontend-dev:
+	@cd dashboard && npm run dev
