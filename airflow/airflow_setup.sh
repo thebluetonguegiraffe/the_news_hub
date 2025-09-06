@@ -56,7 +56,7 @@ echo "Email configuration..."
 airflow config get-value smtp smtp_host
 airflow config get-value smtp smtp_user
 airflow config get-value smtp smtp_password
-airflow connections get smtp_default
+# airflow connections get smtp_default
 
 # Check for any import errors
 echo "Checking for import errors..."

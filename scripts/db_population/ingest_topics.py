@@ -53,7 +53,7 @@ if __name__ == "__main__":
         where={"date": start_date}, include=["metadatas"]
         )["metadatas"]
 
-    topics = [doc["topic"].lower() for doc in metadatas]
+    topics = [doc.get('topic', "Others").lower() for doc in metadatas]
     topic_counts = dict(Counter(topics))
 
     if not topics:
