@@ -123,7 +123,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               
               {isLanguageMenuOpen && (
                 <div className="absolute right-0 mt-2 w-28 bg-card border border-border rounded-lg shadow-lg z-50">
-                  <button
+                  {/* <button
                     onClick={() => handleLanguageChange("es")}
                     className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
                       language === "es" ? "text-primary font-bold" : "text-foreground"
@@ -138,7 +138,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
                     }`}
                   >
                     Català
-                  </button>
+                  </button> */}
                   <button
                     onClick={() => handleLanguageChange("en")}
                     className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
@@ -151,12 +151,12 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               )}
             </div>
             
-            <button className="px-4 py-2 text-foreground hover:text-primary transition-colors font-medium">
+            {/* <button className="px-4 py-2 text-foreground hover:text-primary transition-colors font-medium">
               {t("nav.register")}
-            </button>
-            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium">
+            </button> */}
+            {/* <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium">
               {t("nav.login")}
-            </button>
+            </button> */}
           </div>
 
           {/* Mobile menu button */}

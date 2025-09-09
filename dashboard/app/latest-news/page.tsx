@@ -119,7 +119,6 @@ const NewsList: React.FC<NewsListProps> = ({ articles }) => {
 };
 
 const SourcesSection = () => {
-  const { t } = useLanguage();
 
   const sources = [
     {
@@ -139,6 +138,12 @@ const SourcesSection = () => {
       abbreviation: "BBC",
       description: "British public service broadcaster",
       logo: "/images/BBC.jpg"
+    },
+    { 
+      name: "The Guardian News",
+      abbreviation: "The Guardian",
+      description: "Global Independent journalism voicer",
+      logo: "/images/the_guardian.jpg"
     }
   ];
 
@@ -158,7 +163,7 @@ const SourcesSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {sources.map((source) => (
             <div 
               key={source.abbreviation} 

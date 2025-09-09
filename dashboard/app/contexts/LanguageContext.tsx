@@ -130,7 +130,7 @@ const translations = {
     "footer.navigation": "Navigation",
     "footer.resources": "Resources",
     "footer.follow": "Follow Us",
-    "footer.copyright": "© 2025 The News Hub. All rights reserved.",
+    "footer.copyright": "© All rights reserved.",
   },
   ca: {
     // Navigation

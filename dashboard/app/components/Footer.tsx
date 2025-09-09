@@ -1,8 +1,7 @@
 
 import Image from "next/image";
 import { useLanguage } from "../contexts/LanguageContext";
-import Link from "next/link";
-import { Users } from "lucide-react";
+// import Link from "next/link";
 
 const Footer = () => {
     const { t } = useLanguage();
@@ -10,7 +9,7 @@ const Footer = () => {
     return (
       <footer className="bg-card border-t border-border py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-8"> 
             <div>
               <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                 <Image
@@ -72,7 +71,7 @@ const Footer = () => {
                 </li>
               </ul>
             </div>
-            
+        
             <div>
               <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                 <div className="w-2 h-2 bg-[#f7c873] rounded-full"></div>
@@ -84,13 +83,55 @@ const Footer = () => {
                 </a>
               </div>
             </div>
-          </div>
-          
-          <div className="border-t border-border mt-8 pt-8 text-center">
+          </div> */}
+          {/* <div className="border-t border-border mt-8 pt-8 text-center"> */}
+
+          <div className="flex justify-evenly items-center w-full">
+            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <Image
+                src="/images/the_news_hub_logo.png"
+                alt="The News Hub"
+                width={32}
+                height={32}
+                className="h-8 w-auto"
+              />
+              The News Hub
+            </h3>
+
+            <p className="text-muted-foreground">
+              {t("footer.description")}
+            </p>
+
             <p className="text-muted-foreground">
               {t("footer.copyright")}
             </p>
+
+            <a
+              href="mailto:thebluetonguegiraffe+dev@gmail.com"
+              className="flex items-center text-muted-foreground hover:text-[#f7c873] transition-colors"
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+              Contact
+            </a>
           </div>
+
+          {/* </div>
+            <p className="text-muted-foreground">
+              {t("footer.copyright")}
+            </p>
+          </div> */}
         </div>
       </footer>
     );
