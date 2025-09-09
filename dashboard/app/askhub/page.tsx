@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL, DEFAULT_HEADERS } from "../config";
+
 import { useState } from "react";
 import { MessageSquare, Bot, Zap, Send, Brain, Search, Clock, MessageCircle, ExternalLink, AlignCenter, SquareArrowOutUpRight } from "lucide-react";
 import NavigationBar from "../components/NavigationBar";
@@ -326,11 +328,9 @@ export default function AIPage() {
       setIsLoading(true);
 
       try {
-        const response = await fetch("http://localhost:7000/question", {
+        const response = await fetch(`${API_URL}/question`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: DEFAULT_HEADERS,
           body: JSON.stringify({ question: query }),
         });
 

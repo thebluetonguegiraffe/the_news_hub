@@ -1,5 +1,8 @@
 "use client";
 
+import { API_URL, DEFAULT_HEADERS } from "../../config";
+
+
 import { useState, useEffect } from "react";
 
 import Link from "next/link";
@@ -107,11 +110,9 @@ export default function ArticlePage() {
       if (!topicName) return;
         setLoading(true);
         try {
-          const response = await fetch(`http://localhost:7000/articles/${topicName}?from=${fromDate}&to=${toDate}`, {
+          const response = await fetch(`${API_URL}/articles/${topicName}?from=${fromDate}&to=${toDate}`, {
             method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: DEFAULT_HEADERS,
           });
    
           if (!response.ok) {

@@ -1,5 +1,8 @@
 "use client";
 
+import { API_URL, DEFAULT_HEADERS } from "../config";
+
+
 import { useState, useEffect } from "react";
 import { TrendingUp, Users, BarChart3, ArrowRight, ShieldCheck, Star, Zap, AlertTriangle, Globe, Building2, Trophy, Film, Microscope, ExternalLink, BookOpen, Music, Globe2, Leaf, Heart, BarChart2 } from "lucide-react";
 import NavigationBar from "../components/NavigationBar";
@@ -105,7 +108,13 @@ const HotTopicsSection = () => {
       setToDate(toDate);
 
       try {
-        const response = await fetch(`http://localhost:7000/topics/?from=${fromDate}&to=${toDate}`);
+        const response = await fetch(
+          `${API_URL}/topics/?from=${fromDate}&to=${toDate}`,
+          {
+            method: "GET",
+            headers: DEFAULT_HEADERS,
+          }
+        );
         const data = await response.json();
 
         // Ensure data is an array and handle different response structures

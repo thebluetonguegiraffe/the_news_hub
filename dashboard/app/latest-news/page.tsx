@@ -1,4 +1,7 @@
 "use client";
+
+import { API_URL, DEFAULT_HEADERS } from "../config";
+
 import { useState, useEffect } from "react";
 import {
   Calendar,
@@ -186,12 +189,19 @@ export default function LatestNewsPage() {
   const retrieve_news = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:7000/latest_news", {
+      console.log("Request:", {
+        url: `${API_URL}/latest_news`,
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: DEFAULT_HEADERS,
+        credentials: "include",
       });
+
+      const response = await fetch(`${API_URL}/latest_news`, {
+        method: "GET",
+        headers: DEFAULT_HEADERS,
+        credentials: 'include',
+      });
+      console.log(response)
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
