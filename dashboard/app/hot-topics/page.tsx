@@ -102,7 +102,6 @@ const HotTopicsSection = () => {
 
       const fromDate = toLocalMidnightISOString(selectedDateRange.fromDate);
       const toDate = toLocalMidnightISOString(selectedDateRange.toDate);
-      console.log(fromDate, toDate)
 
       setFromDate(fromDate);
       setToDate(toDate);

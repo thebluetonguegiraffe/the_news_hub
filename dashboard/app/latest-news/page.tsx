@@ -194,19 +194,11 @@ export default function LatestNewsPage() {
   const retrieve_news = async () => {
     setLoading(true);
     try {
-      console.log("Request:", {
-        url: `${API_URL}/latest_news`,
-        method: "GET",
-        headers: DEFAULT_HEADERS,
-        credentials: "include",
-      });
 
       const response = await fetch(`${API_URL}/latest_news`, {
         method: "GET",
         headers: DEFAULT_HEADERS,
-        credentials: 'include',
       });
-      console.log(response)
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
