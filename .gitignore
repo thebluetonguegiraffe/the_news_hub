@@ -18,4 +18,5 @@ airflow/*
 
 /dashboard/.next
 /dashboard/node_modules
+/dashboard/package-lock.json
 /dashboard/deleted
