@@ -15,3 +15,8 @@ db/*
 !db/mongo-container.yml
 airflow/*
 !airflow/dags/
+
+/dashboard/.next
+/dashboard/node_modules
+/dashboard/package-lock.json
+/dashboard/deleted

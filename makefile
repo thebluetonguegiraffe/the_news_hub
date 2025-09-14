@@ -25,5 +25,16 @@ start-airflow:
 build-mongo.container:
 	@docker compose --env-file ./.env -f ./db/mongo-container.yml up -d
 
-build-mysql-container:
-	@docker compose --env-file ./.env -f ./db/mongo-container.yml up -d
+run-frontend-dev:
+	@cd dashboard && npm run dev
+
+run-frontend:
+	@cd dashboard && rm -rf .next && rm -rf node_modules/.cache && npm run build && npm start
+
+stop-cloudflare-tunnel:
+	@echo "Stopping Cloudflare tunnel..."
+	@sudo systemctl stop cloudflared-dashboard.service
+
+start-cloudflare-tunnel:
+	@echo "Starting Cloudflare tunnel..."
+	@sudo systemctl start cloudflared-dashboard.service
