@@ -209,7 +209,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               <div className="pt-2 border-t border-border space-y-2">
                 {/* Mobile Language Selector */}
                 <div className="flex items-center justify-between px-3 py-2">
-                  <span className="text-sm text-muted-foreground">Idioma:</span>
+                  <span className="text-sm text-muted-foreground">Language:</span>
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleLanguageChange("es")}
@@ -243,12 +243,12 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
                     </button>
                   </div>
                 </div>
-                <button className="w-full px-3 py-2 text-foreground hover:text-primary transition-colors font-medium">
+                {/* <button className="w-full px-3 py-2 text-foreground hover:text-primary transition-colors font-medium">
                   {t("nav.register")}
                 </button>
                 <button className="w-full px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium">
                   {t("nav.login")}
-                </button>
+                </button> */}
               </div>
             </div>
           </div>

@@ -1,9 +1,10 @@
-from collections import defaultdict
 import logging
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.params import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
-from datetime import datetime, date, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 import sys
 import os
@@ -39,9 +40,35 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*" ],
 )
+
+# Security scheme
+security = HTTPBearer()
+
+# Store your API tokens (in production, use database or environment variables)
+VALID_API_TOKENS = {
+    os.getenv("API_ACCESS_TOKEN"): {
+        "name": "Frontend App",
+        "permissions": ["read", "write"]
+    },
+}
+
+# Token validation function
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Verify the API token"""
+    token = credentials.credentials
+    
+    if token not in VALID_API_TOKENS:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    return VALID_API_TOKENS[token]
 
 # Initialize database clients
 project_root = Path(__file__).resolve().parent.parent
@@ -61,15 +88,24 @@ class TopicResponse(BaseModel):
     topics: List[Dict]
     date: str
 
+
 class ArticleResponse(BaseModel):
     documents: List[str]
     metadatas: List[Dict[str, Any]]
     ids: List[str]
 
+
+@app.get("/health")
+async def health_check(token_data: dict = Depends(verify_token)):
+    """Health check endpoint"""
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+
+
 @app.get("/topics/", response_model=TopicResponse)
 async def get_topics_by_date_range(
     from_date: str = Query(..., alias="from"),
     to_date: str = Query(..., alias="to"),
+    token_data: dict = Depends(verify_token)
 ):
     """
     Get topics within a date range.
@@ -140,6 +176,7 @@ async def get_articles_by_topic(
     topic: str,
     from_date: str = Query(..., alias="from"),
     to_date: str = Query(..., alias="to"),
+    token_data: dict = Depends(verify_token)
 ):
     try:
         from_date = datetime.fromisoformat(from_date).replace(hour=23, minute=55, second=0, microsecond=0)
@@ -173,17 +210,15 @@ async def get_articles_by_topic(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
-
 
 class QuestionPayload(BaseModel):
     question: str
 
 @app.post("/question")
-async def news_rs_by_question(payload: QuestionPayload):
+async def news_rs_by_question(
+    payload: QuestionPayload,
+    token_data: dict = Depends(verify_token)
+):
     """Recommends articles based on input query"""
     rs = RecommenderSystem()
 
@@ -200,7 +235,9 @@ async def news_rs_by_question(payload: QuestionPayload):
 
 
 @app.get("/latest_news")
-async def get_latest_news():
+async def get_latest_news(
+    token_data: dict = Depends(verify_token)
+):
     """Retrieves 6 random articles from the database"""
     yesterday = datetime.now(timezone.utc) - timedelta(days=1)
     dt = yesterday.replace(hour=23, minute=55, second=0, microsecond=0)
