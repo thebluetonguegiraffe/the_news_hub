@@ -1,16 +1,20 @@
 import argparse
 import json
+import logging
 from dotenv import load_dotenv
 
 import re
 from typing import  Tuple
+from textblob import TextBlob
 
-from config import db_configuration, project_root
+from config import db_configuration, project_root, chat_configuration
 from scripts.recomender_system.constants import NUMERIC_TIME_PATTERNS, TIME_EXPRESSIONS
 from src.vectorized_database import VectorizedDatabase
 from src.llm_engine import create_prompt_template, create_llm
 from templates.news_templates import rag_rs_template
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 class RecommenderSystem:
     TIME_WINDOW = (-4,0)
@@ -37,12 +41,16 @@ class RecommenderSystem:
         )
 
     def ask_by_query(self, question: str):
-        # db_path = db_configuration["db_path"]
-        # collection_name = db_configuration["collection_name"]
 
-        time_window = self.get_time_window(question)
+        corrected_question = self.correct_text_blob(question)
+        logger.info(f"Corrected question: {question} -> {corrected_question}")
 
-        llm = create_llm()
+        time_window = self.get_time_window(corrected_question)
+        logger.info(f"Using time window: {time_window} days")
+
+        llm = create_llm(
+            model=chat_configuration["ask_hub"]
+        )
         prompt_template = create_prompt_template(rag_rs_template)
         retriever = self.vectorized_db.get_retriever(time_window=time_window)
 
@@ -55,7 +63,7 @@ class RecommenderSystem:
             | llm
         )
 
-        response = rag_chain.invoke({"question": question})
+        response = rag_chain.invoke({"question": corrected_question})
         parsed_response = json.loads(response.content)
         return parsed_response
 
@@ -79,6 +87,9 @@ class RecommenderSystem:
                 results.append(days_offset)
         
         return results[0] if results else self.TIME_WINDOW
+    def correct_text_blob(self, text:str):
+        blob = TextBlob(text)
+        return str(blob.correct())
     
 
 if __name__ == "__main__":

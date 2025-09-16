@@ -53,7 +53,6 @@ def parse_dict_results(
     results: List,
 ) -> Union[List[Dict], Dict] :
     articles = []
-    enriched_metadata = {}
         
     for i, item in enumerate(results):
         article = defaultdict(dict)
@@ -62,10 +61,9 @@ def parse_dict_results(
             image_urls=item.get("image", "").split(' '), 
             url = url
         )
-
         article["id"] = i
         article["chroma_id"] = item.get('chroma_id')
-        article["date"] = item.get("publish_date")
+        article["date"] = item.get("date")
         article["topic"] = item.get("topic")
         article["source"] = item.get("source")
         article["url"] = url

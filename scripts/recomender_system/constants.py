@@ -1,9 +1,9 @@
 TIME_EXPRESSIONS = {
     # Relative day references
-    'yesterday': -1,
-    'today': 0,
-    'the day before yesterday': -2,
-    'day before yesterday': -2,
+    'yesterday': (-2, -1),
+    'today': (-1, 0),
+    'the day before yesterday': (-3, -2),
+    'day before yesterday': (-4, -3),
     
     # Week-based references
     'last week': (-14, -7),  # From 2 weeks ago to 1 week ago

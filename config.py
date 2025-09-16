@@ -27,4 +27,5 @@ chat_configuration = {
     # "model": "xai/grok-3-mini",
     # "model": "xai/grok-3",
     "model": "openai/gpt-4.1-nano",
+    "ask_hub": "openai/gpt-4.1-mini",
 }
