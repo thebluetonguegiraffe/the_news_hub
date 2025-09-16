@@ -15,6 +15,9 @@ from templates.news_templates import rag_rs_template
 class RecommenderSystem:
     TIME_WINDOW = (-4,0)
 
+    def __init__(self, vectorized_db: VectorizedDatabase):
+        self.vectorized_db=vectorized_db
+
     def serialize_docs_json(self, docs):
         return json.dumps(
             [
@@ -34,16 +37,14 @@ class RecommenderSystem:
         )
 
     def ask_by_query(self, question: str):
-        db_path = db_configuration["db_path"]
-        collection_name = db_configuration["collection_name"]
+        # db_path = db_configuration["db_path"]
+        # collection_name = db_configuration["collection_name"]
 
         time_window = self.get_time_window(question)
 
         llm = create_llm()
         prompt_template = create_prompt_template(rag_rs_template)
-        retriever = VectorizedDatabase.from_config(
-            persist_directory=f"{project_root}db/{db_path}", collection_name=collection_name, time_window=time_window
-        )
+        retriever = self.vectorized_db.get_retriever(time_window=time_window)
 
         rag_chain = (
             {
@@ -85,7 +86,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Ask a question to the news recommender system.")
     parser.add_argument("--question", nargs="*", help="The question to ask")
     args = parser.parse_args()
-
-    rs = RecommenderSystem()
+    
+    chroma_db_path = f"{project_root}db/{db_configuration['db_path']}"
+    rs = RecommenderSystem(
+        vectorized_db=VectorizedDatabase(
+            persist_directory=chroma_db_path,
+            collection_name=db_configuration["collection_name"],
+        )
+    )
     response = rs.ask_by_query(question="What has happened this week in EEUU")
     print(response)

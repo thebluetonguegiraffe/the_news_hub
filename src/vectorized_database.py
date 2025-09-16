@@ -7,13 +7,11 @@ from langchain_chroma import Chroma
 from config import embeddings_configuration
 from src.custom_modules.custom_embedder import CustomEmbedder
 
-TIME_WINDOW = (-4,0)
 
 class VectorizedDatabase:
-    def __init__(self, persist_directory: str, collection_name: str, time_window: Optional[Tuple[int, int]]=TIME_WINDOW):
+    def __init__(self, persist_directory: str, collection_name: str):
         self.persist_directory = persist_directory
         self.collection_name = collection_name
-        self.time_window = time_window
         self.embedding_function = CustomEmbedder(
             model=embeddings_configuration["model"],
             endpoint=embeddings_configuration["endpoint"],
@@ -29,7 +27,7 @@ class VectorizedDatabase:
 
         return collection
 
-    def get_retriever(self):
+    def get_retriever(self, time_window: Optional[Tuple[int, int]]):
         vectorstore = Chroma(
             persist_directory=self.persist_directory,
             embedding_function=self.embedding_function,
@@ -38,11 +36,11 @@ class VectorizedDatabase:
 
         today = datetime.now(timezone.utc).replace(hour=23, minute=55, second=0, microsecond=0)
         
-        start = today + timedelta(days=self.time_window[0])
+        start = today + timedelta(days=time_window[0])
         start_iso = start.isoformat().replace('+00:00', '.000000')
         start_ts = datetime.fromisoformat(start_iso).timestamp()
 
-        end = today + timedelta(days=self.time_window[1])
+        end = today + timedelta(days=time_window[1])
         end_iso = end.isoformat().replace('+00:00', '.000000')
         end_ts = datetime.fromisoformat(end_iso).timestamp()
 
@@ -59,8 +57,3 @@ class VectorizedDatabase:
             }
         )
         return retriever
-
-    @classmethod
-    def from_config(cls, persist_directory: str, collection_name: str, time_window:int):
-        instance = cls(persist_directory, collection_name, time_window)
-        return instance.get_retriever()
