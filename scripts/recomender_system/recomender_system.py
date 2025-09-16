@@ -13,7 +13,7 @@ from templates.news_templates import rag_rs_template
 
 
 class RecommenderSystem:
-    TIME_WINDOW = (4,0)
+    TIME_WINDOW = (-4,0)
 
     def serialize_docs_json(self, docs):
         return json.dumps(

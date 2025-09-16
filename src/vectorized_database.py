@@ -1,16 +1,16 @@
 from datetime import datetime, timedelta, timezone
 import os
-from typing import Tuple
+from typing import Tuple, Optional
 from chromadb import PersistentClient
 from langchain_chroma import Chroma
 
 from config import embeddings_configuration
 from src.custom_modules.custom_embedder import CustomEmbedder
 
+TIME_WINDOW = (-4,0)
 
 class VectorizedDatabase:
-
-    def __init__(self, persist_directory: str, collection_name: str, time_window: Tuple[int, int]):
+    def __init__(self, persist_directory: str, collection_name: str, time_window: Optional[Tuple[int, int]]=TIME_WINDOW):
         self.persist_directory = persist_directory
         self.collection_name = collection_name
         self.time_window = time_window
