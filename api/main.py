@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 import sys
 import os
-from pathlib import Path
 
 from dotenv import load_dotenv
 from pymongo import MongoClient
@@ -17,9 +16,9 @@ from pymongo import MongoClient
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '..')))
 
 from api.api_utils import parse_chroma_results, parse_dict_results
-from scripts.recomender_system import RecommenderSystem
+from scripts.recomender_system.recomender_system import RecommenderSystem
 from src.vectorized_database import VectorizedDatabase
-from config import db_configuration, mongo_configuration
+from config import db_configuration, mongo_configuration, project_root
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -71,9 +70,7 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
     return VALID_API_TOKENS[token]
 
 # Initialize database clients
-project_root = Path(__file__).resolve().parent.parent
-sql_db_path = f"{project_root}/db/topics.db"
-chroma_db_path = f"{project_root}/db/{db_configuration['db_path']}"
+chroma_db_path = f".{project_root}db/{db_configuration['db_path']}"
 
 # Initialize ChromaDB client
 chroma_client = VectorizedDatabase(
@@ -82,7 +79,6 @@ chroma_client = VectorizedDatabase(
 )
 
 collection = chroma_client.get_collection()
-
 
 class TopicResponse(BaseModel):
     topics: List[Dict]
@@ -220,7 +216,9 @@ async def news_rs_by_question(
     token_data: dict = Depends(verify_token)
 ):
     """Recommends articles based on input query"""
-    rs = RecommenderSystem()
+    rs = RecommenderSystem(
+        vectorized_db=chroma_client
+    )
 
     response = rs.ask_by_query(question=payload.question)
     results = response.get("articles", [])
