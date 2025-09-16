@@ -70,10 +70,17 @@ if __name__ == "__main__":
         raise ValueError(f"HTTP error occurred: {e}")
 
     unique_articles = {}
+    seen_titles = set()
+    seen_summaries = set()
+
     for article in articles:
         title = article.get("title")
-        if title and title not in unique_articles:
+        summary = article.get("summary")
+        
+        if title and summary and title not in seen_titles and summary not in seen_summaries:
             unique_articles[title] = article
+            seen_titles.add(title)
+            seen_summaries.add(summary)
 
     documents, ids, metadatas = map(
         list,
