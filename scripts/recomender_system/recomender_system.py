@@ -1,15 +1,19 @@
 import argparse
 import json
-from pathlib import Path
 from dotenv import load_dotenv
 
-from config import db_configuration
+import re
+from typing import  Tuple
+
+from config import db_configuration, project_root
+from scripts.recomender_system.constants import NUMERIC_TIME_PATTERNS, TIME_EXPRESSIONS
 from src.vectorized_database import VectorizedDatabase
 from src.llm_engine import create_prompt_template, create_llm
-from templates.news_templates import rag_rs_template, asked_frecuency_template
+from templates.news_templates import rag_rs_template
 
 
 class RecommenderSystem:
+    TIME_WINDOW = (4,0)
 
     def serialize_docs_json(self, docs):
         return json.dumps(
@@ -30,22 +34,15 @@ class RecommenderSystem:
         )
 
     def ask_by_query(self, question: str):
-        project_root = Path(__file__).resolve().parent.parent
         db_path = db_configuration["db_path"]
         collection_name = db_configuration["collection_name"]
 
-        llm = create_llm()
-        preprocessing = create_prompt_template(asked_frecuency_template)
+        time_window = self.get_time_window(question)
 
-        preprocessing_chain =  preprocessing | llm
-        preprocessing_response = preprocessing_chain.invoke(
-            {
-                "question": question,
-            }
-        )
+        llm = create_llm()
         prompt_template = create_prompt_template(rag_rs_template)
         retriever = VectorizedDatabase.from_config(
-            persist_directory=f"{project_root}/db/{db_path}", collection_name=collection_name, time_window=preprocessing_response.content
+            persist_directory=f"{project_root}db/{db_path}", collection_name=collection_name, time_window=time_window
         )
 
         rag_chain = (
@@ -61,6 +58,27 @@ class RecommenderSystem:
         parsed_response = json.loads(response.content)
         return parsed_response
 
+    def get_time_window(self, text: str) -> Tuple[int, int]:
+        results = []
+        text_lower = text.lower()
+        
+        # Search for exact matches from dictionary
+        for expression, days_offset in TIME_EXPRESSIONS.items():
+            pattern = r'\b' + re.escape(expression) + r'\b'
+            matches = re.finditer(pattern, text_lower)
+            for match in matches:
+                results.append(days_offset)
+        
+        # Search for numeric patterns
+        for pattern, offset_func in NUMERIC_TIME_PATTERNS.items():
+            matches = re.finditer(pattern, text_lower)
+            for match in matches:
+                number = match.group(1)
+                days_offset = offset_func(number)
+                results.append(days_offset)
+        
+        return results[0] if results else self.TIME_WINDOW
+    
 
 if __name__ == "__main__":
     load_dotenv()

@@ -1,19 +1,19 @@
 from datetime import datetime, timedelta, timezone
 import os
+from typing import Tuple
 from chromadb import PersistentClient
 from langchain_chroma import Chroma
 
 from config import embeddings_configuration
 from src.custom_modules.custom_embedder import CustomEmbedder
 
-TIME_WINDOW = 4
 
 class VectorizedDatabase:
 
-    def __init__(self, persist_directory: str, collection_name: str, time_window: int = TIME_WINDOW):
+    def __init__(self, persist_directory: str, collection_name: str, time_window: Tuple[int, int]):
         self.persist_directory = persist_directory
         self.collection_name = collection_name
-        self.time_window = int(time_window) or TIME_WINDOW # avoid 0 time_window
+        self.time_window = time_window
         self.embedding_function = CustomEmbedder(
             model=embeddings_configuration["model"],
             endpoint=embeddings_configuration["endpoint"],
@@ -37,12 +37,14 @@ class VectorizedDatabase:
         )
 
         today = datetime.now(timezone.utc).replace(hour=23, minute=55, second=0, microsecond=0)
-        today_iso = today.isoformat().replace('+00:00', '.000000')
-        today_ts = datetime.fromisoformat(today_iso).timestamp()
         
-        start = today - timedelta(days=self.time_window)
+        start = today + timedelta(days=self.time_window[0])
         start_iso = start.isoformat().replace('+00:00', '.000000')
         start_ts = datetime.fromisoformat(start_iso).timestamp()
+
+        end = today + timedelta(days=self.time_window[1])
+        end_iso = end.isoformat().replace('+00:00', '.000000')
+        end_ts = datetime.fromisoformat(end_iso).timestamp()
 
         retriever = vectorstore.as_retriever(
             search_type="similarity", 
@@ -51,7 +53,7 @@ class VectorizedDatabase:
                 "filter": {
                     "$and": [
                         {"timestamp": {"$gte": start_ts}},
-                        {"timestamp": {"$lte": today_ts}}
+                        {"timestamp": {"$lte": end_ts}}
                     ]
                 }
             }

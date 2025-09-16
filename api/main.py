@@ -17,7 +17,7 @@ from pymongo import MongoClient
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '..')))
 
 from api.api_utils import parse_chroma_results, parse_dict_results
-from scripts.recomender_system import RecommenderSystem
+from scripts.recomender_system.recomender_system import RecommenderSystem
 from src.vectorized_database import VectorizedDatabase
 from config import db_configuration, mongo_configuration
 
