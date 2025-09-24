@@ -9,11 +9,11 @@ from typing import  Tuple
 from textblob import TextBlob
 
 from langchain.chat_models import init_chat_model
+from langchain.prompts import ChatPromptTemplate
 
 from config import db_configuration, project_root, chat_configuration
 from scripts.recomender_system.constants import NUMERIC_TIME_PATTERNS, TIME_EXPRESSIONS
 from src.vectorized_database import VectorizedDatabase
-from src.llm_engine import create_prompt_template, create_llm
 from templates.news_templates import rag_rs_template
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -57,7 +57,7 @@ class RecommenderSystem:
             api_key=os.environ["GITHUB_TOKEN"],
             base_url="https://models.github.ai/inference"
         )
-        prompt_template = create_prompt_template(rag_rs_template)
+        prompt_template = ChatPromptTemplate.from_messages([("human", rag_rs_template)])
         retriever = self.vectorized_db.get_retriever(time_window=time_window)
 
         rag_chain = (
