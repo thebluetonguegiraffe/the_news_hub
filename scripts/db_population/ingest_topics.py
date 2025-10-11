@@ -6,9 +6,11 @@ import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
-from config import db_configuration, project_root, mongo_configuration
+from config import db_configuration, project_root, mongo_configuration, chat_configuration
 
-from src.llm_engine import create_prompt_template, create_llm
+from langchain.chat_models import init_chat_model
+from langchain.prompts import ChatPromptTemplate
+
 from src.vectorized_database import VectorizedDatabase
 
 from templates.news_templates import topic_description_template
@@ -74,8 +76,14 @@ if __name__ == "__main__":
             db = client[mongo_configuration["db"]]
             mongo_collection = db[mongo_configuration["collection"]]
 
-            llm_description = create_llm()
-            description_prompt = create_prompt_template(topic_description_template)
+            llm_description = init_chat_model(
+                model=chat_configuration["model"],
+                model_provider="openai",
+                api_key=os.environ["GITHUB_TOKEN"],
+                base_url="https://models.github.ai/inference"
+            )
+            description_prompt = ChatPromptTemplate.from_messages([("human", topic_description_template)])
+            
             description_chain = description_prompt | llm_description
 
             for topic, n in topic_counts.items():

@@ -8,10 +8,12 @@ from pymongo import MongoClient
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
-from config import db_configuration, project_root, mongo_configuration
+from langchain.chat_models import init_chat_model
+from langchain.prompts import ChatPromptTemplate
+
+from config import db_configuration, project_root, mongo_configuration, chat_configuration
 
 from src.vectorized_database import VectorizedDatabase
-from src.llm_engine import create_prompt_template, create_llm
 
 from templates.news_templates import topic_generation_template
 import argparse
@@ -83,8 +85,13 @@ if __name__ == "__main__":
 
     logger.info("Clusters Generated")
 
-    prompt = create_prompt_template(topic_generation_template)
-    llm = create_llm()
+    prompt =  ChatPromptTemplate.from_messages([("human", topic_generation_template)])
+    llm = init_chat_model(
+        model=chat_configuration["ask_hub"],
+        model_provider="openai",
+        api_key=os.environ["GITHUB_TOKEN"],
+        base_url="https://models.github.ai/inference"
+    )
 
     chain = prompt | llm
 

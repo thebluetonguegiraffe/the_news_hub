@@ -1,16 +1,19 @@
 import argparse
 import json
 import logging
+import os
 from dotenv import load_dotenv
 
 import re
 from typing import  Tuple
 from textblob import TextBlob
 
+from langchain.chat_models import init_chat_model
+from langchain.prompts import ChatPromptTemplate
+
 from config import db_configuration, project_root, chat_configuration
 from scripts.recomender_system.constants import NUMERIC_TIME_PATTERNS, TIME_EXPRESSIONS
 from src.vectorized_database import VectorizedDatabase
-from src.llm_engine import create_prompt_template, create_llm
 from templates.news_templates import rag_rs_template
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -42,16 +45,19 @@ class RecommenderSystem:
 
     def ask_by_query(self, question: str):
 
-        corrected_question = self.correct_text_blob(question)
-        logger.info(f"Corrected question: {question} -> {corrected_question}")
+        # corrected_question = self.correct_text_blob(question)
+        # logger.info(f"Corrected question: {question} -> {corrected_question}")
 
-        time_window = self.get_time_window(corrected_question)
+        time_window = self.get_time_window(question)
         logger.info(f"Using time window: {time_window} days")
 
-        llm = create_llm(
-            model=chat_configuration["ask_hub"]
+        llm = init_chat_model(
+            model=chat_configuration["ask_hub"],
+            model_provider="openai",
+            api_key=os.environ["GITHUB_TOKEN"],
+            base_url="https://models.github.ai/inference"
         )
-        prompt_template = create_prompt_template(rag_rs_template)
+        prompt_template = ChatPromptTemplate.from_messages([("human", rag_rs_template)])
         retriever = self.vectorized_db.get_retriever(time_window=time_window)
 
         rag_chain = (
@@ -63,7 +69,7 @@ class RecommenderSystem:
             | llm
         )
 
-        response = rag_chain.invoke({"question": corrected_question})
+        response = rag_chain.invoke({"question": question})
         parsed_response = json.loads(response.content)
         return parsed_response
 
@@ -105,5 +111,5 @@ if __name__ == "__main__":
             collection_name=db_configuration["collection_name"],
         )
     )
-    response = rs.ask_by_query(question="What has happened this week in EEUU")
+    response = rs.ask_by_query(question=args.question[0])
     print(response)
