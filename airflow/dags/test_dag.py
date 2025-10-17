@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from airflow import DAG
 from airflow.providers.standard.operators.bash import BashOperator
@@ -12,7 +11,7 @@ default_args = {
     "depends_on_past": False,
     "email": ["thebluetonguegiraffe@gmail.com"],
     "email_on_failure": True,
-    "email_on_retry": False
+    "email_on_retry": False,
 }
 
 dag = DAG(
@@ -24,22 +23,20 @@ dag = DAG(
 )
 
 notify_success = PythonOperator(
-    task_id='notify_success',
+    task_id="notify_success",
     python_callable=send_email,
     op_kwargs={
         "to_email": "thebluetonguegiraffe@gmail.com",
         "subject": "Test email ✅",
         "body": "Your task finished successfully!",
     },
-    dag=dag
+    dag=dag,
 )
 
 
 failed_task = BashOperator(
     task_id="failed_task",
-    bash_command=(
-       "shs"
-    ),
+    bash_command=("shs"),
     email_on_failure=True,
     dag=dag,
 )

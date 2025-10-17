@@ -1,5 +1,3 @@
-
-
 import argparse
 import json
 import logging
@@ -11,6 +9,7 @@ from src.vectorized_database import VectorizedDatabase
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def parse_filter(value: str) -> dict:
     """Parses --filter argument into a dict."""
@@ -27,7 +26,7 @@ def parse_filter(value: str) -> dict:
 
 if __name__ == "__main__":
 
-    load_dotenv()    
+    load_dotenv()
     parser = argparse.ArgumentParser(description="Ask a question to the news recommender system.")
     parser.add_argument(
         "--field",
@@ -65,7 +64,6 @@ if __name__ == "__main__":
     db_path = db_configuration["db_path"]
     collection_name = db_configuration["collection_name"]
 
-
     logger.info("Initializing vectorized database")
     db_client = VectorizedDatabase(
         persist_directory=f"{project_root}/db/{db_path}", collection_name=collection_name
@@ -79,17 +77,16 @@ if __name__ == "__main__":
     )
 
     n_docs = len(docs["metadatas"])
-    
+
     for i, metadata in enumerate(docs["metadatas"]):
         field_to_modify = metadata[args.field]
         result = runnable(field_to_modify) if runnable else args.value
-        docs['metadatas'][i][field] = result
+        docs["metadatas"][i][field] = result
         logger.info(f"Updated {field} from {field_to_modify} to {result}")
-    
 
     if not args.dry_run:
         collection.update(
-            ids=docs["ids"],                 
-            metadatas=docs["metadatas"],     
+            ids=docs["ids"],
+            metadatas=docs["metadatas"],
         )
         logger.info(f"{n_docs} updated in Chroma DB.")

@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import Dict, List
 import requests
-import uuid
+
+from src.scrapper import BaseScrapper
 
 
 class FinlightAPIClient:
@@ -24,18 +25,52 @@ class FinlightAPIClient:
         response.raise_for_status()
         return response.json()
 
-    @staticmethod
-    def parse_finlight_article(input_data: Dict, date: datetime) -> Union[str, str, List]:
-        document = input_data.get("summary")
-        doc_id = str(uuid.uuid4())
-        metadata = {
+    @classmethod
+    def filter_image_urls(cls, image_urls: List[str], article_url: str) -> List[str]:
+        """
+        Avoid saving images from the author an scrap image if there are non-author available images.
+        """
+        non_author_images = [url for url in image_urls if "author" not in url]
+
+        if non_author_images:
+            return non_author_images
+
+        scrapper = BaseScrapper()
+        image = scrapper.scrape_image_sync(article_url)
+        return [image]
+
+    @classmethod
+    def parse(cls, input_data: Dict, creation_date: datetime) -> Dict:
+        """
+        Parse the article data from Finlight API response to a standardized format.
+        """
+        valid_image_urls = cls.filter_image_urls(
+            image_urls=input_data.get("images", []), article_url=input_data.get("link")
+        )
+        parsed_document = {
             "publish_date": input_data.get("publishDate"),
-            "date": date.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "source": input_data.get("source"),
             "url": input_data.get("link"),
-            "title": input_data.get("title"),
-            "excerpt": input_data.get("summary"),
-            "image": " ".join(input_data.get("images")),
-            "timestamp": date.timestamp(),
+            "title_en": input_data.get("title"),
+            "description_en": input_data.get("summary"),
+            "image": valid_image_urls,
+            "creation_date": creation_date,
         }
-        return document, doc_id, metadata
+        return parsed_document
+
+
+if __name__ == "__main__":
+
+    client = FinlightAPIClient(
+        base_url="https://api.finlight.me/v2/",
+        headers={"X-API-KEY": "your_api_key_here"},
+    )
+
+    image_urls = [
+        "https://static01.nyt.com/images/2021/08/10/business/author-lauren-hirsch/author-lauren-hirsch-thumbLarge-v3.png",
+        "https://static01.nyt.com/images/2023/11/20/reader-center/author-julie-creswell/author-julie-creswell-thumbLarge.png",
+    ]
+    article_url = "https://www.ara.cat/internacional/proxim-orient/als-israelians-unics-essers-humans-gaza-son-ostatges-soldats_128_5524640.html"
+
+    filtered_list = client.filter_image_urls(image_urls, article_url)
+    print(filtered_list)

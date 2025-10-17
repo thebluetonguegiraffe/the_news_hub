@@ -26,7 +26,7 @@ KMEANS_CLUSTERS = 15
 if __name__ == "__main__":
 
     load_dotenv()
-    
+
     parser = argparse.ArgumentParser(description="Generate topics for clustered news articles.")
     parser.add_argument(
         "--dry-run",
@@ -38,7 +38,9 @@ if __name__ == "__main__":
         "-d", "--date", required=True, help="Date for the news articles in format YYYY-MM-DDTHH:MM"
     )
     parser.add_argument(
-        "--topics-history", required=True, choices=["LATEST", "DEFAULT"],
+        "--topics-history",
+        required=True,
+        choices=["LATEST", "DEFAULT"],
     )
     args = parser.parse_args()
     dry_run = args.dry_run
@@ -85,12 +87,12 @@ if __name__ == "__main__":
 
     logger.info("Clusters Generated")
 
-    prompt =  ChatPromptTemplate.from_messages([("human", topic_generation_template)])
+    prompt = ChatPromptTemplate.from_messages([("human", topic_generation_template)])
     llm = init_chat_model(
         model=chat_configuration["ask_hub"],
         model_provider="openai",
         api_key=os.environ["GITHUB_TOKEN"],
-        base_url="https://models.github.ai/inference"
+        base_url="https://models.github.ai/inference",
     )
 
     chain = prompt | llm
@@ -98,12 +100,12 @@ if __name__ == "__main__":
     label_map = {}
 
     with MongoClient(
-            host=mongo_configuration["host"],
-            port=mongo_configuration.get("port", 27017),
-            username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),
-            password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"),
-            authSource=mongo_configuration.get("database", "admin"),
-        ) as client:
+        host=mongo_configuration["host"],
+        port=mongo_configuration.get("port", 27017),
+        username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),
+        password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"),
+        authSource=mongo_configuration.get("database", "admin"),
+    ) as client:
         db = client[mongo_configuration["db"]]
         mongo_collection = db[mongo_configuration["collection"]]
 
@@ -126,7 +128,9 @@ if __name__ == "__main__":
         metadatas = [content["metadatas"] for content in cluster_content]
 
         if metadatas[0].get("topic"):
-            logger.info(f"Cluster {cluster_id} already has a topic assigned: {metadatas[0].get('topic')}. Skipping...")
+            logger.info(
+                f"Cluster {cluster_id} already has a topic assigned: {metadatas[0].get('topic')}. Skipping..."
+            )
             label_map[int(cluster_id)] = metadatas[0].get("topic")
             continue
 
@@ -139,6 +143,7 @@ if __name__ == "__main__":
         logger.info(f"Topic updated for cluster {cluster_id}: {topic.content.lower()}")
 
         if not dry_run:
-            chroma_collection.update(ids=ids, metadatas=[{"topic": topic.content.lower()}] * len(ids))
+            chroma_collection.update(
+                ids=ids, metadatas=[{"topic": topic.content.lower()}] * len(ids)
+            )
         label_map[int(cluster_id)] = topic.content.lower()
-

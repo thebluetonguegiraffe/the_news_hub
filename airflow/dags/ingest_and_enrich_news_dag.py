@@ -10,7 +10,7 @@ default_args = {
     "depends_on_past": False,
     "email": ["thebluetonguegiraffe@gmail.com"],
     "email_on_failure": True,
-    "email_on_retry": False
+    "email_on_retry": False,
 }
 
 dag = DAG(
@@ -84,14 +84,21 @@ enrich_with_topic = BashOperator(
 )
 
 notify_success = PythonOperator(
-    task_id='notify_success',
+    task_id="notify_success",
     python_callable=send_email,
     op_kwargs={
         "to_email": "thebluetonguegiraffe@gmail.com",
         "subject": "News ingestion and enrichment Dag Success ✅",
         "body": "Your task finished successfully!",
     },
-    dag=dag
+    dag=dag,
 )
 
-ingest_news_tnyt >> ingest_news_bbc >> ingest_news_guardian >> ingest_news_twp >> enrich_with_topic >> notify_success
+(
+    ingest_news_tnyt
+    >> ingest_news_bbc
+    >> ingest_news_guardian
+    >> ingest_news_twp
+    >> enrich_with_topic
+    >> notify_success
+)

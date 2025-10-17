@@ -35,25 +35,22 @@ class VectorizedDatabase:
         )
 
         today = datetime.now(timezone.utc).replace(hour=23, minute=55, second=0, microsecond=0)
-        
+
         start = today + timedelta(days=time_window[0])
-        start_iso = start.isoformat().replace('+00:00', '.000000')
+        start_iso = start.isoformat().replace("+00:00", ".000000")
         start_ts = datetime.fromisoformat(start_iso).timestamp()
 
         end = today + timedelta(days=time_window[1])
-        end_iso = end.isoformat().replace('+00:00', '.000000')
+        end_iso = end.isoformat().replace("+00:00", ".000000")
         end_ts = datetime.fromisoformat(end_iso).timestamp()
 
         retriever = vectorstore.as_retriever(
-            search_type="similarity", 
+            search_type="similarity",
             search_kwargs={
                 "k": 3,
                 "filter": {
-                    "$and": [
-                        {"timestamp": {"$gte": start_ts}},
-                        {"timestamp": {"$lte": end_ts}}
-                    ]
-                }
-            }
+                    "$and": [{"timestamp": {"$gte": start_ts}}, {"timestamp": {"$lte": end_ts}}]
+                },
+            },
         )
         return retriever

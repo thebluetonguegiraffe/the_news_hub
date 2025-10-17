@@ -51,11 +51,11 @@ if __name__ == "__main__":
     chroma_collection = chroma.get_collection()
 
     start_date = args.date + ":00.000000Z"
-    metadatas = chroma_collection.get(
-        where={"date": start_date}, include=["metadatas"]
-        )["metadatas"]
+    metadatas = chroma_collection.get(where={"date": start_date}, include=["metadatas"])[
+        "metadatas"
+    ]
 
-    topics = [doc.get('topic', "Others").lower() for doc in metadatas]
+    topics = [doc.get("topic", "Others").lower() for doc in metadatas]
     topic_counts = dict(Counter(topics))
 
     if not topics:
@@ -67,12 +67,12 @@ if __name__ == "__main__":
 
     if not dry_run:
         with MongoClient(
-                mongo_configuration["host"],
-                port=mongo_configuration.get("port", 27017),
-                username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),
-                password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"),
-                authSource=mongo_configuration.get("database", "admin"),
-            ) as client:
+            mongo_configuration["host"],
+            port=mongo_configuration.get("port", 27017),
+            username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),
+            password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"),
+            authSource=mongo_configuration.get("database", "admin"),
+        ) as client:
             db = client[mongo_configuration["db"]]
             mongo_collection = db[mongo_configuration["collection"]]
 
@@ -80,10 +80,12 @@ if __name__ == "__main__":
                 model=chat_configuration["model"],
                 model_provider="openai",
                 api_key=os.environ["GITHUB_TOKEN"],
-                base_url="https://models.github.ai/inference"
+                base_url="https://models.github.ai/inference",
             )
-            description_prompt = ChatPromptTemplate.from_messages([("human", topic_description_template)])
-            
+            description_prompt = ChatPromptTemplate.from_messages(
+                [("human", topic_description_template)]
+            )
+
             description_chain = description_prompt | llm_description
 
             for topic, n in topic_counts.items():
@@ -100,13 +102,17 @@ if __name__ == "__main__":
                         {
                             "_id": topic,
                             "description": description,
-                            "topics_per_day": {'date': start_date, "docs_number": n},
+                            "topics_per_day": {"date": start_date, "docs_number": n},
                         }
                     )
                 else:
                     logger.info(f"Description found for: {topic}")
                     mongo_collection.update_one(
                         filter={"_id": topic},
-                        update={"$addToSet": {"topics_per_day": {'date': start_date, "docs_number": n},}},
+                        update={
+                            "$addToSet": {
+                                "topics_per_day": {"date": start_date, "docs_number": n},
+                            }
+                        },
                         upsert=True,
                     )

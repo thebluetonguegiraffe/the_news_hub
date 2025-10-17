@@ -11,7 +11,8 @@ load_dotenv()  # Load environment variables from .env file if needed
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 GMAIL_USER = "thebluetonguegiraffe@gmail.com"
-GMAIL_APP_PASSWORD = os.getenv('GMAIL_PWD')
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_PWD")
+
 
 def send_email(to_email, subject, body, cc=None, bcc=None):
     try:
@@ -44,6 +45,7 @@ def send_email(to_email, subject, body, cc=None, bcc=None):
     except Exception as e:
         print(f"❌ Error sending email: {e}")
         raise
+
 
 # Example usage
 if __name__ == "__main__":
