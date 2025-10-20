@@ -3,7 +3,7 @@ from typing import Dict, List, TypedDict
 from langgraph.graph import StateGraph, START, END
 
 from ingestors.base_ingestor import BaseIngestor
-from src.scrapper import SCRAPPER_MAPPER
+from src.core.scrapper import SCRAPPER_MAPPER
 from src.models.chroma_models import ChromaDoc, Metadata
 
 logging.basicConfig(

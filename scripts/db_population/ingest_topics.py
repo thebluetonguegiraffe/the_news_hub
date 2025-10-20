@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
-from config import db_configuration, project_root, mongo_configuration, chat_configuration
+from config import chroma_configuration, project_root, mongo_configuration, chat_configuration
 
 from langchain.chat_models import init_chat_model
 from langchain.prompts import ChatPromptTemplate
@@ -39,8 +39,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dry_run = args.dry_run
 
-    db_path = db_configuration["db_path"]
-    collection_name = db_configuration["collection_name"]
+    db_path = chroma_configuration["db_path"]
+    collection_name = chroma_configuration["collection_name"]
 
     logger.info("Initializing vectorized database")
     chroma = VectorizedDatabase(

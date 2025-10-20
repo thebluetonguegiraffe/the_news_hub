@@ -2,7 +2,7 @@ from collections import defaultdict
 from dotenv import load_dotenv
 
 import logging
-from config import db_configuration, project_root
+from config import chroma_configuration, project_root
 from src.vectorized_database import VectorizedDatabase
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 if __name__ == "__main__":
 
     load_dotenv()
-    db_path = db_configuration["db_path"]
-    collection_name = db_configuration["collection_name"]
+    db_path = chroma_configuration["db_path"]
+    collection_name = chroma_configuration["collection_name"]
 
     logger.info("Initializing vectorized database")
     db_client = VectorizedDatabase(

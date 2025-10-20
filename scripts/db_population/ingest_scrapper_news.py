@@ -1,7 +1,7 @@
 import asyncio
 
 from ingestors.scrapper_ingestor import ScrapperIngestor
-from src.scrapper import SCRAPPER_MAPPER
+from src.core.scrapper import SCRAPPER_MAPPER
 
 
 if __name__ == "__main__":

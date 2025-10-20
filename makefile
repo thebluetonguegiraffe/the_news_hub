@@ -1,9 +1,6 @@
-run-chroma-server:
-	@echo "Starting ChromaDB in background..."
-	@python db/run_chroma_server.py
 
 run-chroma-client:
-	@chroma browse $(shell python3 -c "from config import db_configuration; print(db_configuration['collection_name'])") --local
+	@chroma browse $(shell python3 -c "from config import chroma_configuration; print(chroma_configuration['collection_name'])") --host http://localhost:8000
 
 run-api:
 	@echo "Starting FastAPI server..."

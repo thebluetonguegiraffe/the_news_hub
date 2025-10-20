@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Dict, List
 import requests
 
-from src.scrapper import BaseScrapper
+from src.core.scrapper import BaseScrapper
 
 
 class FinlightAPIClient:
@@ -67,10 +67,10 @@ if __name__ == "__main__":
     )
 
     image_urls = [
-        "https://static01.nyt.com/images/2021/08/10/business/author-lauren-hirsch/author-lauren-hirsch-thumbLarge-v3.png",
-        "https://static01.nyt.com/images/2023/11/20/reader-center/author-julie-creswell/author-julie-creswell-thumbLarge.png",
+        "https://static01.nyt.com/images/2021/08/10/business/author-lauren-hirsch/author-lauren-hirsch-thumbLarge-v3.png",  # noqa
+        "https://static01.nyt.com/images/2023/11/20/reader-center/author-julie-creswell/author-julie-creswell-thumbLarge.png",  # noqa
     ]
-    article_url = "https://www.ara.cat/internacional/proxim-orient/als-israelians-unics-essers-humans-gaza-son-ostatges-soldats_128_5524640.html"
+    article_url = "https://www.ara.cat/internacional/proxim-orient/als-israelians-unics-essers-humans-gaza-son-ostatges-soldats_128_5524640.html"  # noqa
 
     filtered_list = client.filter_image_urls(image_urls, article_url)
     print(filtered_list)

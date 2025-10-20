@@ -62,7 +62,6 @@ class ChromaDatabase:
         )
 
     def search(self, query: str, top_k: int = 5, chroma_filter: Dict = None) -> List[ChromaDoc]:
-        print(chroma_filter)
         query_results = self.collection.query(
             query_texts=[query],  # ChromaDB will embed this using CustomEmbedder
             n_results=top_k,
@@ -81,16 +80,12 @@ class ChromaDatabase:
         results = self.search(query, top_k=5, chroma_filter=chroma_filter)
         return results
 
-    def search_by_filter(self, chroma_filter: Dict, limit: int = 1):
-        filter_keys = list(chroma_filter.keys())
-        metadata_keys = list(Metadata.model_fields.keys())
+    def search_with_filter(
+        self, chroma_filter: Dict, limit: int = None, include: List = ["documents", "metadatas"]
+    ):
 
-        if all(key in metadata_keys for key in filter_keys):
-            result = self.collection.get(where=chroma_filter, limit=limit)
-            return result
-        else:
-            invalid_keys = [key for key in chroma_filter.keys() if key not in metadata_keys]
-            raise ValueError(f"Invalid metadata fields: {invalid_keys}.")
+        result = self.collection.get(where=chroma_filter, limit=limit, include=include)
+        return result
 
     def list_collections(self) -> list:
         try:

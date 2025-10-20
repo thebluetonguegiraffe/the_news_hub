@@ -5,7 +5,7 @@ from typing import Dict, TypedDict, List
 
 import requests
 from ingestors.base_ingestor import BaseIngestor
-from src.finlight_api_client import FinlightAPIClient
+from src.core.finlight_api_client import FinlightAPIClient
 from src.models.chroma_models import ChromaDoc, Metadata
 
 from langgraph.graph import StateGraph, START, END

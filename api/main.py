@@ -18,7 +18,7 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 from api.api_utils import parse_chroma_results, parse_dict_results
 from scripts.recomender_system.recomender_system import RecommenderSystem
 from src.vectorized_database import VectorizedDatabase
-from config import db_configuration, mongo_configuration, project_root
+from config import chroma_configuration, mongo_configuration, project_root
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -67,11 +67,11 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
 
 
 # Initialize database clients
-chroma_db_path = f".{project_root}db/{db_configuration['db_path']}"
+chroma_db_path = f".{project_root}db/{chroma_configuration['db_path']}"
 
 # Initialize ChromaDB client
 chroma_client = VectorizedDatabase(
-    persist_directory=chroma_db_path, collection_name=db_configuration["collection_name"]
+    persist_directory=chroma_db_path, collection_name=chroma_configuration["collection_name"]
 )
 
 collection = chroma_client.get_collection()

@@ -1,11 +1,11 @@
 from abc import ABC
 import logging
 from typing import Dict
-from src.chroma_database import ChromaDatabase
-from src.translator import GoogleTranslator
+from src.core.chroma_database import ChromaDatabase
+from src.core.translator import GoogleTranslator
 from langgraph.graph import END
 
-from config import db_configuration
+from config import chroma_configuration
 
 
 logging.basicConfig(
@@ -19,14 +19,14 @@ logger = logging.getLogger("base_ingestor")
 class BaseIngestor(ABC):
 
     def __init__(self):
-        self.chroma_db = ChromaDatabase(collection_name=db_configuration["collection_name"])
+        self.chroma_db = ChromaDatabase(collection_name=chroma_configuration["collection_name"])
         self.translator = GoogleTranslator(self.LANGUAGE)
 
     def _is_url_scraped(self, url):
         try:
-            result = self.chroma_db.search_by_filter(chroma_filter={"url": url})
+            result = self.chroma_db.search_with_filter(chroma_filter={"url": url}, limit=1)
             return len(result["ids"]) > 0
-        except:
+        except Exception:
             return False
 
     def translate_documents_node(self, state: Dict) -> Dict:

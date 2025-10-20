@@ -9,11 +9,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-from chroma_database import ChromaDatabase
+from src.core.chroma_database import ChromaDatabase
 
-from config import chat_configuration, db_configuration
+from config import chat_configuration, chroma_configuration
 from src.constants import NUMERIC_TIME_PATTERNS, TIME_EXPRESSIONS
-from src.translator import GoogleTranslator
+from src.core.translator import GoogleTranslator
 from templates.news_templates import Prompts
 
 
@@ -27,7 +27,7 @@ class ChromaRAG:
             api_key=os.getenv("GITHUB_TOKEN"),
             base_url="https://models.github.ai/inference",
         )
-        self.chroma_db = ChromaDatabase(collection_name=db_configuration["collection_name"])
+        self.chroma_db = ChromaDatabase(collection_name=chroma_configuration["collection_name"])
         self.translator = GoogleTranslator()
 
     @classmethod

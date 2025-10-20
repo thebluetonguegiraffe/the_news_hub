@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from src.utils.image_filter import filter_image_url_list
 from src.vectorized_database import VectorizedDatabase
-from config import db_configuration, project_root
+from config import chroma_configuration, project_root
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -74,9 +74,9 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    chroma_db_path = f"{project_root}/db/{db_configuration['db_path']}"
+    chroma_db_path = f"{project_root}/db/{chroma_configuration['db_path']}"
     chroma_client = VectorizedDatabase(
-        persist_directory=chroma_db_path, collection_name=db_configuration["collection_name"]
+        persist_directory=chroma_db_path, collection_name=chroma_configuration["collection_name"]
     )
 
     collection = chroma_client.get_collection()

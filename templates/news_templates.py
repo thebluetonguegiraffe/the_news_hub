@@ -4,10 +4,12 @@ class Prompts:
     RAG_TEMPLATE = """You are an expert news journalist and recommender.
 
     Your task is to:
-        - Write a concise, well-written news-style summary of the information provided in the context.
+        - Write a concise, well-written news-style summary of the information provided
+        in the context.
         - Use a neutral and professional tone, as if writing a short paragraph for a news article.
         - Do not mention that you are summarizing or that the information came from a context.
-        - If the context does not contain any relevant information to answer the question, respond exactly with:
+        - If the context does not contain any relevant information to answer the question, respond
+        exactly with:
         "There is no relevant information about your question this week."
 
         Formatting rules:
@@ -22,7 +24,7 @@ class Prompts:
 
         Answer:
     """
-    topic_categorization_template = """You are a topic classification assistant.
+    TOPIC_CLASSIFICATION_TEMPLATE = """You are a topic classification assistant.
 
     Given the following document, assign it **one** of the following topics:
     {topics}
@@ -33,7 +35,7 @@ class Prompts:
     Topic:
     """
 
-    topic_generation_template = """You are a topic assignor.
+    TOPIC_GENERATION_TEMPLATE = """You are a topic assignor.
 
     Given the following documents, you have to propose a single topic that fits
     the documents content. The topic should be a single word without containing the quote "topic:" .
@@ -41,7 +43,7 @@ class Prompts:
     own topic.
 
     The general topics are:
-    {initial_topics}
+    {cached_topics}
 
     Documents:
     {documents}
@@ -49,7 +51,7 @@ class Prompts:
     Proposed topic:
     """
 
-    topic_description_template = """You are a topic descriptor.
+    TOPIC_DESCRIPTION_TEMPLATE = """You are a topic descriptor.
 
     Given a single topic, you will provide a description of it in 10 words approx.
 
