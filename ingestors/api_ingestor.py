@@ -11,7 +11,7 @@ from src.models.chroma_models import ChromaDoc, Metadata
 from langgraph.graph import StateGraph, START, END
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
@@ -66,6 +66,13 @@ class APIIngestor(BaseIngestor):
         articles_md = []
         for article in articles_raw:
             url = article.get("link")
+            title = article.get("title")
+            summary = article.get("summary")
+
+            if not title or not summary:
+                logger.warning(f"Article at {url} is missing title or summary, skipping.")
+                continue
+
             if not self._is_url_scraped(url):
                 articles_md.append(self.api_client.parse(article, self.end_date))
 
@@ -89,13 +96,14 @@ class APIIngestor(BaseIngestor):
                     image=md.get("image"),
                     source=self.source,
                     published_date=md.get("publish_date"),
+                    ingestion_date=self.end_date
                 ),
             )
             # avoid duplicate docs
             chroma_docs[doc.id] = doc
         self.chroma_db.add_documents(list(chroma_docs.values()))
-        logger.info(
-            f"Total amount of {len(articles_md)} scrapped and stored in ChromaDB from {self.source}"
+        logger.warning(
+            f"Total of {len(articles_md)} docs queried and stored in ChromaDB from {self.source}"
         )
 
     def workflow(self):

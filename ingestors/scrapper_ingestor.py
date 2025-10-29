@@ -40,6 +40,13 @@ class ScrapperIngestor(BaseIngestor):
             for url in article_urls:
                 if not self._is_url_scraped(url):
                     scraped_article = await scrapper.scrape_article(url)
+                    title = scraped_article.get(f"title_{self.LANGUAGE}")
+                    description = scraped_article.get(f"description_{self.LANGUAGE}")
+                    if not title or not description:
+                        logger.warning(
+                            f"Missing title or description in metadata, skipping articleL: {url}"
+                        )
+                        continue
                     articles_md.append(scraped_article)
         return {"articles_md": articles_md}
 
@@ -62,25 +69,28 @@ class ScrapperIngestor(BaseIngestor):
 
         chroma_docs = {}
         for url, md in zip(article_urls, articles_md):
-            doc = ChromaDoc(
-                document=md.get("title_en") + ". " + md.get("description_en"),
-                metadata=Metadata(
-                    url=url,
-                    topic=md.get("topic"),
-                    title=md.get("title_en"),
-                    title_es=md.get("title_es"),
-                    title_ca=md.get("title_ca"),
-                    excerpt=md.get("description_en"),
-                    excerpt_es=md.get("description_es"),
-                    excerpt_ca=md.get("description_ca"),
-                    image=[md.get("og:image")],
-                    source=self.source,
-                    published_date=md.get("article:modified_time"),
-                ),
-            )
-            # avoid duplicate docs
-            chroma_docs[doc.id] = doc
-        self.chroma_db.add_documents(list(chroma_docs.values()))
+            try:
+                doc = ChromaDoc(
+                    document=md.get("title_en") + ". " + md.get("description_en"),
+                    metadata=Metadata(
+                        url=url,
+                        topic=md.get("topic"),
+                        title=md.get("title_en"),
+                        title_es=md.get("title_es"),
+                        title_ca=md.get("title_ca"),
+                        excerpt=md.get("description_en"),
+                        excerpt_es=md.get("description_es"),
+                        excerpt_ca=md.get("description_ca"),
+                        image=[md.get("og:image")],
+                        source=self.source,
+                        published_date=md.get("article:modified_time"),
+                    ),
+                )
+                # avoid duplicate docs
+                chroma_docs[doc.id] = doc
+            except Exception as e:
+                logger.error(f"Error creating ChromaDoc for URL {url}: {e}")
+                continue
         logger.info(f"Total amount of {len(articles_md)} scrapped and stored in ChromaDB")
 
     def workflow(self):

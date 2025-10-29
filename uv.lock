@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -4142,70 +4142,6 @@ wheels = [
 ]
 
 [[package]]
-name = "news-rs"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "apache-airflow", extra = ["amazon", "celery", "cncf-kubernetes", "google"] },
-    { name = "apache-airflow-providers-smtp" },
-    { name = "bs4" },
-    { name = "chromadb" },
-    { name = "crawl4ai" },
-    { name = "flask-appbuilder" },
-    { name = "langchain" },
-    { name = "langchain-chroma" },
-    { name = "langchain-openai" },
-    { name = "langgraph" },
-    { name = "openai" },
-    { name = "playwright" },
-    { name = "pymongo" },
-    { name = "pytest" },
-    { name = "requests" },
-    { name = "scikit-learn" },
-    { name = "textblob" },
-]
-
-[package.optional-dependencies]
-api = [
-    { name = "fastapi" },
-    { name = "pydantic" },
-    { name = "uvicorn" },
-]
-dev = [
-    { name = "ipykernel" },
-    { name = "matplotlib" },
-    { name = "scikit-learn" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "apache-airflow", extras = ["amazon", "celery", "cncf-kubernetes", "google"], specifier = ">=3.0.4" },
-    { name = "apache-airflow-providers-smtp", specifier = ">=2.2.0" },
-    { name = "bs4", specifier = ">=0.0.2" },
-    { name = "chromadb", specifier = ">=1.0.15" },
-    { name = "crawl4ai", specifier = ">=0.7.4" },
-    { name = "fastapi", marker = "extra == 'api'", specifier = ">=0.104.1" },
-    { name = "flask-appbuilder", specifier = ">=4.8.1" },
-    { name = "ipykernel", marker = "extra == 'dev'" },
-    { name = "langchain", specifier = ">=0.3.27" },
-    { name = "langchain-chroma", specifier = ">=0.2.5" },
-    { name = "langchain-openai", specifier = ">=0.3.33" },
-    { name = "langgraph", specifier = ">=0.6.10" },
-    { name = "matplotlib", marker = "extra == 'dev'" },
-    { name = "openai", specifier = ">=1.98.0" },
-    { name = "playwright", specifier = ">=1.54.0" },
-    { name = "pydantic", marker = "extra == 'api'", specifier = ">=2.0.0" },
-    { name = "pymongo", specifier = ">=4.14.1" },
-    { name = "pytest", specifier = ">=8.4.1" },
-    { name = "requests", specifier = ">=2.32.4" },
-    { name = "scikit-learn", specifier = ">=1.7.1" },
-    { name = "scikit-learn", marker = "extra == 'dev'" },
-    { name = "textblob", specifier = ">=0.19.0" },
-    { name = "uvicorn", marker = "extra == 'api'", specifier = ">=0.24.0" },
-]
-provides-extras = ["dev", "api"]
-
-[[package]]
 name = "nltk"
 version = "3.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -6515,6 +6451,70 @@ sdist = { url = "https://files.pythonhosted.org/packages/d6/6b/32bb58c65991f91ae
 wheels = [
     { url = "https://files.pythonhosted.org/packages/11/3d/2653f4cf49660bb44eeac8270617cc4c0287d61716f249f55053f0af0724/tf_playwright_stealth-1.2.0-py3-none-any.whl", hash = "sha256:26ee47ee89fa0f43c606fe37c188ea3ccd36f96ea90c01d167b768df457e7886", size = 33151, upload-time = "2025-06-13T04:51:03.769Z" },
 ]
+
+[[package]]
+name = "the-news-hub"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "apache-airflow", extra = ["amazon", "celery", "cncf-kubernetes", "google"] },
+    { name = "apache-airflow-providers-smtp" },
+    { name = "bs4" },
+    { name = "chromadb" },
+    { name = "crawl4ai" },
+    { name = "flask-appbuilder" },
+    { name = "langchain" },
+    { name = "langchain-chroma" },
+    { name = "langchain-openai" },
+    { name = "langgraph" },
+    { name = "openai" },
+    { name = "playwright" },
+    { name = "pymongo" },
+    { name = "pytest" },
+    { name = "requests" },
+    { name = "scikit-learn" },
+    { name = "textblob" },
+]
+
+[package.optional-dependencies]
+api = [
+    { name = "fastapi" },
+    { name = "pydantic" },
+    { name = "uvicorn" },
+]
+dev = [
+    { name = "ipykernel" },
+    { name = "matplotlib" },
+    { name = "scikit-learn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "apache-airflow", extras = ["amazon", "celery", "cncf-kubernetes", "google"], specifier = ">=3.0.4" },
+    { name = "apache-airflow-providers-smtp", specifier = ">=2.2.0" },
+    { name = "bs4", specifier = ">=0.0.2" },
+    { name = "chromadb", specifier = ">=1.0.15" },
+    { name = "crawl4ai", specifier = ">=0.7.4" },
+    { name = "fastapi", marker = "extra == 'api'", specifier = ">=0.104.1" },
+    { name = "flask-appbuilder", specifier = ">=4.8.1" },
+    { name = "ipykernel", marker = "extra == 'dev'" },
+    { name = "langchain", specifier = ">=0.3.27" },
+    { name = "langchain-chroma", specifier = ">=0.2.5" },
+    { name = "langchain-openai", specifier = ">=0.3.33" },
+    { name = "langgraph", specifier = ">=0.6.10" },
+    { name = "matplotlib", marker = "extra == 'dev'" },
+    { name = "openai", specifier = ">=1.98.0" },
+    { name = "playwright", specifier = ">=1.54.0" },
+    { name = "pydantic", marker = "extra == 'api'", specifier = ">=2.0.0" },
+    { name = "pymongo", specifier = ">=4.14.1" },
+    { name = "pytest", specifier = ">=8.4.1" },
+    { name = "requests", specifier = ">=2.32.4" },
+    { name = "scikit-learn", specifier = ">=1.7.1" },
+    { name = "scikit-learn", marker = "extra == 'dev'" },
+    { name = "textblob", specifier = ">=0.19.0" },
+    { name = "uvicorn", marker = "extra == 'api'", specifier = ">=0.24.0" },
+]
+provides-extras = ["dev", "api"]
 
 [[package]]
 name = "threadpoolctl"

@@ -1,6 +1,6 @@
 project_root = "./"
 
-chroma_configuration = {"db_path": "news_v2", "collection_name": "news"}
+chroma_configuration = {"collection_name": "news"}
 
 mongo_configuration = {
     "host": "mongodb://localhost:27017/",

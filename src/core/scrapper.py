@@ -77,7 +77,7 @@ class AraScrapper(BaseScrapper):
 class VanguardiaScrapper(BaseScrapper):
     STOP_WORDS = ["calculadoras", "videos", "juegos", "comprar", "sorteos"]
     VALID_URL_MAX_TOKENS = 4
-    LANGUAGE = "ca"
+    LANGUAGE = "es"
 
 
 SCRAPPER_MAPPER = {

@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    parser = argparse.ArgumentParser(description="Ask a question to the news recommender system.")
+    parser = argparse.ArgumentParser(description="API news ingestion script")
     parser.add_argument(
         "-d",
         "--date",

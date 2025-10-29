@@ -2,7 +2,7 @@
 set -e
 
 # Make sure we're in the right directory
-cd ~/the_news_hub/news_rs
+cd ~/the_news_hub
 
 export GMAIL_PWD=$(grep '^GMAIL_PWD=' "$(pwd)/.env" | cut -d '=' -f2-)
 export GMAIL_PWD_NO_SPACES=$(grep '^GMAIL_PWD_NO_SPACES=' "$(pwd)/.env" | cut -d '=' -f2-)
@@ -14,7 +14,7 @@ echo "Setting AIRFLOW_HOME to $AIRFLOW_HOME"
 export AIRFLOW__CORE__DAGS_FOLDER=$AIRFLOW_HOME/dags
 echo "Setting AIRFLOW__CORE__DAGS_FOLDER to $AIRFLOW__CORE__DAGS_FOLDER"
 
-export AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////home/ubuntu/the_news_hub/news_rs/airflow/airflow.db
+export AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////home/ubuntu/the_news_hub/airflow/airflow.db
 export AIRFLOW__CORE__LOAD_EXAMPLES=False
 
 # Verify the configuration is correct

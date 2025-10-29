@@ -9,7 +9,7 @@ from config import chroma_configuration
 
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
@@ -39,6 +39,9 @@ class BaseIngestor(ABC):
             title = md.get(f"title_{self.LANGUAGE}")
             description = md.get(f"description_{self.LANGUAGE}")
 
+            if not title or not description:
+                logger.warning("Missing title or description in metadata, skipping translation.")
+
             for language in self.dest_lang:
                 md[f"title_{language}"] = self.translator.translate(title, target_lang=language)
                 md[f"description_{language}"] = self.translator.translate(
@@ -50,6 +53,7 @@ class BaseIngestor(ABC):
     def finish_graph(self, state: Dict) -> Dict:
         articles_md = state["articles_md"]
         if not articles_md:
-            logger.info("No new documents to ingest")
+            logger.warning(f"No new documents to ingest in {self.source}, ending workflow.")
             return END
+        logger.warning(f"{len(articles_md)} new documents to ingest for {self.source}")
         return "articles_translator"

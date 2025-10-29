@@ -37,6 +37,8 @@ class FinlightAPIClient:
 
         scrapper = BaseScrapper()
         image = scrapper.scrape_image_sync(article_url)
+        if not image:
+            return []
         return [image]
 
     @classmethod

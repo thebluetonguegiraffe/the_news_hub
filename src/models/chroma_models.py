@@ -16,11 +16,12 @@ class Metadata(BaseModel):
     image: List[str]
     source: str
     published_date: Optional[datetime] = None
-    ingestion_date: Optional[datetime] = None
+    ingestion_date: datetime = None
+    modification_date: Optional[datetime] = None
     timestamp: Optional[float] = None
 
     def to_metadata_dict(self) -> dict:
-        ingestion_date = datetime.combine(datetime.today().date(), time(23, 55, 0))
+        modification_date = datetime.combine(datetime.today().date(), time(23, 55, 0))
         data = {
             "url": self.url,
             "topic": self.topic or "",  # API articles do not contain topic
@@ -37,8 +38,9 @@ class Metadata(BaseModel):
                 if self.published_date
                 else None
             ),
-            "ingestion_date": ingestion_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
-            "timestamp": ingestion_date.timestamp(),
+            "ingestion_date": self.ingestion_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+            "modification_date": modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+            "timestamp": modification_date.timestamp(),
         }
         return data
 

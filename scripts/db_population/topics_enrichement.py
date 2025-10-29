@@ -39,10 +39,10 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    start_date = args.date + ":00.000000Z"
+    start_date = args.date + ":00.000Z"
 
     topics_descriptor = TopicsEnricher()
     topics_descriptor.clusterize_topics(
         date=start_date, dry_run=args.dry_run, overwrite=args.overwrite
     )
-    topics_descriptor.populate_topics_database(date="2025-10-17T23:55:00.000Z")
+    topics_descriptor.populate_topics_database(date=start_date, dry_run=args.dry_run)

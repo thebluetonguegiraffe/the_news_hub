@@ -33,8 +33,8 @@ class TopicsEnricher:
         self.mongo = CustomMongoClient
         self.cached_topics = self.retrieve_cached_topics()
 
-    def clusterize_topics(self, date: str, dry_run: bool = False, force: bool = False):
-        if force:
+    def clusterize_topics(self, date: str, dry_run: bool = False, overwrite: bool = False):
+        if overwrite:
             chroma_filter = {"ingestion_date": date}
         else:
             # only docs that have no topic
