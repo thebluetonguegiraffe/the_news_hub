@@ -1,6 +1,6 @@
 import asyncio
 
-from ingestors.scrapper_ingestor import ScrapperIngestor
+from src.ingestors.scrapper_ingestor import ScrapperIngestor
 from src.core.scrapper import SCRAPPER_MAPPER
 
 

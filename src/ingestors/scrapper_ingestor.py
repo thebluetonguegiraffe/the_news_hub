@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List, TypedDict
 from langgraph.graph import StateGraph, START, END
 
-from ingestors.base_ingestor import BaseIngestor
+from src.ingestors.base_ingestor import BaseIngestor
 from src.core.scrapper import SCRAPPER_MAPPER
 from src.models.chroma_models import ChromaDoc, Metadata
 
@@ -121,4 +121,3 @@ class ScrapperIngestor(BaseIngestor):
         workflow = self.workflow()
         state = await workflow.ainvoke({})
         return state
-

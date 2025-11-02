@@ -3,7 +3,7 @@ from datetime import datetime
 import logging
 from dotenv import load_dotenv
 
-from ingestors.api_ingestor import APIIngestor
+from src.ingestors.api_ingestor import APIIngestor
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
