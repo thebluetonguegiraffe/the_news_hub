@@ -45,6 +45,10 @@ class TopicsRetriever:
         self.from_date = from_date.replace(tzinfo=timezone.utc)
         self.to_date = to_date.replace(tzinfo=timezone.utc)
 
+        # get full date range
+        self.from_date = self.from_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        self.to_date = self.to_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+
         with self.mongo() as client:
             db = client[mongo_configuration["db"]]
             mongo_collection = db[mongo_configuration["collection"]]
@@ -53,8 +57,8 @@ class TopicsRetriever:
                     "topics_per_day": {
                         "$elemMatch": {
                             "date": {
-                                "$gte": from_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
-                                "$lte": to_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+                                "$gte": self.from_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+                                "$lte": self.to_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
                             },
                             "docs_number": {"$gt": 0}
                         }

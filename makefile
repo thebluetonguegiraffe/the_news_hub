@@ -6,7 +6,7 @@ run-api-dev:
 	@echo "Starting FastAPI server..."
 	PYTHONPATH=$(PWD) uvicorn api.main:app --host 0.0.0.0 --port 7001 --reload
 
-run-api:
+deploy-api:
 	cd api && docker compose up --build -d
 
 run-frontend-dev:

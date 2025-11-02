@@ -15,7 +15,7 @@ def get_articles_retriever():
 @router.get("/")
 async def get_articles(
     range_date: RangeDate = Depends(),
-    limit: int = Query(default=10, ge=1, le=100, description="Number of articles to return"),
+    limit: int = Query(default=100, ge=1, le=100, description="Number of articles to return"),
     retriever: ArticlesRetriever = Depends(get_articles_retriever),
     # token_data: dict = Depends(verify_token)
 ):

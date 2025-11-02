@@ -75,7 +75,7 @@ class ChromaRAG:
         question = inputs["question"]
         context = inputs["context"]
         context_docs = (
-            "\n\n".join([f"- {doc.document}" for doc in context])
+            "\n\n".join([f"- {doc['document']}" for doc in context])
             if context
             else "No relevant documents found."
         )

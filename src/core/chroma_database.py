@@ -4,7 +4,7 @@ from typing import Dict, List
 from openai import OpenAI
 from chromadb import Documents, EmbeddingFunction, HttpClient, Embeddings
 
-from src.models.chroma_models import ChromaDoc, Metadata
+from src.models.chroma_models import ChromaDoc
 
 
 class CustomEmbedder(EmbeddingFunction):
@@ -67,7 +67,7 @@ class ChromaDatabase:
             metadatas=documents["metadatas"],
         )
 
-    def search(self, query: str, top_k: int = 5, chroma_filter: Dict = None) -> List[ChromaDoc]:
+    def search(self, query: str, top_k: int = 5, chroma_filter: Dict = None) -> List[Dict]:
         query_results = self.collection.query(
             query_texts=[query],  # ChromaDB will embed this using CustomEmbedder
             n_results=top_k,
@@ -77,14 +77,13 @@ class ChromaDatabase:
         for _id, doc, metadata in zip(
             query_results["ids"][0], query_results["documents"][0], query_results["metadatas"][0]
         ):
-            metadata["image"] = metadata["image"].split(",") if metadata.get("image") else []
-            doc = ChromaDoc(id=_id, document=doc, metadata=Metadata(**metadata))
+            doc = {"id": _id, "document": doc, "metadata": metadata}
             results.append(doc)
         return results
 
     def search_with_filter(
         self, chroma_filter: Dict, limit: int = None, include: List = ["documents", "metadatas"]
-    ):
+    ) -> List[Dict]:
         if chroma_filter and any(chroma_filter.values()):
             result = self.collection.get(where=chroma_filter, limit=limit, include=include)
         else:

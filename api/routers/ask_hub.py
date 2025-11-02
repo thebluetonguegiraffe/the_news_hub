@@ -35,9 +35,9 @@ async def news_rs_by_question(
 
     results = defaultdict(list)
     for context in response["context"]:
-        results["ids"].append(context.id)
-        results["documents"].append(context.document)
-        results["metadatas"].append(context.metadata)
+        results["ids"].append(context['id'])
+        results["documents"].append(context['document'])
+        results["metadatas"].append(context['metadata'])
 
     parsed_articles = retriever.parse_chroma_results(results)
 
