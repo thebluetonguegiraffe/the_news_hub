@@ -61,6 +61,12 @@ class ChromaDatabase:
             metadatas=d.metadata.to_dict(),
         )
 
+    def update_documents(self, documents: Dict):
+        self.collection.update(
+            ids=documents["ids"],
+            metadatas=documents["metadatas"],
+        )
+
     def search(self, query: str, top_k: int = 5, chroma_filter: Dict = None) -> List[ChromaDoc]:
         query_results = self.collection.query(
             query_texts=[query],  # ChromaDB will embed this using CustomEmbedder
@@ -83,7 +89,10 @@ class ChromaDatabase:
     def search_with_filter(
         self, chroma_filter: Dict, limit: int = None, include: List = ["documents", "metadatas"]
     ):
-        result = self.collection.get(where=chroma_filter, limit=limit, include=include)
+        if chroma_filter and any(chroma_filter.values()):
+            result = self.collection.get(where=chroma_filter, limit=limit, include=include)
+        else:
+            result = self.collection.get(limit=limit, include=include)
         return result
 
     def list_collections(self) -> list:

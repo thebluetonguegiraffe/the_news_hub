@@ -4,8 +4,8 @@ import logging
 
 from dotenv import load_dotenv
 
-from config import chroma_configuration, project_root
-from src.vectorized_database import VectorizedDatabase
+from config import chroma_configuration
+from src.core.chroma_database import ChromaDatabase
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def parse_filter(value: str) -> dict:
 if __name__ == "__main__":
 
     load_dotenv()
-    parser = argparse.ArgumentParser(description="Ask a question to the news recommender system.")
+    parser = argparse.ArgumentParser(description="Run script tp modify ChromaDB fields")
     parser.add_argument(
         "--field",
         required=True,
@@ -50,6 +50,11 @@ if __name__ == "__main__":
         type=parse_filter,
     )
     parser.add_argument(
+        "--limit",
+        required=False,
+        type=parse_filter,
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Run the script without updating the database.",
@@ -61,32 +66,23 @@ if __name__ == "__main__":
     runnable = eval(args.runnable) if args.runnable else None
     field = args.new_field or args.field
 
-    db_path = chroma_configuration["db_path"]
-    collection_name = chroma_configuration["collection_name"]
+    chroma_db = ChromaDatabase(collection_name=chroma_configuration["collection_name"])
 
-    logger.info("Initializing vectorized database")
-    db_client = VectorizedDatabase(
-        persist_directory=f"{project_root}/db/{db_path}", collection_name=collection_name
-    )
-
-    collection = db_client.get_collection()
-    docs = collection.get(
+    docs = chroma_db.search_with_filter(
         include=["metadatas"],
-        where=filter_dict,
-        # limit=1
+        chroma_filter=filter_dict,
+        limit=args.limit if args.limit else None
     )
 
     n_docs = len(docs["metadatas"])
 
     for i, metadata in enumerate(docs["metadatas"]):
-        field_to_modify = metadata[args.field]
-        result = runnable(field_to_modify) if runnable else args.value
+        old_field_value = metadata[args.field]
+        # modify runnable(field to get data) if necessary
+        result = runnable(metadata) if runnable else args.value
         docs["metadatas"][i][field] = result
-        logger.info(f"Updated {field} from {field_to_modify} to {result}")
+        logger.info(f"Updated {field} from {old_field_value} to {result}")
 
     if not args.dry_run:
-        collection.update(
-            ids=docs["ids"],
-            metadatas=docs["metadatas"],
-        )
+        chroma_db.update_documents(docs)
         logger.info(f"{n_docs} updated in Chroma DB.")
