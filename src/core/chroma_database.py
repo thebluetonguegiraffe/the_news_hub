@@ -51,14 +51,14 @@ class ChromaDatabase:
         self.collection.add(
             documents=[d.document for d in documents],
             ids=[str(d.id) for d in documents],
-            metadatas=[d.metadata.to_metadata_dict() for d in documents],
+            metadatas=[d.metadata.to_dict() for d in documents],
         )
 
     def add_document(self, d: ChromaDoc):
         self.collection.add(
             documents=d.document,
             ids=str(d.id),
-            metadatas=d.metadata.to_metadata_dict(),
+            metadatas=d.metadata.to_dict(),
         )
 
     def search(self, query: str, top_k: int = 5, chroma_filter: Dict = None) -> List[ChromaDoc]:
@@ -83,7 +83,6 @@ class ChromaDatabase:
     def search_with_filter(
         self, chroma_filter: Dict, limit: int = None, include: List = ["documents", "metadatas"]
     ):
-
         result = self.collection.get(where=chroma_filter, limit=limit, include=include)
         return result
 

@@ -20,7 +20,7 @@ class Metadata(BaseModel):
     modification_date: Optional[datetime] = None
     timestamp: Optional[float] = None
 
-    def to_metadata_dict(self) -> dict:
+    def to_dict(self) -> dict:
         modification_date = datetime.combine(datetime.today().date(), time(23, 55, 0))
         data = {
             "url": self.url,
@@ -40,7 +40,7 @@ class Metadata(BaseModel):
             ),
             "ingestion_date": self.ingestion_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
             "modification_date": modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
-            "timestamp": modification_date.timestamp(),
+            "timestamp": self.ingestion_date.timestamp(),
         }
         return data
 
