@@ -1,6 +1,5 @@
 from collections import defaultdict
 from typing import Dict, List
-from dotenv import load_dotenv
 from fastapi import APIRouter
 from fastapi.params import Depends
 from pydantic import BaseModel
@@ -31,7 +30,6 @@ async def news_rs_by_question(
     retriever: ArticlesRetriever = Depends(get_articles_retriever),
     # token_data: dict = Depends(verify_token)
 ):
-    load_dotenv()
     rag = ChromaRAG()
     response = rag.run(input_question=payload.question)
 

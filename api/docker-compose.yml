@@ -1,0 +1,15 @@
+# api-compose.yml tells Docker how to run that image
+
+services:
+  fastapi:
+    build:
+        context: ..
+        dockerfile: api/Dockerfile
+    container_name: the_news_hub_api
+    network_mode: "host"
+    restart: unless-stopped
+    volumes:
+      - ./api:/app
+networks:
+  db_default:
+    external: true
