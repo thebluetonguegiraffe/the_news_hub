@@ -108,7 +108,7 @@ const HotTopicsSection = () => {
 
       try {
         const response = await fetch(
-          `${API_URL}/topics/?from=${fromDate}&to=${toDate}`,
+          `${API_URL}/topics?from_date=${fromDate}&to_date=${toDate}`,
           {
             method: "GET",
             headers: DEFAULT_HEADERS,
