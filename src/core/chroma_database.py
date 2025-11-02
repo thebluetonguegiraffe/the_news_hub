@@ -82,10 +82,6 @@ class ChromaDatabase:
             results.append(doc)
         return results
 
-    def retrieve(self, query: str, chroma_filter: Dict = None) -> List[ChromaDoc]:
-        results = self.search(query, top_k=5, chroma_filter=chroma_filter)
-        return results
-
     def search_with_filter(
         self, chroma_filter: Dict, limit: int = None, include: List = ["documents", "metadatas"]
     ):

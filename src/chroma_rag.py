@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 import os
 import re
 from typing import Dict
+from dotenv import load_dotenv
 from langchain_core.runnables import RunnableLambda
 
 from langchain.chat_models import init_chat_model
@@ -96,7 +97,7 @@ class ChromaRAG:
 
         chain = {
             "context": RunnableLambda(
-                lambda q: self.chroma_db.retrieve(q, chroma_filter=time_window_filter)
+                lambda q: self.chroma_db.search(q, chroma_filter=time_window_filter)
             ),
             "question": RunnablePassthrough(),
         } | RunnableLambda(self.run_llm_with_context)
@@ -110,6 +111,7 @@ class ChromaRAG:
 
 
 if __name__ == "__main__":
+    load_dotenv()
     rag = ChromaRAG()
     # answer = rag_pipeline.invoke("What has happened today regarding the BBVA OPA?")
     result = rag.run("Que ha passat avui amb Pfizer?")
