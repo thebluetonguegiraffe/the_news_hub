@@ -4,13 +4,7 @@ run-chroma-client:
 
 run-api:
 	@echo "Starting FastAPI server..."
-	@cd api && uvicorn main:app --host 0.0.0.0 --port 7000 --reload
-
-test-api: # TO DO: move to general test
-	@echo "Testing API endpoints..."
-	@python api/test_api.py
-
-.PHONY: start stop
+	PYTHONPATH=$(PWD) uvicorn api.main:app --host 0.0.0.0 --port 7000 --reload
 
 run-frontend-dev:
 	@cd dashboard && npm run dev
