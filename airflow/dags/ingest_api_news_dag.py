@@ -1,7 +1,6 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.providers.standard.operators.bash import BashOperator
-
 from airflow.providers.standard.operators.python import PythonOperator
 
 from src.utils.mail_sender import send_email
@@ -15,11 +14,24 @@ default_args = {
 }
 
 dag = DAG(
-    "test_dag",
+    "ingest_api_news_dag",
     default_args=default_args,
+    description="DAG for API news ingestion",
+    schedule="55 23 * * *",  # Run every day at 23:55
     start_date=datetime(2025, 8, 1),
     catchup=False,
-    tags=["test"],
+    tags=["ingestion", "news"],
+)
+
+ingest_news = BashOperator(
+    task_id="ingest_api_news",
+    bash_command=(
+        "cd /home/ubuntu/the_news_hub/ && "
+        "export PYTHONPATH=. && "
+        "python scripts/db_population/ingest_api_news.py "
+        "--date {{  ds  }}T23:55"
+    ),
+    dag=dag,
 )
 
 notify_success = PythonOperator(
@@ -27,18 +39,13 @@ notify_success = PythonOperator(
     python_callable=send_email,
     op_kwargs={
         "to_email": "thebluetonguegiraffe@gmail.com",
-        "subject": "Test email ✅",
+        "subject": "API News ingestion Dag Success ✅",
         "body": "Your task finished successfully!",
     },
     dag=dag,
 )
 
-
-failed_task = BashOperator(
-    task_id="failed_task",
-    bash_command=("shs"),
-    email_on_failure=True,
-    dag=dag,
+(
+    ingest_news
+    >> notify_success
 )
-
-notify_success >> failed_task

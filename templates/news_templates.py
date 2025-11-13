@@ -1,82 +1,76 @@
-rag_rs_template = """You are a news recommender system.
+class Prompts:
+    """Collection of prompts for analyzing news articles."""
 
-Your task is to:
-- Provide a brief summary of the provided context. Do not mention it is a summary, you should act as a journalist
-- Return a bullet list of the URLs found in the context. If you came to the conclusion that the
- context is not related to the
-question, do not add the bullet list and reply using the following structure:
-"There is no relevant information about your question this week".
+    RAG_TEMPLATE = """You are an expert news journalist and recommender.
 
-Format the output as a dictionary with "summary" and "articles" as keys.
-Respond in strict JSON format with a 'summary' string, an array of 'articles' dict. Those dicts
- should contain:
-    - chroma_id
-    - date
-    - topic
-    - source
-    - url
-    - image
-    - excerpt
-    - title
-No markdown or extra formatting."
+    Your task is to:
+        - Write a concise, well-written news-style summary of the information provided
+        in the context.
+        - Use a neutral and professional tone, as if writing a short paragraph for a news article.
+        - Do not mention that you are summarizing or that the information came from a context.
+        - If the context does not contain any relevant information to answer the question, respond
+        exactly with:
+        "There is no relevant information about your question this week."
 
+        Formatting rules:
+        - Do not use markdown, bullet points, or headings.
+        - Respond in plain text, as natural news prose.
 
-Context:
-{context}
+        Context:
+        {context}
 
-Question:
-{question}
+        Question:
+        {question}
 
-Answer:
-"""
+        Answer:
+    """
+    TOPIC_CLASSIFICATION_TEMPLATE = """You are a topic classification assistant.
 
-topic_categorization_template = """You are a topic classification assistant.
+    Given the following document, assign it **one** of the following topics:
+    {topics}
 
-Given the following document, assign it **one** of the following topics:
-{topics}
+    Document:
+    {document}
 
-Document:
-{document}
+    Topic:
+    """
 
-Topic:
-"""
+    TOPIC_GENERATION_TEMPLATE = """You are a topic assignor.
 
-topic_generation_template = """You are a topic assignor.
+    Given the following documents, you have to propose a single topic that fits
+    the documents content. The topic should be a single word without containing the quote "topic:" .
+    You should try to propose the following general topics but if you can not, you can propose your
+    own topic.
 
-Given the following documents, you have to propose a single topic that fits
-the documents content. The topic should be a single word without containing the quote "topic:" .
-You should try to propose the following general topics but if you can not, you can propose your
-own topic.
+    The general topics are:
+    {cached_topics}
 
-The general topics are:
-{initial_topics}
+    Documents:
+    {documents}
 
-Documents:
-{documents}
+    Proposed topic:
+    """
 
-Proposed topic:
-"""
+    TOPIC_DESCRIPTION_TEMPLATE = """You are a topic descriptor.
 
-topic_description_template = """You are a topic descriptor.
+    Given a single topic, you will provide a description of it in 10 words approx.
 
-Given a single topic, you will provide a description of it in 10 words approx.
+    Topic:
+    {topic}
 
-Topic:
-{topic}
+    Proposed description:
+    """
 
-Proposed description:
-"""
+    asked_frecuency_template = """You are a linguistic expert.
 
-asked_frecuency_template = """You are a linguistic expert.
+    You should determined the time window descrived by the user in the input question.
+    Examples
+    - What has happen during this week? -> 7
+    - What has happen today? ->  1
+    If you are not sure of the anwser, say 0
 
-You should determined the time window descrived by the user in the input question.
-Examples
-- What has happen during this week? -> 7
-- What has happen today? ->  1
-If you are not sure of the anwser, say 0
+    Question:
+    {question}
 
-Question:
-{question}
-
-time_window:
-"""
+    time_window:
+    """

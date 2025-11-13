@@ -110,7 +110,7 @@ export default function ArticlePage() {
       if (!topicName) return;
         setLoading(true);
         try {
-          const response = await fetch(`${API_URL}/articles/${topicName}?from=${fromDate}&to=${toDate}`, {
+          const response = await fetch(`${API_URL}/articles/${topicName}?from_date=${fromDate}&to_date=${toDate}`, {
             method: "GET",
             headers: DEFAULT_HEADERS,
           });
@@ -120,7 +120,19 @@ export default function ArticlePage() {
           }
    
           const data = await response.json();
-          setArticles(data.articles || []);
+
+          const transformedArticles = data.articles.map((item: any) => ({
+            id: item.id,
+            title: item.metadata.title,
+            excerpt: item.metadata.excerpt,
+            topic: item.metadata.topic,
+            source: item.metadata.source,
+            date: item.metadata.published_date,
+            image: item.metadata.image?.split(',').map((url: string) => url.trim()) || [], 
+            url: item.metadata.url
+          }));
+
+          setArticles(transformedArticles || []);
    
         } catch (error) {
           console.error("Error fetching search results:", error);

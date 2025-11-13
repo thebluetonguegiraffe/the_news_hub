@@ -194,7 +194,7 @@ export default function LatestNewsPage() {
   const retrieve_news = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/latest_news`, {
+      const response = await fetch(`${API_URL}/articles`, {
         method: "GET",
         headers: DEFAULT_HEADERS,
       });
@@ -204,7 +204,19 @@ export default function LatestNewsPage() {
       }
 
       const data = await response.json();
-      setArticles(data.articles || []);
+
+      const transformedArticles = data.articles.map((item: any) => ({
+        id: item.id,
+        title: item.metadata.title,
+        excerpt: item.metadata.excerpt,
+        topic: item.metadata.topic,
+        source: item.metadata.source,
+        date: item.metadata.published_date,
+        image: item.metadata.image?.split(',').map((url: string) => url.trim()) || [], 
+        url: item.metadata.url
+      }));
+
+      setArticles(transformedArticles || []);
 
     } catch (error) {
       console.error("Error fetching search results:", error);

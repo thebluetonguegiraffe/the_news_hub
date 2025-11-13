@@ -3,11 +3,13 @@
 import { API_URL, DEFAULT_HEADERS } from "../config";
 
 import { useState } from "react";
-import { MessageSquare, Bot, Zap, Send, Brain, Search, Clock, MessageCircle, ExternalLink, AlignCenter, SquareArrowOutUpRight } from "lucide-react";
+import { MessageSquare, Bot, Zap, Send, Brain, Search, Clock, MessageCircle, ExternalLink, AlignCenter, SquareArrowOutUpRight, Newspaper } from "lucide-react";
 import NavigationBar from "../components/NavigationBar";
 import Footer from "../components/Footer";
 import { Article, getDaysFromDate } from "../components/Articles";
 import { useLanguage } from "../contexts/LanguageContext";
+
+import RobustImageComponent from "../components/RobustImage";
 
 const HeroSection = ({
   onSearch,
@@ -125,9 +127,12 @@ const SearchResults = ({ query, summary, articles, isLoading }: { query: string;
     );
   }
 
-  if (articles.length === 0) return null;
+  const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>({});
+  const handleImageError = (id: number) => {
+    setImageErrors(prev => ({ ...prev, [id]: true }));
+  };
 
-  console.log("Articles:", articles);
+  if (articles.length === 0) return null;
 
   return (
     <section className="py-16 bg-muted/30">
@@ -157,16 +162,23 @@ const SearchResults = ({ query, summary, articles, isLoading }: { query: string;
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {articles.map((article) => (
             <div key={article.id} className="bg-card border border-border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <div className="aspect-video relative overflow-hidden">
-                <img 
-                  src={article.image} 
-                  alt={article.title}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "https://via.placeholder.com/400x250?text=News";
-                  }}
-                />
+              <div className="aspect-video relative overflow-hidden"  >
+                {imageErrors[article.id] ? (
+                    <div className="w-full h-full bg-gradient-to-br from-[#f7c873]/20 to-[#f7c873]/10 flex items-center justify-center">
+                      <Newspaper className="w-12 h-12 text-[#f7c873]" />
+                    </div>
+                  ) : (
+                  <RobustImageComponent
+                    images={article.image}
+                    alt={article.title}
+                    className="w-full h-full object-cover"
+                    fallback={
+                      <div className="w-full h-full bg-gradient-to-br from-[#f7c873]/20 to-[#f7c873]/10 flex items-center justify-center">
+                        <Newspaper className="w-12 h-12 text-[#f7c873]" />
+                      </div>
+                    }
+                  />
+                )}
                 <div className="absolute top-4 left-4">
                   <span className="px-3 py-1 bg-[#f7c873] text-[#1a2238] text-xs font-semibold rounded-full">
                     {article.topic}
@@ -328,7 +340,7 @@ export default function AIPage() {
       setIsLoading(true);
 
       try {
-        const response = await fetch(`${API_URL}/question`, {
+        const response = await fetch(`${API_URL}/ask_hub`, {
           method: "POST",
           headers: DEFAULT_HEADERS,
           body: JSON.stringify({ question: query }),
@@ -339,7 +351,19 @@ export default function AIPage() {
         }
 
         const data = await response.json();
-        setArticles(data.articles || []);
+        const transformedArticles = data.articles.map((item: any) => ({
+          id: item.id,
+          title: item.metadata.title,
+          excerpt: item.metadata.excerpt,
+          topic: item.metadata.topic,
+          source: item.metadata.source,
+          date: item.metadata.published_date,
+          image: item.metadata.image?.split(',').map((url: string) => url.trim()) || [], 
+          url: item.metadata.url
+        }));
+
+        setArticles(transformedArticles || []);
+        console.log(transformedArticles)
         setSummary(data.summary || "No summary available for this query.");
 
       } catch (error) {

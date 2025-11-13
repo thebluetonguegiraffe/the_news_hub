@@ -1,29 +1,13 @@
-run-chroma-server:
-	@echo "Starting ChromaDB in background..."
-	@python db/run_chroma_server.py
 
 run-chroma-client:
-	@chroma browse $(shell python3 -c "from config import db_configuration; print(db_configuration['collection_name'])") --local
+	@chroma browse $(shell python3 -c "from config import chroma_configuration; print(chroma_configuration['collection_name'])") --host http://localhost:8000
 
-run-api:
+run-api-dev:
 	@echo "Starting FastAPI server..."
-	@cd api && uvicorn main:app --host 0.0.0.0 --port 7000 --reload
+	PYTHONPATH=$(PWD) uvicorn api.main:app --host 0.0.0.0 --port 7001 --reload
 
-test-api: # TO DO: move to general test
-	@echo "Testing API endpoints..."
-	@python api/test_api.py
-
-
-AIRFLOW_SCRIPT := ./airflow/airflow_setup.sh
-
-.PHONY: start stop
-
-start-airflow:
-	@echo "Starting Airflow..."
-	@exec bash $(AIRFLOW_SCRIPT)
-
-build-mongo.container:
-	@docker compose --env-file ./.env -f ./db/mongo-container.yml up -d
+deploy-api:
+	cd api && docker compose up --build -d
 
 run-frontend-dev:
 	@cd dashboard && npm run dev
