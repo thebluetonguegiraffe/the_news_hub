@@ -5,8 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "apache-airflow[amazon,celery,cncf-kubernetes,google]>=3.0.4",
-    "apache-airflow-providers-smtp>=2.2.0",
     "bs4>=0.0.2",
     "chromadb>=1.0.15",
     "langchain>=0.3.27",
@@ -17,12 +15,12 @@ dependencies = [
     "pytest>=8.4.1",
     "requests>=2.32.4",
     "scikit-learn>=1.7.1",
-    "flask-appbuilder>=4.8.1",
     "textblob>=0.19.0",
     "langchain-openai>=0.3.33",
     "crawl4ai>=0.7.4",
     "langgraph>=0.6.10",
     "pydantic-settings>=2.11.0",
+    "apache-airflow-providers-docker>=4.5.0",
 ]
 
 [project.optional-dependencies]

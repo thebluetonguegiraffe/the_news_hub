@@ -1,3 +1,5 @@
+include .env
+export
 
 run-chroma-client:
 	@chroma browse $(shell python3 -c "from config import chroma_configuration; print(chroma_configuration['collection_name'])") --host http://localhost:8000
@@ -30,3 +32,24 @@ stop-api-cloudflare-tunnel:
 start-api-cloudflare-tunnel:
 	@echo "Starting Cloudflare tunnel..."
 	@sudo systemctl start cloudflared.service
+
+
+
+GITHUB_USER := thebluetonguegiraffe
+IMAGE_NAME := the_news_hub
+TAG ?= $(shell git rev-parse --short HEAD)
+REGISTRY := ghcr.io
+FULL_IMAGE := $(REGISTRY)/$(GITHUB_USER)/$(IMAGE_NAME):$(TAG)
+LATEST_IMAGE := $(REGISTRY)/$(GITHUB_USER)/$(IMAGE_NAME):latest
+
+cr-login:
+	@echo $(CR_PAT) | docker login $(REGISTRY) -u $(GITHUB_USER) --password-stdin
+
+build:
+	docker build --no-cache -t $(FULL_IMAGE) -t $(LATEST_IMAGE) .
+
+push:
+	docker push $(FULL_IMAGE)
+	docker push $(LATEST_IMAGE)
+
+all: build push
