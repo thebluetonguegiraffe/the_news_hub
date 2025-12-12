@@ -1,9 +1,9 @@
 from datetime import datetime
 from airflow import DAG
-from airflow.providers.standard.operators.bash import BashOperator
-from airflow.providers.standard.operators.python import PythonOperator
+from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.operators.email import EmailOperator
 
-from src.utils.mail_sender import send_email
+DOCKER_IMAGE_NAME = "ghcr.io/thebluetonguegiraffe/the_news_hub:latest"
 
 default_args = {
     "owner": "the_blue_tongue_giraffe_dev",
@@ -16,36 +16,37 @@ default_args = {
 dag = DAG(
     "ingest_api_news_dag",
     default_args=default_args,
-    description="DAG for API news ingestion",
-    schedule="55 23 * * *",  # Run every day at 23:55
+    description="DAG for API news ingestion running on Docker",
+    schedule="55 23 * * *",
     start_date=datetime(2025, 8, 1),
     catchup=False,
-    tags=["ingestion", "news"],
+    tags=["ingestion", "news", "docker"],
 )
 
-ingest_news = BashOperator(
+ingest_news = DockerOperator(
     task_id="ingest_api_news",
-    bash_command=(
-        "cd /home/ubuntu/the_news_hub/ && "
-        "export PYTHONPATH=. && "
-        "python scripts/db_population/ingest_api_news.py "
-        "--date {{  ds  }}T23:55"
-    ),
-    dag=dag,
-)
-
-notify_success = PythonOperator(
-    task_id="notify_success",
-    python_callable=send_email,
-    op_kwargs={
-        "to_email": "thebluetonguegiraffe@gmail.com",
-        "subject": "API News ingestion Dag Success ✅",
-        "body": "Your task finished successfully!",
+    image=DOCKER_IMAGE_NAME,
+    auto_remove=True,
+    command="python scripts/db_population/ingest_api_news.py --date {{ ds }}T23:55",
+    environment={
+        "PYTHONPATH": "/the_news_hub",
+        "CHROMA_DB_TOKEN": "{{ var.value.CHROMA_DB_TOKEN }}",
+        "FINLIGHT_API_TOKEN": "{{ var.value.FINLIGHT_API_TOKEN }}",
+        "GITHUB_TOKEN": "{{ var.value.GITHUB_TOKEN }}",
     },
+    network_mode="bridge",
+    docker_url="unix://var/run/docker.sock",
+    dag=dag,
+    docker_conn_id="ghcr_test",
+    force_pull=True
+)
+
+notify_success = EmailOperator(
+    task_id="notify_success",
+    to="thebluetonguegiraffe@gmail.com",
+    subject="API News ingestion Dag Success ✅",
+    html_content="Your task finished successfully!",
     dag=dag,
 )
 
-(
-    ingest_news
-    >> notify_success
-)
+ingest_news >> notify_success
