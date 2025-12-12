@@ -1,9 +1,6 @@
 include .env
 export
 
-run-chroma-client:
-	@chroma browse $(shell python3 -c "from config import chroma_configuration; print(chroma_configuration['collection_name'])") --host http://localhost:8000
-
 run-api-dev:
 	@echo "Starting FastAPI server..."
 	PYTHONPATH=$(PWD) uvicorn api.main:app --host 0.0.0.0 --port 7001 --reload
