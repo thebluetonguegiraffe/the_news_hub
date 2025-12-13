@@ -3,6 +3,7 @@ from fastapi.params import Depends, Query
 
 from api.models.range_date import RangeDate
 from api.retrievers.articles import ArticlesRetriever
+from api.security import verify_token
 
 
 router = APIRouter(prefix="/articles", tags=["articles"])
@@ -17,7 +18,7 @@ async def get_articles(
     range_date: RangeDate = Depends(),
     limit: int = Query(default=100, ge=1, le=100, description="Number of articles to return"),
     retriever: ArticlesRetriever = Depends(get_articles_retriever),
-    # token_data: dict = Depends(verify_token)
+    token_data: dict = Depends(verify_token)
 ):
     articles = retriever.get_articles(
         from_date=range_date.from_date,
@@ -34,7 +35,7 @@ async def get_articles_by_topic(
     range_date: RangeDate = Depends(),
     limit: int = Query(default=10, ge=1, le=100, description="Number of articles to return"),
     retriever: ArticlesRetriever = Depends(get_articles_retriever),
-    # token_data: dict = Depends(verify_token),
+    token_data: dict = Depends(verify_token),
 ):
 
     return retriever.get_articles_by_topic(

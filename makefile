@@ -6,30 +6,13 @@ run-api-dev:
 	PYTHONPATH=$(PWD) uvicorn api.main:app --host 0.0.0.0 --port 7001 --reload
 
 deploy-api:
-	cd api && docker compose up --build -d
+	docker compose -f api/the-news-hub-api.yml up --build -d
 
 run-frontend-dev:
 	@cd dashboard && npm run dev
 
 run-frontend:
 	@cd dashboard && rm -rf .next && rm -rf node_modules/.cache && npm run build && npm start
-
-stop-dashboard-cloudflare-tunnel:
-	@echo "Stopping Cloudflare tunnel..."
-	@sudo systemctl stop cloudflared-dashboard.service
-
-start-dashboard-cloudflare-tunnel:
-	@echo "Starting Cloudflare tunnel..."
-	@sudo systemctl start cloudflared-dashboard.service
-
-stop-api-cloudflare-tunnel:
-	@echo "Stopping Cloudflare tunnel..."
-	@sudo systemctl stop cloudflared.service
-
-start-api-cloudflare-tunnel:
-	@echo "Starting Cloudflare tunnel..."
-	@sudo systemctl start cloudflared.service
-
 
 
 GITHUB_USER := thebluetonguegiraffe

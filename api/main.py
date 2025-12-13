@@ -43,7 +43,7 @@ async def favicon():
     return FileResponse('/home/ubuntu/the_news_hub/dashboard/app/favicon.ico')
 
 
-@app.get("/health")
+@app.get("/status")
 async def health_check(
     # token_data: dict = Depends(verify_token)
 ):
