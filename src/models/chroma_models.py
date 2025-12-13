@@ -36,11 +36,19 @@ class Metadata(BaseModel):
             "published_date": (
                 self.published_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
                 if self.published_date
-                else None
+                else modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
             ),
-            "ingestion_date": self.ingestion_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
             "modification_date": modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
-            "timestamp": self.ingestion_date.timestamp(),
+            "ingestion_date": (
+                self.ingestion_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                if self.ingestion_date
+                else modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+            ),
+            "timestamp": (
+                self.ingestion_date.timestamp()
+                if self.ingestion_date
+                else modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+            ),
         }
         return data
 

@@ -1,19 +1,32 @@
 import asyncio
-from typing import Dict, List
-from crawl4ai import AsyncWebCrawler
-
+import logging
 from abc import ABC
+from typing import Dict, List
+
+from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
+
+logger = logging.getLogger("scrapper")
+logger.setLevel(logging.INFO)
 
 
 class BaseScrapper(ABC):
     METADATA_KEYS = ["title", "description", "author", "article:modified_time", "og:image"]
 
     async def __aenter__(self):
-        self.crawler = AsyncWebCrawler()
+        browser_config = BrowserConfig(
+            headless=True,  # Recommended setting for server environments
+            verbose=False   # <-- This disables the [INIT] logs
+        )
+        self.run_config = CrawlerRunConfig(
+            verbose=False,        # <-- DISABLES [FETCH], [SCRAPE], [COMPLETE] logs
+            log_console=False     # Highly recommended to also disable browser console logs
+        )
+        self.crawler = AsyncWebCrawler(config=browser_config)
         return self
 
     async def scrape_homepage(self, url: str):
-        result = await self.crawler.arun(url=url)
+        result = await self.crawler.arun(url=url, config=self.run_config)
+        logger.info(f"Scraped Homepage URL: {url}")
         parsed_result = self.parse_homepage(result)
         return parsed_result
 
@@ -42,12 +55,13 @@ class BaseScrapper(ABC):
         await self.crawler.close()
 
     async def scrape_article(self, url):
-        result = await self.crawler.arun(url=url)
+        result = await self.crawler.arun(url=url, config=self.run_config)
+        logger.info(f"Scraped article URL: {url}")
         parsed_result = self.parse_article(result)
         return parsed_result
 
     async def scrape_image(self, url):
-        result = await self.crawler.arun(url=url)
+        result = await self.crawler.arun(url=url, config=self.run_config)
         return result.metadata.get("og:image")
 
     def scrape_image_sync(self, url):
@@ -61,6 +75,10 @@ class BaseScrapper(ABC):
 
     def parse_article(self, result) -> Dict:
         metadata = result.metadata
+        if not metadata:
+            logger.info(f"No metadata found for URL: {result.url}")
+            return {}
+
         filtered_metadata = {k: metadata[k] for k in self.METADATA_KEYS if k in metadata}
         filtered_metadata[f"title_{self.LANGUAGE}"] = filtered_metadata.pop("title")
         filtered_metadata[f"description_{self.LANGUAGE}"] = filtered_metadata.pop("description")

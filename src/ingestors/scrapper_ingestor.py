@@ -6,12 +6,9 @@ from src.ingestors.base_ingestor import BaseIngestor
 from src.core.scrapper import SCRAPPER_MAPPER
 from src.models.chroma_models import ChromaDoc, Metadata
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+
 logger = logging.getLogger("scrapper_ingestor")
+logger.setLevel(logging.INFO)
 
 
 class State(TypedDict):
@@ -22,8 +19,9 @@ class State(TypedDict):
 class ScrapperIngestor(BaseIngestor):
     DEST_LANGUAGES = {"en", "es", "ca"}
 
-    def __init__(self, source: str):
+    def __init__(self, source: str, dry_run: bool):
         self.source, self.scrapper = SCRAPPER_MAPPER[source]
+        self.dry_run = dry_run
         self.LANGUAGE = self.scrapper.LANGUAGE
         super().__init__()
         self.dest_lang = self.DEST_LANGUAGES - {self.LANGUAGE}
@@ -43,8 +41,8 @@ class ScrapperIngestor(BaseIngestor):
                     title = scraped_article.get(f"title_{self.LANGUAGE}")
                     description = scraped_article.get(f"description_{self.LANGUAGE}")
                     if not title or not description:
-                        logger.warning(
-                            f"Missing title or description in metadata, skipping articleL: {url}"
+                        logger.info(
+                            f"Missing title or description in metadata, skipping article: {url}"
                         )
                         continue
                     articles_md.append(scraped_article)
@@ -61,6 +59,7 @@ class ScrapperIngestor(BaseIngestor):
             topic = md.get("topic")
             md["topic"] = self.translator.translate(topic, target_lang="en")
 
+        logger.info("Articles metadata translation completed.")
         return {"articles_md": articles_md}
 
     def articles_db_insert_node(self, state: State) -> Dict:
@@ -81,7 +80,7 @@ class ScrapperIngestor(BaseIngestor):
                         excerpt=md.get("description_en"),
                         excerpt_es=md.get("description_es"),
                         excerpt_ca=md.get("description_ca"),
-                        image=[md.get("og:image")],
+                        image=[md.get("og:image")] if md.get("og:image") else [],
                         source=self.source,
                         published_date=md.get("article:modified_time"),
                     ),
@@ -91,6 +90,12 @@ class ScrapperIngestor(BaseIngestor):
             except Exception as e:
                 logger.error(f"Error creating ChromaDoc for URL {url}: {e}")
                 continue
+
+        if not self.dry_run:
+            self.chroma_db.add_documents(list(chroma_docs.values()))
+        else:
+            logger.info("Dry run enabled, skipping database insertion.")
+
         logger.info(f"Total amount of {len(articles_md)} scrapped and stored in ChromaDB")
 
     def workflow(self):
