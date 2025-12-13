@@ -43,6 +43,9 @@ cr-login:
 	@echo $(CR_PAT) | docker login $(REGISTRY) -u $(GITHUB_USER) --password-stdin
 
 build:
+	docker build -t $(FULL_IMAGE) -t $(LATEST_IMAGE) .
+
+build-no-cache:
 	docker build --no-cache -t $(FULL_IMAGE) -t $(LATEST_IMAGE) .
 
 push:

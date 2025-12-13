@@ -13,8 +13,8 @@ from config import chat_configuration, chroma_configuration, mongo_configuration
 from src.core.mongo_client import CustomMongoClient
 from templates.news_templates import Prompts
 
-logging.basicConfig(level=logging.WARNING, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("topics_enricher")
+logger.setLevel(logging.INFO)
 
 
 class TopicsEnricher:
@@ -64,14 +64,14 @@ class TopicsEnricher:
                 self.chroma_db.collection.update(
                     ids=cluster_ids, metadatas=[{"topic": topic}] * len(cluster_ids)
                 )
-                logger.warning(
+                logger.info(
                     f"Topic updated for cluster {cluster_id}: {topic} - "
                     f"{len(cluster_ids)} docs"
                 )
 
     def populate_topics_database(self, date: str, dry_run: bool = False):
         if dry_run:
-            logger.warning("Dry run enabled, skipping MongoDB update.")
+            logger.info("Dry run enabled, skipping MongoDB update.")
 
         chroma_results = self.chroma_db.search_with_filter(
             chroma_filter={"ingestion_date": date},
@@ -120,12 +120,12 @@ class TopicsEnricher:
             result = mongo_collection.find({}, {"_id": 1})
             if result:
                 retrieved_topics = [topic["_id"] for topic in result]
-                logger.warning(
+                logger.info(
                     f"{len(retrieved_topics)} topics successfully retrieved from Mongo DB"
                 )
                 return retrieved_topics
             else:
-                logger.warning("No cached topics to retrieve.")
+                logger.info("No cached topics to retrieve.")
                 return []
 
     def update_mongo_topics_collection(self, topics: List[str], date: datetime) -> List[str]:
@@ -152,7 +152,7 @@ class TopicsEnricher:
                 mongo_collection.insert_many(
                     new_mongo_documents
                 )
-                logger.warning(f"{len(new_mongo_documents)} new topics updated in MongoDB")
+                logger.info(f"{len(new_mongo_documents)} new topics updated in MongoDB")
 
             # update existing topics
             for topic in self.cached_topics:
@@ -166,7 +166,7 @@ class TopicsEnricher:
                     },
                     upsert=True,
                 )
-            logger.warning(f"{len(self.cached_topics)} existing topics updated in MongoDB")
+            logger.info(f"{len(self.cached_topics)} existing topics updated in MongoDB")
 
     def get_topic_description(self, topic: str) -> str:
         prompt = ChatPromptTemplate.from_messages(
@@ -174,7 +174,7 @@ class TopicsEnricher:
         )
         chain = prompt | self.llm
         topic_description = chain.invoke({"topic": topic})
-        logger.warning(f"Description generated for topic: {topic}")
+        logger.info(f"Description generated for topic: {topic}")
         return topic_description.content.lower()
 
 

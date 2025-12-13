@@ -29,12 +29,17 @@ topics_enrichement = DockerOperator(
     task_id="topics_enrichement",
     image=DOCKER_IMAGE_NAME,
     auto_remove=True,
-    command="python scripts/db_population/topics_enrichement.py --date {{ macros.ds_add(ds, -1) }}T23:55",  # noqa
+    command="""
+    sh -c "
+    echo 'RUNNING python scripts/db_population/topics_enrichement.py --date {{ macros.ds_add(ds, -1) }}T23:55 --overwrite'
+    python scripts/db_population/topics_enrichement.py --date {{ macros.ds_add(ds, -1) }}T23:55 --overwrite
+    "
+    """,  # noqa
     environment={
         "PYTHONPATH": "/the_news_hub",
         "CHROMA_DB_TOKEN": "{{ var.value.CHROMA_DB_TOKEN }}",
-        "FINLIGHT_API_TOKEN": "{{ var.value.FINLIGHT_API_TOKEN }}",
         "GITHUB_TOKEN": "{{ var.value.GITHUB_TOKEN }}",
+        "MONGO_URI": "{{ var.value.MONGO_URI }}",
     },
     network_mode="bridge",
     docker_url="unix://var/run/docker.sock",
@@ -47,7 +52,7 @@ topics_enrichement = DockerOperator(
 notify_success = EmailOperator(
     task_id="notify_success",
     to="thebluetonguegiraffe@gmail.com",
-    subject="News topic ingestion Dag Success ✅",
+    subject="News topic ingestion Dag Success of {{ macros.ds_add(ds, -1) }}T23:55✅",
     html_content="Your task finished successfully!",
     dag=dag,
 )

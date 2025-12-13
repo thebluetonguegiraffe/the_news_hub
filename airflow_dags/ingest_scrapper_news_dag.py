@@ -29,7 +29,12 @@ ingest_news_scrapper = DockerOperator(
     task_id="ingest_scrapper_news",
     image=DOCKER_IMAGE_NAME,
     auto_remove=True,
-    command="python scripts/db_population/ingest_scrapper_news.py",
+    command="""
+    sh -c "
+    echo 'RUNNING: python scripts/db_population/ingest_scrapper_news.py'
+    python scripts/db_population/ingest_scrapper_news.py
+    "
+    """,
     environment={
         "PYTHONPATH": "/the_news_hub",
         "CHROMA_DB_TOKEN": "{{ var.value.CHROMA_DB_TOKEN }}",
@@ -46,7 +51,7 @@ ingest_news_scrapper = DockerOperator(
 notify_success = EmailOperator(
     task_id="notify_success",
     to="thebluetonguegiraffe@gmail.com",
-    subject="Scrapper News ingestion Dag Success ✅",
+    subject="Scrapper News ingestion Dag Success for {{ ds }}T23:55 ✅",
     html_content="Your task finished successfully!",
     dag=dag,
 )

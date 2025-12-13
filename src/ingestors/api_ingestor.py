@@ -10,12 +10,9 @@ from src.models.chroma_models import ChromaDoc, Metadata
 
 from langgraph.graph import StateGraph, START, END
 
-logging.basicConfig(
-    level=logging.WARNING,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+
 logger = logging.getLogger("api_ingestor")
+logger.setLevel(logging.INFO)
 
 
 class State(TypedDict):
@@ -28,9 +25,10 @@ class APIIngestor(BaseIngestor):
     LANGUAGE = "en"
     DEST_LANG = {"es", "ca"}
 
-    def __init__(self, source: str, date: datetime):
+    def __init__(self, source: str, date: datetime, dry_run: bool):
         super().__init__()
         self.source = source
+        self.dry_run = dry_run
         self.end_date = datetime.strptime(date, "%Y-%m-%dT%H:%M")
         self.start_date = self.end_date - timedelta(days=1)
         self.api_client = FinlightAPIClient(
@@ -70,7 +68,7 @@ class APIIngestor(BaseIngestor):
             summary = article.get("summary")
 
             if not title or not summary:
-                logger.warning(f"Article at {url} is missing title or summary, skipping.")
+                logger.info(f"Article at {url} is missing title or summary, skipping.")
                 continue
 
             if not self._is_url_scraped(url):
@@ -101,8 +99,13 @@ class APIIngestor(BaseIngestor):
             )
             # avoid duplicate docs
             chroma_docs[doc.id] = doc
-        self.chroma_db.add_documents(list(chroma_docs.values()))
-        logger.warning(
+
+        if not self.dry_run:
+            self.chroma_db.add_documents(list(chroma_docs.values()))
+        else:
+            logger.info("Dry run enabled, skipping database insertion.")
+
+        logger.info(
             f"Total of {len(articles_md)} docs queried and stored in ChromaDB from {self.source}"
         )
 
