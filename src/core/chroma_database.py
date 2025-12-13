@@ -1,13 +1,11 @@
 import os
 from typing import Dict, List
-
-import chromadb
 from dotenv import load_dotenv
+
 from openai import OpenAI
-from chromadb import Documents, EmbeddingFunction, HttpClient, Embeddings
+from chromadb import Documents, EmbeddingFunction, HttpClient, Embeddings, CloudClient
 
 from src.models.chroma_models import ChromaDoc
-
 from config import chroma_configuration
 
 
@@ -48,7 +46,7 @@ class ChromaDatabase:
                 host=chroma_configuration["host"], port=chroma_configuration["port"]
             )
         else:
-            self.client = chromadb.CloudClient(
+            self.client = CloudClient(
                 tenant='9afc23b2-89c9-463c-b136-cf99ce4b7853',
                 database=chroma_configuration["database"],
                 api_key=os.getenv("CHROMA_DB_TOKEN"),

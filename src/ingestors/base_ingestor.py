@@ -8,12 +8,8 @@ from langgraph.graph import END
 from config import chroma_configuration
 
 
-logging.basicConfig(
-    level=logging.WARNING,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
 logger = logging.getLogger("base_ingestor")
+logger.setLevel(logging.INFO)
 
 
 class BaseIngestor(ABC):
@@ -22,7 +18,7 @@ class BaseIngestor(ABC):
         self.chroma_db = ChromaDatabase(collection_name=chroma_configuration["collection_name"])
         self.translator = GoogleTranslator(self.LANGUAGE)
 
-    def _is_url_scraped(self, url):
+    def _is_url_scraped(self, url: str) -> bool:
         try:
             result = self.chroma_db.search_with_filter(chroma_filter={"url": url}, limit=1)
             return len(result["ids"]) > 0
@@ -40,7 +36,7 @@ class BaseIngestor(ABC):
             description = md.get(f"description_{self.LANGUAGE}")
 
             if not title or not description:
-                logger.warning("Missing title or description in metadata, skipping translation.")
+                logger.info("Missing title or description in metadata, skipping translation.")
 
             for language in self.dest_lang:
                 md[f"title_{language}"] = self.translator.translate(title, target_lang=language)
@@ -53,7 +49,7 @@ class BaseIngestor(ABC):
     def finish_graph(self, state: Dict) -> Dict:
         articles_md = state["articles_md"]
         if not articles_md:
-            logger.warning(f"No new documents to ingest in {self.source}, ending workflow.")
+            logger.info(f"No new documents to ingest in {self.source}, ending workflow.")
             return END
-        logger.warning(f"{len(articles_md)} new documents to ingest for {self.source}")
+        logger.info(f"{len(articles_md)} new documents to ingest for {self.source}")
         return "articles_translator"

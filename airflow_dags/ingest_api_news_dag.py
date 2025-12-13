@@ -27,7 +27,12 @@ ingest_news = DockerOperator(
     task_id="ingest_api_news",
     image=DOCKER_IMAGE_NAME,
     auto_remove=True,
-    command="python scripts/db_population/ingest_api_news.py --date {{ ds }}T23:55",
+    command="""
+    sh -c "
+    echo 'RUNNING python scripts/db_population/ingest_api_news.py --date {{ ds }}T23:55'
+    python scripts/db_population/ingest_api_news.py --date {{ ds }}T23:55
+    "
+    """,
     environment={
         "PYTHONPATH": "/the_news_hub",
         "CHROMA_DB_TOKEN": "{{ var.value.CHROMA_DB_TOKEN }}",
@@ -44,7 +49,7 @@ ingest_news = DockerOperator(
 notify_success = EmailOperator(
     task_id="notify_success",
     to="thebluetonguegiraffe@gmail.com",
-    subject="API News ingestion Dag Success ✅",
+    subject="API News ingestion Dag Success for date {{ ds }}T23:55 ✅",
     html_content="Your task finished successfully!",
     dag=dag,
 )
