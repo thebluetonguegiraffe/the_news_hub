@@ -5,6 +5,7 @@ from fastapi.params import Depends
 from pydantic import BaseModel
 
 from api.retrievers.articles import ArticlesRetriever
+from api.security import verify_token
 from src.chroma_rag import ChromaRAG
 
 
@@ -28,7 +29,7 @@ def get_articles_retriever():
 async def news_rs_by_question(
     payload: QuestionPayload,
     retriever: ArticlesRetriever = Depends(get_articles_retriever),
-    # token_data: dict = Depends(verify_token)
+    token_data: dict = Depends(verify_token)
 ):
     rag = ChromaRAG()
     response = rag.run(input_question=payload.question)

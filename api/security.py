@@ -1,30 +1,24 @@
-from fastapi import Depends, HTTPException, status
+import os
+from fastapi import HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from api.config import settings
+# from api.config import settings
 
-security = HTTPBearer()
 
-VALID_API_TOKENS = (
-    {settings.API_ACCESS_TOKEN: {"name": "Frontend App", "permissions": ["read", "write"]}}
-    if settings.API_ACCESS_TOKEN
-    else {}
+security = HTTPBearer(
+    scheme_name="Bearer Token",
+    description="Ingresa tu token de API"
 )
 
+API_TOKEN = os.getenv("API_TOKEN")
 
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """
-    Verifies API token unless authentication is disabled.
-    """
-    if not settings.ENABLE_TOKEN_AUTH:
-        return {"name": "Anonymous", "permissions": ["read", "write"], "auth_disabled": True}
+if not API_TOKEN:
+    raise ValueError("API_TOKEN must be set in environment variables")
 
-    token = credentials.credentials
 
-    if token not in VALID_API_TOKENS:
+def verify_token(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:
+    if credentials.credentials != API_TOKEN:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API token",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=401,
+            detail="Invalid authentication token"
         )
-
-    return VALID_API_TOKENS[token]
+    return credentials.credentials
