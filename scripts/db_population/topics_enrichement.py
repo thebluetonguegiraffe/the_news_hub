@@ -1,9 +1,21 @@
 
 import argparse
 from datetime import datetime
+import logging
 from dotenv import load_dotenv
 
 from src.topics_enricher import TopicsEnricher
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("topics_enricher_script")
+logger.setLevel(logging.INFO)
+logging.getLogger("chromadb").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 def valid_date(date_str: str) -> datetime:

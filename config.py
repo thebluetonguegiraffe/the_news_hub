@@ -9,7 +9,7 @@ chroma_configuration = {
 
 mongo_configuration = {
     "host": "mongodb://localhost:27017/",
-    "db": "news_hub",
+    "db": "the_news_hub",
     "collection": "topics",
 }
 
