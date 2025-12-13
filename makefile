@@ -6,7 +6,7 @@ run-api-dev:
 	PYTHONPATH=$(PWD) uvicorn api.main:app --host 0.0.0.0 --port 7001 --reload
 
 deploy-api:
-	cd api && docker compose up --build -d
+	docker compose -f api/the-news-hub-api.yml up --build -d
 
 run-frontend-dev:
 	@cd dashboard && npm run dev

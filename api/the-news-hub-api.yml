@@ -12,7 +12,7 @@ services:
       - ../.env
     restart: unless-stopped
     volumes:
-      - ./api:/app
+      - .:/the_news_hub/api
 networks:
   db_default:
     external: true

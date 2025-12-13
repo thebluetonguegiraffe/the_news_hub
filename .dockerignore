@@ -3,3 +3,8 @@
 __pycache__
 *.pyc
 .env
+
+**/node_modules/
+airflow_dags/
+dashboard/
+scripts/
