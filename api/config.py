@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     ENABLE_TOKEN_AUTH: bool = False
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:3000",
-        "https://the_news_hub.thebluetonguegiraffe.online",
+        # "https://the_news_hub.thebluetonguegiraffe.online",
     ]
 
 

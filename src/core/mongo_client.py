@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 @contextmanager
 def CustomMongoClient():
-    mongo_client = MongoClient(os.getenv("MONGO_URI"))
+    mongo_client = MongoClient(os.getenv("MONGO_URI_TOKEN"))
     yield mongo_client
     mongo_client.close()
 
