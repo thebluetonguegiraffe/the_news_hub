@@ -17,7 +17,7 @@ dag = DAG(
     "ingest_api_news_dag",
     default_args=default_args,
     description="DAG for API news ingestion running on Docker",
-    schedule="55 23 * * *",
+    schedule="55 11,23 * * *",
     start_date=datetime(2025, 8, 1),
     catchup=False,
     tags=["ingestion", "news", "docker"],
@@ -29,10 +29,10 @@ ingest_news = DockerOperator(
     auto_remove=True,
     command="""
     sh -c "
-    echo 'RUNNING python scripts/db_population/ingest_api_news.py --date {{ ds }}T23:55'
-    python scripts/db_population/ingest_api_news.py --date {{ ds }}T23:55
+    echo 'RUNNING python scripts/db_population/ingest_api_news.py --date {{ data_interval_end.strftime('%Y-%m-%dT%H:%M') }}'
+    python scripts/db_population/ingest_api_news.py --date {{ data_interval_end.strftime('%Y-%m-%dT%H:%M') }}
     "
-    """,
+    """,  # noqa
     environment={
         "PYTHONPATH": "/the_news_hub",
         "CHROMA_DB_TOKEN": "{{ var.value.CHROMA_DB_TOKEN }}",
@@ -43,14 +43,22 @@ ingest_news = DockerOperator(
     docker_url="unix://var/run/docker.sock",
     dag=dag,
     docker_conn_id="ghcr_test",
-    force_pull=True
+    force_pull=True,
+    # output in the mail
+    do_xcom_push=True,
+    xcom_all=True,
 )
 
 notify_success = EmailOperator(
     task_id="notify_success",
     to="thebluetonguegiraffe@gmail.com",
-    subject="API News ingestion Dag Success for date {{ ds }}T23:55 ✅",
-    html_content="Your task finished successfully!",
+    subject="API News ingestion Dag Success for date {{ data_interval_end.strftime('%Y-%m-%dT%H:%M') }} ✅",  # noqa
+    html_content="""
+    <h3>Execution Report:</h3>
+    <pre style="background-color: #f4f4f4; padding: 10px; border: 1px solid #ddd;">
+    {{ ti.xcom_pull(task_ids='ingest_api_news') | join('\n') }}
+    </pre>
+    """,
     dag=dag,
 )
 

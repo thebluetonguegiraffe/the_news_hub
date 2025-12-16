@@ -18,7 +18,7 @@ dag = DAG(
     "ingest_scrapper_news_dag",
     default_args=default_args,
     description="DAG for API news ingestion",
-    schedule="55 23 * * *",  # Run every day at 23:55
+    schedule="55 11,23 * * *",  # Run every day at 23:55
     start_date=datetime(2025, 8, 1),
     catchup=False,
     tags=["ingestion", "news", "scrapper"],
@@ -45,14 +45,22 @@ ingest_news_scrapper = DockerOperator(
     docker_url="unix://var/run/docker.sock",
     dag=dag,
     docker_conn_id="ghcr_test",
-    force_pull=True
+    force_pull=True,
+    # output in the mail
+    do_xcom_push=True,
+    xcom_all=True,
 )
 
 notify_success = EmailOperator(
     task_id="notify_success",
     to="thebluetonguegiraffe@gmail.com",
-    subject="Scrapper News ingestion Dag Success for {{ ds }}T23:55 ✅",
-    html_content="Your task finished successfully!",
+    subject="Scrapper News Scrapper Dag Success for {{ data_interval_end.strftime('%Y-%m-%dT%H:%M') }}✅",  # noqa
+    html_content="""
+    <h3>Execution Report:</h3>
+    <pre style="background-color: #f4f4f4; padding: 10px; border: 1px solid #ddd;">
+    {{ ti.xcom_pull(task_ids='ingest_scrapper_news') | join('\n') }}
+    </pre>
+    """,
     dag=dag,
 )
 
