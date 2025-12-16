@@ -194,7 +194,7 @@ export default function LatestNewsPage() {
   const retrieve_news = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/articles`, {
+      const response = await fetch(`${API_URL}/articles/`, {
         method: "GET",
         headers: DEFAULT_HEADERS,
       });
