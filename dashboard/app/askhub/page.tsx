@@ -340,7 +340,7 @@ export default function AIPage() {
       setIsLoading(true);
 
       try {
-        const response = await fetch(`${API_URL}/ask_hub`, {
+        const response = await fetch(`${API_URL}/ask_hub/`, {
           method: "POST",
           headers: DEFAULT_HEADERS,
           body: JSON.stringify({ question: query }),
@@ -363,7 +363,6 @@ export default function AIPage() {
         }));
 
         setArticles(transformedArticles || []);
-        console.log(transformedArticles)
         setSummary(data.summary || "No summary available for this query.");
 
       } catch (error) {

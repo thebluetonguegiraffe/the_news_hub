@@ -8,10 +8,10 @@ run-api-dev:
 deploy-api:
 	docker compose -f api/the-news-hub-api.yml up --build -d
 
-run-frontend-dev:
+run-dashboard-dev:
 	@cd dashboard && npm run dev
 
-run-frontend:
+run-dashboard:
 	@cd dashboard && rm -rf .next && rm -rf node_modules/.cache && npm run build && npm start
 
 
