@@ -41,7 +41,6 @@ RUN /the_news_hub/.venv/bin/playwright install chromium
 COPY config.py .
 COPY src ./src
 COPY scripts ./scripts
-COPY templates ./templates
 RUN uv sync --frozen --no-dev
 
 # "activate" .venv in remote machine

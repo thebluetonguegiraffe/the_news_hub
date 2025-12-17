@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 from dotenv import load_dotenv
 
-from src.topics_enricher import TopicsEnricher
+from src.core.topics_enricher import TopicsEnricher
 
 
 logging.basicConfig(

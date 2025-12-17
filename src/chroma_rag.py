@@ -15,7 +15,7 @@ from src.core.chroma_database import ChromaDatabase
 from config import chat_configuration, chroma_configuration
 from src.constants import NUMERIC_TIME_PATTERNS, TIME_EXPRESSIONS
 from src.core.translator import GoogleTranslator
-from templates.news_templates import Prompts
+from src.utils.prompts import Prompts
 
 
 class ChromaRAG:

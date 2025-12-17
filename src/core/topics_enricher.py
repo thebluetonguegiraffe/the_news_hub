@@ -2,7 +2,9 @@ from collections import defaultdict
 from datetime import datetime
 import logging
 import os
+import time
 from typing import Dict, List
+
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from langchain.chat_models import init_chat_model
@@ -11,7 +13,7 @@ from langchain.prompts import ChatPromptTemplate
 from src.core.chroma_database import ChromaDatabase
 from config import chat_configuration, chroma_configuration, mongo_configuration
 from src.core.mongo_client import CustomMongoClient
-from templates.news_templates import Prompts
+from src.utils.prompts import Prompts
 
 logger = logging.getLogger("topics_enricher")
 logger.setLevel(logging.INFO)
@@ -57,7 +59,7 @@ class TopicsEnricher:
             cluster_docs = [content["document"] for content in cluster_content]
             cluster_ids = [content["id"] for content in cluster_content]
 
-            topic = self.get_cluster_topic(cluster_docs=cluster_docs)
+            topic = self.get_cluster_topic(cluster_id=cluster_id, cluster_docs=cluster_docs)
             named_clusters[topic] = cluster_content
 
             if not dry_run:
@@ -100,7 +102,9 @@ class TopicsEnricher:
             clusters[label].append({"document": doc, "id": _id, "metadatas": metadata})
         return clusters
 
-    def get_cluster_topic(self, cluster_docs: List[str]) -> str:
+    def get_cluster_topic(self, cluster_id: str, cluster_docs: List[str]) -> str:
+        logger.info(f"Getting topic for cluster {cluster_id} with {len(cluster_docs)} documents")
+        time.sleep(2)
         prompt = ChatPromptTemplate.from_messages(
             [("system", self.prompts.TOPIC_GENERATION_TEMPLATE)]  # system?
         )
@@ -111,6 +115,7 @@ class TopicsEnricher:
                     "cached_topics": ", ".join(self.cached_topics),
                 }
             )
+        logger.info("Sucess!")
         return topic.content.lower()
 
     def retrieve_cached_topics(self) -> List[str]:
@@ -169,16 +174,12 @@ class TopicsEnricher:
             logger.info(f"{len(self.cached_topics)} existing topics updated in MongoDB")
 
     def get_topic_description(self, topic: str) -> str:
+        logger.info(f"Generating description for topic: {topic}")
+        time.sleep(2)
         prompt = ChatPromptTemplate.from_messages(
             [("system", self.prompts.TOPIC_DESCRIPTION_TEMPLATE)]
         )
         chain = prompt | self.llm
         topic_description = chain.invoke({"topic": topic})
-        logger.info(f"Description generated for topic: {topic}")
+        logger.info("Sucess!")
         return topic_description.content.lower()
-
-
-if __name__ == "__main__":
-    topics_descriptor = TopicsEnricher()
-    # topics_descriptor.clusterize_topics(date="2025-10-17T23:55:00.000Z", force=True)
-    topics_descriptor.populate_topics_database(date="2025-10-17T23:55:00.000Z")

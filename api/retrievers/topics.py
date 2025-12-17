@@ -31,7 +31,7 @@ class TopicsRetriever:
             if doc["_id"] != "no_topic":
                 topic = {
                     "name": doc["_id"],
-                    "description": doc["description"],
+                    "description": doc.get("description"),
                     "topics_per_day": matched_topics_per_day,
                 }
                 period_topics.append(topic)
