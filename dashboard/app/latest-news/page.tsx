@@ -47,6 +47,28 @@ type NewsListProps = {
   articles: Article[];
 };
 
+  // Función para obtener el icono según el nombre de la fuente
+  const getSourceIcon = (sourceName: string) => {
+    const source = sourceName?.toLowerCase() || "";
+    if (source.includes("https://www.lavanguardia.com")) return "/images/la-vanguardia.png";
+    if (source.includes("https://www.ara.cat/")) return "/images/ara.png";
+    if (source.includes("www.washingtonpost.com")) return "/images/WP.png";
+    if (source.includes("www.nytimes.com")) return "/images/nyt.png";
+    if (source.includes("www.bbc.com")) return "/images/BBC.jpg";
+    if (source.includes("www.theguardian.com")) return "/images/the_guardian.jpg";
+    return null;
+  };
+
+  const getSourceName = (url: string) => {
+    const s = url?.toLowerCase() || "";
+    if (s.includes("lavanguardia.com")) return "La Vanguardia";
+    if (s.includes("ara.cat")) return "Ara";
+    if (s.includes("washingtonpost.com")) return "The Washington Post";
+    if (s.includes("nytimes.com")) return "The New York Times";
+    if (s.includes("bbc.com")) return "BBC News";
+    if (s.includes("theguardian.com")) return "The Guardian";
+    return "News Source";
+  };
 
 const NewsList: React.FC<NewsListProps> = ({ articles }) => {
   const { t } = useLanguage();
@@ -59,7 +81,6 @@ const NewsList: React.FC<NewsListProps> = ({ articles }) => {
   return (
     <section className="py-16 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Recent News */}
         <div>
           <h2 className="text-2xl font-bold text-foreground mb-6">Recent News</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -71,27 +92,43 @@ const NewsList: React.FC<NewsListProps> = ({ articles }) => {
                       <Newspaper className="w-12 h-12 text-[#f7c873]" />
                     </div>
                   ) : (
-                  <RobustImageComponent
-                    images={article.image}
-                    alt={article.title}
-                    className="w-full h-full object-cover"
-                    fallback={
-                      <div className="w-full h-full bg-gradient-to-br from-[#f7c873]/20 to-[#f7c873]/10 flex items-center justify-center">
-                        <Newspaper className="w-12 h-12 text-[#f7c873]" />
-                      </div>
-                    }
-                  />
+                    <RobustImageComponent
+                      images={article.image}
+                      alt={article.title}
+                      className="w-full h-full object-cover"
+                      fallback={
+                        <div className="w-full h-full bg-gradient-to-br from-[#f7c873]/20 to-[#f7c873]/10 flex items-center justify-center">
+                          <Newspaper className="w-12 h-12 text-[#f7c873]" />
+                        </div>
+                      }
+                    />
                   )}
+
+                  {/* Source*/}
+                  {getSourceIcon(article.source) && (
+                    <div className="absolute top-2 right-2 w-9 h-9 bg-white rounded-full p-1.5 shadow-md border border-border flex items-center justify-center z-10">
+                      <img 
+                        src={getSourceIcon(article.source)!} 
+                        alt={article.source}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* Topic */}
                   <div className="absolute top-2 left-2">
-                    <span className="px-3 py-1 bg-[#f7c873] text-[#1a2238] text-xs font-semibold rounded-full">
+                    <span className="px-3 py-1 bg-[#f7c873] text-[#1a2238] text-xs font-semibold rounded-full shadow-sm">
                       {article.topic}
                     </span>
                   </div>
                 </div>
+
                 <div className="p-6">
                   <div className="flex items-center text-sm text-muted-foreground mb-2">
                     <Calendar className="w-4 h-4 mr-1" />
                     {getDaysFromDate(article.date)}
+                    <span className="mx-2">•</span>
+                    <span className="font-medium text-xs uppercase tracking-wider">{getSourceName(article.source)}</span>
                   </div>
                   <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-2">
                     {article.title}
@@ -112,74 +149,6 @@ const NewsList: React.FC<NewsListProps> = ({ articles }) => {
               </div>
             ))}
           </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const SourcesSection = () => {
-
-  const sources = [
-    {
-      name: "The Washington Post",
-      abbreviation: "TWP",
-      description: "Leading American daily newspaper",
-      logo: "/images/WP.png"
-    },
-    {
-      name: "The New York Times",
-      abbreviation: "TNYT",
-      description: "International daily newspaper",
-      logo: "/images/nyt.png"
-    },
-    {
-      name: "BBC News",
-      abbreviation: "BBC",
-      description: "British public service broadcaster",
-      logo: "/images/BBC.jpg"
-    },
-    { 
-      name: "The Guardian News",
-      abbreviation: "The Guardian",
-      description: "Global Independent journalism voicer",
-      logo: "/images/the_guardian.jpg"
-    }
-  ];
-
-
-  return (
-    <section className="py-16 bg-muted/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#f7c873]/20 rounded-full mb-6">
-            <Newspaper className="w-8 h-8 text-[#f7c873]" />
-          </div>
-          <h2 className="text-3xl font-bold text-foreground mb-4">
-            Our Trusted News Sources
-          </h2>
-          <p className="text-muted-foreground text-lg">
-            We partner with the world's most reputable news organizations to bring you accurate, timely, and comprehensive coverage.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {sources.map((source) => (
-            <div 
-              key={source.abbreviation} 
-              className="bg-card flex flex-col items-center text-center p-6 border border-border rounded-lg shadow hover:shadow-md transition-shadow group"
-            >
-              <div className="w-20 h-20 overflow-hidden rounded-full bg-white flex items-center justify-center mb-4">
-                <img 
-                  src={source.logo} 
-                  alt={source.name} 
-                  className="w-full h-full object-contain p-2" 
-                />
-              </div>
-              <h3 className="text-lg font-semibold">{source.name}</h3>
-              <p className="text-md text-muted-foreground">{source.description}</p>
-            </div>
-          ))}
         </div>
       </div>
     </section>
@@ -231,8 +200,7 @@ export default function LatestNewsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* TODO */}
-      <NavigationBar activePage="noticias" />
+      <NavigationBar activePage="latest-news" />
       <NewsHeader />
 
       {loading ? (
@@ -246,8 +214,6 @@ export default function LatestNewsPage() {
       ) : (
         <NewsList articles={articles} />
       )}
-
-      <SourcesSection />
       <Footer />
     </div>
   );
