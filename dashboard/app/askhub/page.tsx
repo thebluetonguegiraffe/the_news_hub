@@ -374,7 +374,7 @@ export default function AIPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavigationBar activePage="ia" />
+      <NavigationBar activePage="askhub" />
       <HeroSection onSearch={handleSearch} />
       <SearchResults query={searchQuery} summary={summary} articles={articles} isLoading={isLoading} />
       <HowItWorksSection />

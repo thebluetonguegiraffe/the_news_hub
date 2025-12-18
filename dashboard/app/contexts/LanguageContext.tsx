@@ -115,15 +115,14 @@ const translations = {
     
     // FAQ
     "faq.title": "Frequently Asked Questions",
-    "faq.subtitle": "We answer your most common questions",
-    "faq.ai.question": "How does AI interaction work?",
-    "faq.ai.answer": "Ask about any topic — our AI delivers smart, accurate answers using the most up-to-date news.",
+    "faq.ai.question": "How does AskHub work?",
+    "faq.ai.answer": "Introduce a question in Askhub. It will select articles relevant to your question and generate a summary of them, while also displaying the articles to you.",
     "faq.updates.question": "How often are news updated?",
-    "faq.updates.answer": "News is updated in real time, 24 hours a day, 7 days a week to keep you always informed.",
-    "faq.personalize.question": "Can I personalize the news I see?",
-    "faq.personalize.answer": "Yes, when you register you can personalize your preferences and receive news adapted to your specific interests.",
-    "faq.free.question": "Is access to The News Hub free?",
-    "faq.free.answer": "Yes, basic access is completely free. We offer premium features for users who want a more advanced experience.",
+    "faq.updates.answer": "The news is updated twice daily to ensure timely and accurate information. New content is published every day at noon and again at midnight.",
+    "faq.personalize.question": "How are hot topics determined?",
+    "faq.personalize.answer": "Topics are extracted using a machine learning algorithm that groups similar news items together and assigns each group a relevant topic.",
+    "faq.free.question": "Can I customize the news I see on The News Hub?",
+    "faq.free.answer": "Yes, users can personalize their experience by selecting preferred news sources, allowing The News Hub to display more relevant content.",
     
     // Footer
     "footer.description": "Stay informed with AI-powered news and insights.",

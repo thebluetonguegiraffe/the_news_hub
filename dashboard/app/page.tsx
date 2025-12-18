@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, CheckCircle, MessageCircle, TrendingUp, Users, Zap, Star } from "lucide-react";
+import { ArrowRight, MessageCircle, TrendingUp, Zap, Star, Newspaper } from "lucide-react";
 import Link from "next/link";
 import NavigationBar from "./components/NavigationBar";
 import Footer from "./components/Footer";
@@ -106,18 +105,100 @@ const FeaturesSection = () => {
 };
 
 
+
+const SourcesSection = () => {
+
+  const sources = [
+    {
+      name: "The Washington Post",
+      abbreviation: "TWP",
+      description: "Leading American daily newspaper",
+      logo: "/images/WP.png"
+    },
+    {
+      name: "The New York Times",
+      abbreviation: "TNYT",
+      description: "International daily newspaper",
+      logo: "/images/nyt.png"
+    },
+    {
+      name: "BBC News",
+      abbreviation: "BBC",
+      description: "British public service broadcaster",
+      logo: "/images/BBC.jpg"
+    },
+    { 
+      name: "The Guardian News",
+      abbreviation: "The Guardian",
+      description: "Global Independent journalism voicer",
+      logo: "/images/the_guardian.jpg"
+    },
+    { 
+      name: "Ara.cat",
+      abbreviation: "Ara",
+      description: "Catalan news outlet offering independent reporting.",
+      logo: "/images/ara.png"
+    },
+    { 
+      name: "La Vanguardia",
+      abbreviation: "La Vanguardia",
+      description: "Spanish daily covering national and global news.",
+      logo: "/images/la-vanguardia.png"
+    }
+  ];
+
+
+  return (
+    <section className="py-16 bg-muted/30">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#f7c873]/20 rounded-full mb-6">
+            <Newspaper className="w-8 h-8 text-[#f7c873]" />
+          </div>
+          <h2 className="text-3xl font-bold text-foreground mb-4">
+            Our Trusted News Sources
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            We partner with the world's most reputable news organizations to bring you accurate, timely, and comprehensive coverage.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {sources.map((source) => (
+            <div 
+              key={source.abbreviation} 
+              className="bg-card flex flex-col items-center text-center p-6 border border-border rounded-lg shadow hover:shadow-md transition-shadow group"
+            >
+              <div className="w-20 h-20 overflow-hidden rounded-full bg-white flex items-center justify-center mb-4">
+                <img 
+                  src={source.logo} 
+                  alt={source.name} 
+                  className="w-full h-full object-contain p-2" 
+                />
+              </div>
+              <h3 className="text-lg font-semibold">{source.name}</h3>
+              <p className="text-md text-muted-foreground">{source.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const FAQSection = () => {
   const { t } = useLanguage();
   
   const faqs = [
+      {
+      question: t("faq.updates.question"),
+      answer: t("faq.updates.answer")
+    },
     {
       question: t("faq.ai.question"),
       answer: t("faq.ai.answer")
     },
-    {
-      question: t("faq.updates.question"),
-      answer: t("faq.updates.answer")
-    },
+
     {
       question: t("faq.personalize.question"),
       answer: t("faq.personalize.answer")
@@ -138,9 +219,6 @@ const FAQSection = () => {
           <h2 className="text-3xl font-bold text-foreground mb-4">
             {t("faq.title")}
           </h2>
-          <p className="text-muted-foreground text-lg">
-            {t("faq.subtitle")}
-          </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -171,9 +249,10 @@ const FAQSection = () => {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
-      <NavigationBar activePage="inicio" />
+      <NavigationBar activePage="menu" />
       <HeroSection />
       <FeaturesSection />
+      <SourcesSection />
       <FAQSection />
       <Footer />
     </div>

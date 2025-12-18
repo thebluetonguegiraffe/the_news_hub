@@ -226,7 +226,7 @@ const HotTopicsSection = () => {
 export default function HotTopicsPage() {
   return (
     <div className="min-h-screen bg-background">
-      <NavigationBar activePage="tema-caliente" />
+      <NavigationBar activePage="hot-topics" />
       <HeaderSection />
       <HotTopicsSection />
       <Footer />
