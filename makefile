@@ -11,9 +11,6 @@ deploy-api:
 run-dashboard-dev:
 	@cd dashboard && npm run dev
 
-run-dashboard:
-	@cd dashboard && rm -rf .next && rm -rf node_modules/.cache && npm run build && npm start
-
 
 GITHUB_USER := thebluetonguegiraffe
 IMAGE_NAME := the_news_hub

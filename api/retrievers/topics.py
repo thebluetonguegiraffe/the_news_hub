@@ -39,11 +39,12 @@ class TopicsRetriever:
 
     def get_topics_by_date_range(self, from_date: datetime, to_date: datetime) -> TopicResponse:
 
-        if not to_date:
-            to_date = from_date + timedelta(days=1)
-
-        self.from_date = from_date.replace(tzinfo=timezone.utc)
-        self.to_date = to_date.replace(tzinfo=timezone.utc)
+        if not from_date and not to_date:
+            today = datetime.now(timezone.utc)
+            yesterday = today - timedelta(days=1)
+            date = yesterday.replace(hour=23, minute=55, second=0, microsecond=0)
+            self.from_date = date  # yesteday 23:55
+            self.to_date = date + timedelta(days=1)  # today
 
         # get full date range
         self.from_date = self.from_date.replace(hour=0, minute=0, second=0, microsecond=0)
