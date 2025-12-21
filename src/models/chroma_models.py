@@ -47,7 +47,7 @@ class Metadata(BaseModel):
             "timestamp": (
                 self.ingestion_date.timestamp()
                 if self.ingestion_date
-                else modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                else modification_date.timestamp()
             ),
         }
         return data
