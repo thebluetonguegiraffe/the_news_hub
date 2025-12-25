@@ -1,5 +1,4 @@
-from http.client import HTTPException
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from api.models.articles import ArticleResponse, ArticleSearchRequest
 from api.retrievers.articles import ArticlesRetriever

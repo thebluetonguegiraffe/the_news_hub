@@ -11,17 +11,6 @@ logger.setLevel(logging.INFO)
 
 
 class ArticlesRetriever:
-    LANGUAGE_SOURCES = {
-        "en": {
-            "www.bbc.com",
-            "www.nytimes.com",
-            "www.theguardian.com",
-            "www.thewashingtonpost.com",
-        },
-        "ca": {"https://www.ara.cat/", "https://www.lavanguardia.com/"},
-        "es": {"https://www.lavanguardia.com/"},
-    }
-
     def __init__(self):
         self.chroma_db = ChromaDatabase(collection_name=chroma_configuration["collection_name"])
 
@@ -38,6 +27,7 @@ class ArticlesRetriever:
                     "metadata": metadata,
                 }
             )
+        items.sort(key=lambda x: x["metadata"].get("title", ""), reverse=True)
         return items
 
     def search(self, request: ArticleSearchRequest) -> ArticleResponse:
@@ -46,15 +36,8 @@ class ArticlesRetriever:
         if request.topic:
             conditions.append({"topic": request.topic})
 
-        allowed_sources = set()
-        if request.language:
-            allowed_sources.update(self.LANGUAGE_SOURCES.get(request.language))
-
-        if request.source:
-            allowed_sources.update(request.source)
-
-        if allowed_sources:
-            conditions.append({"source": {"$in": list(allowed_sources)}})
+        if request.sources:
+            conditions.append({"source": {"$in": list(request.sources)}})
 
         if request.date_range.from_date and request.date_range.to_date:
             conditions.append({"timestamp": {"$gte": request.date_range.from_date.timestamp()}})
@@ -65,6 +48,7 @@ class ArticlesRetriever:
             chroma_filter = {"$and": conditions}
         elif len(conditions) == 1:
             chroma_filter = conditions[0]
+
         results = self.chroma_db.search_with_filter(
             chroma_filter=chroma_filter,
             limit=request.limit,
@@ -76,7 +60,7 @@ class ArticlesRetriever:
             num_articles=len(parsed_results),
             articles=parsed_results,
             topic=request.topic,
-            source=request.source,
+            source=request.sources,
             from_date=request.date_range.from_date,
             to_date=request.date_range.to_date,
         )
