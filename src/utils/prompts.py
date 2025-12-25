@@ -51,15 +51,26 @@ class Prompts:
     Proposed topic:
     """
 
-    TOPIC_DESCRIPTION_TEMPLATE = """You are a topic descriptor.
+    TOPIC_DESCRIPTION_TEMPLATE = """
+    Role: Expert Database Archivist
+    Task: Summarize a topic in a single, punchy, high-level sentence.
 
-    Given a single topic, you will provide a description of it in 10 words approx.
+    Constraints:
+    - Length: 10-12 words.
+    - Format: [Noun Phrase] + [Formal Impact/Scope].
+    - Forbidden: "is a", "refers to", "when", "like", "for example".
 
-    Topic:
-    {topic}
+    GOOD (Noun-led, Categorical):
+    - Topic: Infrastructure | Description: Foundational physical and organizational structures needed for the operation of society.  
+    - Topic: Logistics | Description: Strategic management of the movement and positioning of resources and goods.
 
-    Proposed description:
-    """
+    BAD (Verb-led, Informal):
+    - Topic: Infrastructure | Description: Building things like roads and bridges so that people can drive.
+    - Topic: Logistics | Description: This is how companies move their products from one place to another.
+
+    Topic: {topic}
+    Description:
+    """  # noqa
 
     asked_frecuency_template = """You are a linguistic expert.
 
