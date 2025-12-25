@@ -7,8 +7,15 @@ from dotenv import load_dotenv
 from config import chroma_configuration
 from src.core.chroma_database import ChromaDatabase
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("update_fields_script")
+logger.setLevel(logging.INFO)
+logging.getLogger("chromadb").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 def parse_filter(value: str) -> dict:
@@ -16,12 +23,24 @@ def parse_filter(value: str) -> dict:
     try:
         return json.loads(value)
     except json.JSONDecodeError:
-        if ":" in value:
-            key, val = value.split(":", 1)
-            return {key.strip(): val.strip()}
-        raise argparse.ArgumentTypeError(
-            f"Invalid filter format: {value}. Expected JSON or key:value."
-        )
+        if "," in value:
+            items = value.split(",")
+            conditions = []
+            for item in items:
+                if ":" in item:
+                    key, val = item.split(":", 1)
+                    conditions.append({key.strip(): val.strip()})
+                else:
+                    raise argparse.ArgumentTypeError(
+                        f"Invalid filter format: {item}. Expected key:value."
+                    )
+
+            if len(conditions) > 1:
+                chroma_filter = {"$and": conditions}
+            else:
+                chroma_filter = conditions[0]
+
+            return chroma_filter
 
 
 if __name__ == "__main__":
@@ -69,9 +88,7 @@ if __name__ == "__main__":
     chroma_db = ChromaDatabase(collection_name=chroma_configuration["collection_name"])
 
     docs = chroma_db.search_with_filter(
-        include=["metadatas"],
-        chroma_filter=filter_dict,
-        limit=args.limit if args.limit else None
+        include=["metadatas"], chroma_filter=filter_dict, limit=args.limit if args.limit else None
     )
 
     n_docs = len(docs["metadatas"])
