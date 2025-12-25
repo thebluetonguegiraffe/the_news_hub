@@ -18,8 +18,8 @@ const getSourceName = (url: string) => {
 
 interface NewsListProps {
   articles: Article[];
-  selectedSources?: string[]; // Ahora es opcional
-  selectedTopics?: string[];  // Ahora es opcional
+  selectedSources?: string[];
+  selectedTopics?: string[];
 }
 
 const NewsList: React.FC<NewsListProps> = ({ 
@@ -27,7 +27,6 @@ const NewsList: React.FC<NewsListProps> = ({
   selectedSources = [], 
   selectedTopics = [] 
 }) => {
-//   const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>({});
 
   const filteredArticles = useMemo(() => {
     if (selectedSources.length === 0 && selectedTopics.length === 0) {
