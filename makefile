@@ -9,7 +9,7 @@ deploy-api:
 	docker compose -f api/the-news-hub-api.yml up --build -d
 
 run-dashboard-dev:
-	@cd dashboard && npm run dev
+	@cd dashboard && npm run dev -- -H 0.0.0.0
 
 run-dashboard:
 	@cd dashboard && rm -rf .next && rm -rf node_modules/.cache && npm run build && npm start
