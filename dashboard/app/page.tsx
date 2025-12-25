@@ -136,7 +136,7 @@ const SourcesSection = () => {
     { 
       name: "Ara.cat",
       abbreviation: "Ara",
-      description: "Catalan news outlet offering independent reporting.",
+      description: "Catalan news newspaper offering independent reporting.",
       logo: "/images/ara.png"
     },
     { 
