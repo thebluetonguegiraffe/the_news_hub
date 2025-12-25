@@ -2,20 +2,33 @@ from http import HTTPStatus
 from typing import Optional
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, model_validator, field_validator
-from datetime import datetime
+from datetime import datetime, time
 
 
 class RangeDate(BaseModel):
     from_date: Optional[datetime] = Field(default=None, description="Start date (YYYY-MM-DD)")
     to_date: Optional[datetime] = Field(default=None, description="End date (YYYY-MM-DD)")
 
-    @field_validator("from_date", "to_date", mode="before")
-    def parse_date(cls, v):
+    @field_validator("from_date", mode="before")
+    def parse_date_from_date(cls, v):
         if v is None:
             return None
         if isinstance(v, str):
             try:
-                return datetime.fromisoformat(v)
+                dt = datetime.fromisoformat(v)
+                return datetime.combine(dt.date(), time.min)
+            except ValueError:
+                raise ValueError("Invalid date format. Use YYYY-MM-DD")
+        return v
+
+    @field_validator("to_date", mode="before")
+    def parse_date_to_date(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                dt = datetime.fromisoformat(v)
+                return datetime.combine(dt.date(), time.max)
             except ValueError:
                 raise ValueError("Invalid date format. Use YYYY-MM-DD")
         return v
