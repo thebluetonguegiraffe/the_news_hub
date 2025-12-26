@@ -7,6 +7,10 @@ export interface Article {
   date: string;
   image: string;
   url: string;
+  title_es?: string;
+  title_ca?: string;
+  excerpt_es?: string;
+  excerpt_ca?: string;
 }
 
 export function getDaysFromDate(dateString: string, t: (key: string, args?: Record<string, string | number>) => string): string {

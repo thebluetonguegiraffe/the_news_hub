@@ -28,7 +28,7 @@ const NewsList: React.FC<NewsListProps> = ({
   selectedSources = [],
   selectedTopics = []
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const filteredArticles = useMemo(() => {
     if (selectedSources.length === 0 && selectedTopics.length === 0) {
@@ -58,73 +58,89 @@ const NewsList: React.FC<NewsListProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredArticles.map((article) => (
-              <div key={article.id} className="bg-card border border-r rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 group">
-                <div className="aspect-video bg-muted relative overflow-hidden">
-                  <RobustImageComponent
-                    images={article.image}
-                    alt={article.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    fallback={
-                      <div className="w-full h-full bg-gradient-to-br from-[#f7c873]/20 to-[#f7c873]/10 flex items-center justify-center">
-                        <Newspaper className="w-12 h-12 text-[#f7c873]" />
+            {filteredArticles.map((article) => {
+              const title =
+                language === "es"
+                  ? article.title_es || article.title
+                  : language === "ca"
+                    ? article.title_ca || article.title
+                    : article.title;
+
+              const excerpt =
+                language === "es"
+                  ? article.excerpt_es || article.excerpt
+                  : language === "ca"
+                    ? article.excerpt_ca || article.excerpt
+                    : article.excerpt;
+
+              return (
+                <div key={article.id} className="bg-card border border-r rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 group">
+                  <div className="aspect-video bg-muted relative overflow-hidden">
+                    <RobustImageComponent
+                      images={article.image}
+                      alt={title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      fallback={
+                        <div className="w-full h-full bg-gradient-to-br from-[#f7c873]/20 to-[#f7c873]/10 flex items-center justify-center">
+                          <Newspaper className="w-12 h-12 text-[#f7c873]" />
+                        </div>
+                      }
+                    />
+
+                    {/* Source icon*/}
+                    {getSourceIcon(article.source) && (
+                      <div className="absolute top-3 right-3 w-10 h-10 bg-white rounded-full p-1.5 shadow-md border border-gray-100 flex items-center justify-center z-10">
+                        <img
+                          src={getSourceIcon(article.source)!}
+                          alt={article.source}
+                          className="w-full h-full object-contain rounded-full"
+                        />
                       </div>
-                    }
-                  />
+                    )}
 
-                  {/* Source icon*/}
-                  {getSourceIcon(article.source) && (
-                    <div className="absolute top-3 right-3 w-10 h-10 bg-white rounded-full p-1.5 shadow-md border border-gray-100 flex items-center justify-center z-10">
-                      <img
-                        src={getSourceIcon(article.source)!}
-                        alt={article.source}
-                        className="w-full h-full object-contain rounded-full"
-                      />
+                    {/* Topic Badge */}
+                    <div className="absolute top-3 left-3">
+                      <span className="px-3 py-1 bg-[#f7c873] text-[#1a2238] text-xs font-bold rounded-full shadow-sm">
+                        {article.topic}
+                      </span>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Topic Badge */}
-                  <div className="absolute top-3 left-3">
-                    <span className="px-3 py-1 bg-[#f7c873] text-[#1a2238] text-xs font-bold rounded-full shadow-sm">
-                      {article.topic}
-                    </span>
+                  <div className="p-6 flex flex-col h-auto min-h-[200px]">
+                    <div className="flex items-center text-xs text-muted-foreground mb-3">
+                      <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                      {getDaysFromDate(article.date, t)}
+                      <span className="mx-2 text-gray-300">•</span>
+                      <span className="font-semibold uppercase tracking-wider text-primary/80">
+                        {getSourceName(article.source) === "news_list.source_default"
+                          ? t(getSourceName(article.source))
+                          : getSourceName(article.source)}
+                      </span>
+                    </div>
+
+                    <h3 className="text-l font-bold text-foreground mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                      {title}
+                    </h3>
+
+                    <p className="text-muted-foreground text-sm mb-4 line-clamp-3 flex-grow">
+                      {excerpt}
+                    </p>
+
+                    <div className="mt-auto pt-4 border-t border-gray-100">
+                      <a
+                        href={article.url}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t("news_list.read_more")}
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
                   </div>
                 </div>
-
-                <div className="p-6 flex flex-col h-auto min-h-[200px]">
-                  <div className="flex items-center text-xs text-muted-foreground mb-3">
-                    <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                    {getDaysFromDate(article.date, t)}
-                    <span className="mx-2 text-gray-300">•</span>
-                    <span className="font-semibold uppercase tracking-wider text-primary/80">
-                      {getSourceName(article.source) === "news_list.source_default"
-                        ? t(getSourceName(article.source))
-                        : getSourceName(article.source)}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-bold text-foreground mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
-                    {article.title}
-                  </h3>
-
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3 flex-grow">
-                    {article.excerpt}
-                  </p>
-
-                  <div className="mt-auto pt-4 border-t border-gray-100">
-                    <a
-                      href={article.url}
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {t("news_list.read_more")}
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

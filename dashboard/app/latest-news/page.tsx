@@ -123,7 +123,11 @@ export default function LatestNewsPage() {
         source: item.metadata.source,
         date: item.metadata.published_date,
         image: item.metadata.image?.split(',').map((url: string) => url.trim()) || [],
-        url: item.metadata.url
+        url: item.metadata.url,
+        title_es: item.metadata.title_es,
+        title_ca: item.metadata.title_ca,
+        excerpt_es: item.metadata.excerpt_es,
+        excerpt_ca: item.metadata.excerpt_ca,
       }));
 
       setArticles(transformedArticles || []);
