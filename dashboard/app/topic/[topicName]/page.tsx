@@ -45,6 +45,7 @@ const TopicHeader = ({ title, description, category }: TopicHeaderProps) => {
 };
 
 export default function ArticlePage() {
+  const { t } = useLanguage();
   const [articles, setArticles] = useState<Article[]>([]);
   const [topicDescription, setTopicDescription] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -138,7 +139,7 @@ export default function ArticlePage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
         <div className="mb-8">
           <NewsFilter
-            title="Filters"
+            title={t("topic_page.filters")}
             availableSources={AVAILABLE_SOURCES}
             selectedSources={selectedSources}
             toggleSource={toggleSource}
@@ -160,10 +161,10 @@ export default function ArticlePage() {
         <div className="mt-16 mb-8 flex justify-center">
           <Link
             href="/hot-topics"
-            className="inline-flex items-center gap-2 bg-card border px-6 py-3 text-muted-foreground rounded-full hover:bg-[#f7c873]/20 hover:text-foreground hover:border-[#f7c873]/50 transition-all duration-300 shadow-sm group"
+            className="inline-flex items-center gap-2 bg-[#f7c873] border border-[#f7c873] px-6 py-3 text-[#1a2238] rounded-full hover:bg-[#f7c873]/90 hover:text-[#1a2238] transition-all duration-300 shadow-sm group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
-            <span className="font-medium">Go back to Hot Topics</span>
+            <span className="font-medium">{t("topic_page.back")}</span>
           </Link>
         </div>
       </main>

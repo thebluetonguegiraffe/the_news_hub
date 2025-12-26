@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Hash } from 'lucide-react';
 import iconMap from './Mappers';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const defaultGetTopicIcon = (topicName: string): React.ElementType => {
   const normalize = (str: string) => str.toLowerCase().trim();
@@ -27,8 +28,9 @@ const NewsFilter = ({
   availableTopics,
   selectedTopics,
   toggleTopic,
-  getTopicIcon = defaultGetTopicIcon 
+  getTopicIcon = defaultGetTopicIcon
 }: NewsFilterProps) => {
+  const { t } = useLanguage();
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [isTopicsOpen, setIsTopicsOpen] = useState(false);
 
@@ -52,18 +54,17 @@ const NewsFilter = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between border-b border-gray-300 pb-8">
           <h1 className="text-3xl font-bold mt-8 text-gray-800">{title}</h1>
-          
+
           <div className="flex items-center gap-3">
-            
+
             {showSources && (
               <div className="relative" ref={sourcesRef}>
                 <button
                   onClick={() => setIsSourcesOpen(!isSourcesOpen)}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-200 text-[#1a2238] font-medium text-sm border ${
-                    isSourcesOpen ? 'bg-[#f7c873]/40 border-[#f7c873]/50' : 'bg-[#f7c873]/20 border-transparent hover:bg-[#f7c873]/30'
-                  }`}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-200 text-[#1a2238] font-medium text-sm border ${isSourcesOpen ? 'bg-[#f7c873]/40 border-[#f7c873]/50' : 'bg-[#f7c873]/20 border-transparent hover:bg-[#f7c873]/30'
+                    }`}
                 >
-                  <span><b>Sources</b></span>
+                  <span><b>{t("news_filter.sources")}</b></span>
                   <ChevronDown className={`w-3.5 h-3.5 ml-1 transition-transform ${isSourcesOpen ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -73,15 +74,14 @@ const NewsFilter = ({
                       {availableSources.map((source) => {
                         const isSelected = selectedSources.includes(source.id);
                         return (
-                          <div 
-                            key={source.id} 
+                          <div
+                            key={source.id}
                             onClick={() => toggleSource(source.id)}
-                            className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all border ${
-                              isSelected ? 'bg-blue-50 border-blue-200 text-blue-900 shadow-sm' : 'bg-transparent border-transparent hover:bg-gray-50 text-gray-700'
-                            }`}
+                            className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all border ${isSelected ? 'bg-blue-50 border-blue-200 text-blue-900 shadow-sm' : 'bg-transparent border-transparent hover:bg-gray-50 text-gray-700'
+                              }`}
                           >
                             <div className="w-9 h-9 bg-white rounded-md flex items-center justify-center border border-gray-100 shadow-sm overflow-hidden shrink-0">
-                                <img src={source.icon} alt={source.name} className="w-7 h-7 object-contain" />
+                              <img src={source.icon} alt={source.name} className="w-7 h-7 object-contain" />
                             </div>
                             <span className={`text-sm ${isSelected ? 'font-semibold' : 'font-medium'}`}>{source.name}</span>
                           </div>
@@ -89,8 +89,8 @@ const NewsFilter = ({
                       })}
                     </div>
                     <div className="bg-gray-50 p-3 border-t flex justify-between">
-                      <button onClick={() => availableSources.forEach(s => !selectedSources.includes(s.id) && toggleSource(s.id))} className="text-xs font-semibold hover:underline">Select All</button>
-                      <button onClick={() => selectedSources.forEach(id => toggleSource(id))} className="text-xs font-semibold text-red-500">Clear</button>
+                      <button onClick={() => availableSources.forEach(s => !selectedSources.includes(s.id) && toggleSource(s.id))} className="text-xs font-semibold hover:underline">{t("news_filter.select_all")}</button>
+                      <button onClick={() => selectedSources.forEach(id => toggleSource(id))} className="text-xs font-semibold text-red-500">{t("news_filter.clear")}</button>
                     </div>
                   </div>
                 )}
@@ -101,11 +101,10 @@ const NewsFilter = ({
               <div className="relative" ref={topicsRef}>
                 <button
                   onClick={() => setIsTopicsOpen(!isTopicsOpen)}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-200 text-[#1a2238] font-medium text-sm border ${
-                    isTopicsOpen ? 'bg-[#f7c873]/40 border-[#f7c873]/50' : 'bg-[#f7c873]/20 border-transparent hover:bg-[#f7c873]/30'
-                  }`}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-200 text-[#1a2238] font-medium text-sm border ${isTopicsOpen ? 'bg-[#f7c873]/40 border-[#f7c873]/50' : 'bg-[#f7c873]/20 border-transparent hover:bg-[#f7c873]/30'
+                    }`}
                 >
-                  <span><b>Topics</b></span>
+                  <span><b>{t("news_filter.topics")}</b></span>
                   <ChevronDown className={`w-3.5 h-3.5 ml-1 transition-transform ${isTopicsOpen ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -116,15 +115,14 @@ const NewsFilter = ({
                         const isSelected = selectedTopics.includes(topic.name);
                         const TopicIcon = getTopicIcon(topic.name);
                         return (
-                          <div 
-                            key={topic.name} 
+                          <div
+                            key={topic.name}
                             onClick={() => toggleTopic(topic.name)}
-                            className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all border ${
-                              isSelected ? 'bg-blue-50 border-blue-200 text-blue-900 shadow-sm' : 'bg-transparent border-transparent hover:bg-gray-50 text-gray-700'
-                            }`}
+                            className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all border ${isSelected ? 'bg-blue-50 border-blue-200 text-blue-900 shadow-sm' : 'bg-transparent border-transparent hover:bg-gray-50 text-gray-700'
+                              }`}
                           >
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isSelected ? 'bg-blue-200 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>
-                                <TopicIcon className="w-4 h-4" />
+                              <TopicIcon className="w-4 h-4" />
                             </div>
                             <span className={`text-sm ${isSelected ? 'font-semibold' : 'font-medium'}`}>{topic.name}</span>
                           </div>
@@ -132,8 +130,8 @@ const NewsFilter = ({
                       })}
                     </div>
                     <div className="bg-gray-50 p-3 border-t flex justify-between">
-                      <button onClick={() => availableTopics.forEach(t => !selectedTopics.includes(t.name) && toggleTopic(t.name))} className="text-xs font-semibold hover:underline">Select All</button>
-                      <button onClick={() => selectedTopics.forEach(id => toggleTopic(id))} className="text-xs font-semibold text-red-500">Clear</button>
+                      <button onClick={() => availableTopics.forEach(t => !selectedTopics.includes(t.name) && toggleTopic(t.name))} className="text-xs font-semibold hover:underline">{t("news_filter.select_all")}</button>
+                      <button onClick={() => selectedTopics.forEach(id => toggleTopic(id))} className="text-xs font-semibold text-red-500">{t("news_filter.clear")}</button>
                     </div>
                   </div>
                 )}

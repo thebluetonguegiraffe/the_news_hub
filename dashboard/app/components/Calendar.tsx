@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { isYesterday } from 'date-fns';
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface CalendarProps {
   onDateSelect?: (date: Date) => void;
@@ -12,8 +13,9 @@ interface CalendarProps {
 }
 
 const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateRange }: CalendarProps) => {
+  const { language, t } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
-  
+
   const [selectedSingleDate, setSelectedSingleDate] = useState<Date | null>(() => {
     if (!selectedDate) return null;
     const d = new Date(selectedDate);
@@ -38,12 +40,12 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    
+
     const startingDayOfWeek = firstDay.getDay();
     const adjustedStartDay = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
 
     const days = [];
-    
+
     const prevMonth = new Date(year, month - 1, 0);
     const daysInPrevMonth = prevMonth.getDate();
     for (let i = adjustedStartDay - 1; i >= 0; i--) {
@@ -78,11 +80,10 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
 
   const handleDateClick = (date: Date) => {
     if (!date || !date.getTime()) return;
-    
-    // Normalizamos la fecha clickeada para ignorar horas/minutos/segundos
+
     const clickedDate = new Date(date);
     clickedDate.setHours(0, 0, 0, 0);
-    
+
     if (isSelectingRange && dateRange?.fromDate) {
       let newRange;
       if (clickedDate >= dateRange.fromDate) {
@@ -90,11 +91,11 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
       } else {
         newRange = { fromDate: clickedDate, toDate: dateRange.fromDate };
       }
-      
+
       setDateRange(newRange);
       setIsSelectingRange(false);
       if (onDateRangeSelect) onDateRangeSelect(newRange.fromDate, newRange.toDate);
-      
+
     } else {
       const newRange = { fromDate: clickedDate, toDate: clickedDate };
       setDateRange(newRange);
@@ -138,11 +139,21 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
   };
 
   const formatMonthYear = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    let str = date.toLocaleDateString(language, { month: 'long', year: 'numeric' });
+    str = str.charAt(0).toUpperCase() + str.slice(1);
+    return str.replace(" de ", " ").replace(" d'", " ").replace(" del ", " ");
   };
 
   const days = getDaysInMonth(currentDate);
-  const dayNames = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  const dayNames = [
+    t("dates.mon"),
+    t("dates.tue"),
+    t("dates.wed"),
+    t("dates.thu"),
+    t("dates.fri"),
+    t("dates.sat"),
+    t("dates.sun")
+  ];
 
   return (
     <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
@@ -182,18 +193,18 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
           const isSelected = isDateSelected(day.date);
           const isStart = isRangeStart(day.date);
           const isEnd = isRangeEnd(day.date);
-          
+
           return (
             <button
               key={index}
               onClick={() => handleDateClick(day.date)}
               className={`
                 relative h-10 w-full rounded-lg text-sm font-medium transition-colors
-                ${!day.isCurrentMonth 
-                  ? 'text-muted-foreground/40' 
+                ${!day.isCurrentMonth
+                  ? 'text-muted-foreground/40'
                   : 'text-foreground hover:bg-muted'
                 }
-                ${isSelected 
+                ${isSelected
                   ? isStart || isEnd
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'bg-primary/20 text-primary'

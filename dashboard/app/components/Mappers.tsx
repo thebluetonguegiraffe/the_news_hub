@@ -1,19 +1,20 @@
 import {
   // Original & General
-  Globe, ShieldCheck, BarChart2, Building2, Microscope, Zap, Heart, Leaf, 
+  Globe, ShieldCheck, BarChart2, Building2, Microscope, Zap, Heart, Leaf,
   Globe2, Trophy, Music, BookOpen, AlertTriangle, Users,
-  
+
   // New Imports
-  Scale, Flame, RefreshCw, Network, Landmark, Gavel, Swords, Car, 
-  Briefcase, DollarSign, HeartHandshake, Ship, 
-  Megaphone, CloudRain, Bomb, Truck, Battery, Factory, Rainbow, 
-  Tv, Lock, PawPrint, EyeOff, TrendingUp, Tractor, Dna, Palette, 
-  Home, ShoppingBag, Plane, Church, SearchX, Utensils, Radio, 
-  ShieldAlert, Accessibility, Tent, FileText, Rocket, Droplets, 
+  Scale, Flame, RefreshCw, Network, Landmark, Gavel, Swords, Car,
+  Briefcase, DollarSign, HeartHandshake, Ship,
+  Megaphone, CloudRain, Bomb, Truck, Battery, Factory, Rainbow,
+  Tv, Lock, PawPrint, EyeOff, TrendingUp, Tractor, Dna, Palette,
+  Home, ShoppingBag, Plane, Church, SearchX, Utensils, Radio,
+  ShieldAlert, Accessibility, Tent, FileText, Rocket, Droplets,
   History, MapPin, Smile, Ticket, MessageSquare, Building,
-  
+
   // Fallback Icon
-  CircleHelp 
+  CircleHelp,
+  Scroll
 } from 'lucide-react';
 
 // Define the map
@@ -21,7 +22,7 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   // --- Professional Human Rights & Law ---
   "human rights": Scale,        // Professional/Justice focus
   law: Gavel,
-  legal: Gavel,
+  legal: Scroll,
   justice: ShieldCheck,
   policy: FileText,
   administration: Landmark,
@@ -68,7 +69,6 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   accidents: AlertTriangle,
   safety: ShieldCheck,
   theft: AlertTriangle,
-  "the proposed topic is: theft": AlertTriangle,
   climate: CloudRain,
   water: Droplets,
   agriculture: Tractor,
@@ -116,7 +116,7 @@ const iconMap: Record<string, React.ComponentType<any>> = {
 };
 
 export const getTopicIcon = (topicId: string) => {
-  return iconMap[topicId] || CircleHelp; 
+  return iconMap[topicId] || CircleHelp;
 };
 
 const AVAILABLE_SOURCES = [

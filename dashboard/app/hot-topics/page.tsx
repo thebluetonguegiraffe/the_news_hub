@@ -19,13 +19,13 @@ const HeaderSection = () => {
         <div className="text-center">
           <div className="inline-flex items-center gap-2 bg-[#f7c873]/20 text-[#1a2238] px-4 py-2 rounded-full mb-6">
             <TrendingUp className="w-4 h-4" />
-            <span className="text-sm font-medium">Trending Now</span>
+            <span className="text-sm font-medium">{t("hot_topics.hero.tagline")}</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
             {t("nav.hot-topics")}
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Discover the most trending topics and breaking stories that are shaping our world today.
+            {t("hot_topics.hero.subtitle")}
           </p>
         </div>
       </div>
@@ -126,33 +126,32 @@ const HotTopicsSection = () => {
           </div>
 
           <div className="lg:col-span-2 h-full">
-            {topics.length > 0 && (
+            {topics.length > 0 ? (
               <div className="h-full">
                 <TopicsChart rawData={topics} />
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-lg p-6 flex flex-col items-center justify-center min-h-[400px] h-full space-y-6">
+                <p className="text-xl font-semibold text-foreground mb-6">{t("hot_topics.no_topics.title")}</p>
+                <p className="text-muted-foreground text-center text-lg opacity-75 mb-6">{t("hot_topics.no_topics.message")}</p>
+                <div className="flex flex-wrap justify-center gap-8">
+                  {Object.entries(iconMap).slice(0, 27).map(([category, Icon]) => (
+                    <div key={category} className="inline-flex items-center justify-center w-12 h-12 bg-[#f7c873]/20 text-[#1a2238] rounded-lg">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Topics Grid */}
-        <div className="mt-8"></div>
-        <h1 className="text-2xl font-bold  mt-8 text-gray-800">Topics List</h1>
-        <div className="flex items-center justify-between border-b border-gray-300 pb-8"></div>
-        <div className="mt-8"></div>
-        <div>
-          {topics.length === 0 ? (
-            <div className="bg-card border border-border rounded-lg p-6 flex flex-col items-center justify-center min-h-[400px] space-y-6">
-              <p className="text-xl font-semibold text-foreground mb-6">No topics registered during this range of dates</p>
-              <p className="text-muted-foreground text-center text-lg opacity-75 mb-6">Please select a different range of dates.</p>
-              <div className="flex flex-wrap justify-center gap-8">
-                {Object.entries(iconMap).map(([category, Icon]) => (
-                  <div key={category} className="inline-flex items-center justify-center w-12 h-12 bg-[#f7c873]/20 text-[#1a2238] rounded-lg">
-                    <Icon className="w-6 h-6" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
+        {topics.length > 0 && (
+          <div>
+            <div className="mt-8"></div>
+            <h1 className="text-2xl font-bold  mt-8 text-gray-800">{t("hot_topics.list.title")}</h1>
+            <div className="flex items-center justify-between border-b border-gray-300 pb-8"></div>
+            <div className="mt-8"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {topics.map((topic, index) => (
                 <div key={index} className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer group">
@@ -162,7 +161,7 @@ const HotTopicsSection = () => {
                     </div>
                     <div className="text-right">
                       <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                        {topic.count} news
+                        {topic.count} {t("hot_topics.card.news_count")}
                       </span>
                     </div>
                   </div>
@@ -179,14 +178,14 @@ const HotTopicsSection = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Read More <ExternalLink className="w-4 h-4" />
+                      {t("hot_topics.card.read_more")} <ExternalLink className="w-4 h-4" />
                     </a>
                   </div>
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );

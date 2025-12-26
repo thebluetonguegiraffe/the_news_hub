@@ -3,6 +3,7 @@ import { Calendar, ExternalLink, Newspaper } from "lucide-react";
 import { Article, getDaysFromDate } from "./Articles";
 import RobustImageComponent from "./RobustImage";
 import { AVAILABLE_SOURCES } from "./Mappers";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const getSourceIcon = (sourceUrl: string) => {
   const s = sourceUrl?.toLowerCase() || "";
@@ -13,7 +14,7 @@ const getSourceIcon = (sourceUrl: string) => {
 const getSourceName = (url: string) => {
   const s = url?.toLowerCase() || "";
   const match = AVAILABLE_SOURCES.find(src => s.includes(src.id.toLowerCase()));
-  return match ? match.name : "News Source";
+  return match ? match.name : "news_list.source_default";
 };
 
 interface NewsListProps {
@@ -22,11 +23,12 @@ interface NewsListProps {
   selectedTopics?: string[];
 }
 
-const NewsList: React.FC<NewsListProps> = ({ 
-  articles, 
-  selectedSources = [], 
-  selectedTopics = [] 
+const NewsList: React.FC<NewsListProps> = ({
+  articles,
+  selectedSources = [],
+  selectedTopics = []
 }) => {
+  const { t } = useLanguage();
 
   const filteredArticles = useMemo(() => {
     if (selectedSources.length === 0 && selectedTopics.length === 0) {
@@ -35,11 +37,11 @@ const NewsList: React.FC<NewsListProps> = ({
 
     return articles.filter(article => {
       const sourceUrl = article.source.toLowerCase();
-      
-      const matchesSource = selectedSources.length === 0 || 
+
+      const matchesSource = selectedSources.length === 0 ||
         selectedSources.some(id => sourceUrl.includes(id.toLowerCase()));
 
-      const matchesTopic = selectedTopics.length === 0 || 
+      const matchesTopic = selectedTopics.length === 0 ||
         selectedTopics.includes(article.topic);
 
       return matchesSource && matchesTopic;
@@ -49,10 +51,10 @@ const NewsList: React.FC<NewsListProps> = ({
   return (
     <section className="py-12 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {filteredArticles.length === 0 ? (
           <div className="text-center py-20 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-            <p className="text-muted-foreground text-lg">No articles found.</p>
+            <p className="text-muted-foreground text-lg">{t("news_list.no_articles")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -73,8 +75,8 @@ const NewsList: React.FC<NewsListProps> = ({
                   {/* Source icon*/}
                   {getSourceIcon(article.source) && (
                     <div className="absolute top-3 right-3 w-10 h-10 bg-white rounded-full p-1.5 shadow-md border border-gray-100 flex items-center justify-center z-10">
-                      <img 
-                        src={getSourceIcon(article.source)!} 
+                      <img
+                        src={getSourceIcon(article.source)!}
                         alt={article.source}
                         className="w-full h-full object-contain rounded-full"
                       />
@@ -92,21 +94,23 @@ const NewsList: React.FC<NewsListProps> = ({
                 <div className="p-6 flex flex-col h-auto min-h-[200px]">
                   <div className="flex items-center text-xs text-muted-foreground mb-3">
                     <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                    {getDaysFromDate(article.date)}
+                    {getDaysFromDate(article.date, t)}
                     <span className="mx-2 text-gray-300">•</span>
                     <span className="font-semibold uppercase tracking-wider text-primary/80">
-                      {getSourceName(article.source)}
+                      {getSourceName(article.source) === "news_list.source_default"
+                        ? t(getSourceName(article.source))
+                        : getSourceName(article.source)}
                     </span>
                   </div>
 
                   <h3 className="text-xl font-bold text-foreground mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
                     {article.title}
                   </h3>
-                  
+
                   <p className="text-muted-foreground text-sm mb-4 line-clamp-3 flex-grow">
                     {article.excerpt}
                   </p>
-                  
+
                   <div className="mt-auto pt-4 border-t border-gray-100">
                     <a
                       href={article.url}
@@ -114,7 +118,7 @@ const NewsList: React.FC<NewsListProps> = ({
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Read Full Story
+                      {t("news_list.read_more")}
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   </div>

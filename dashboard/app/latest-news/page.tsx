@@ -1,8 +1,8 @@
 "use client";
 
 import { API_URL, DEFAULT_HEADERS } from "../config";
-import { useState, useEffect} from "react";
-import { Star} from "lucide-react";
+import { useState, useEffect } from "react";
+import { Star } from "lucide-react";
 
 
 import { useLanguage } from "../contexts/LanguageContext";
@@ -28,13 +28,13 @@ const NewsHeader = () => {
         <div className="text-center">
           <div className="inline-flex items-center gap-2 bg-[#f7c873]/20 text-[#1a2238] px-4 py-2 rounded-full mb-6">
             <Star className="w-4 h-4" />
-            <span className="text-sm font-medium">AI-Powered News</span>
+            <span className="text-sm font-medium">{t("latest_news.hero.tagline")}</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
             {t("nav.latest-news")}
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Stay informed with the latest news, breaking stories, and in-depth analysis from around the world.
+            {t("latest_news.hero.subtitle")}
           </p>
         </div>
       </div>
@@ -44,6 +44,7 @@ const NewsHeader = () => {
 
 
 export default function LatestNewsPage() {
+  const { t } = useLanguage();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
@@ -145,8 +146,8 @@ export default function LatestNewsPage() {
       <main className="flex-grow">
         <NewsHeader />
         <NewsFilter
-          title="Filters"
-          availableSources={AVAILABLE_SOURCES} 
+          title={t("latest_news.filters.title")}
+          availableSources={AVAILABLE_SOURCES}
           selectedSources={selectedSources}
           toggleSource={toggleSource}
           availableTopics={availableTopics}
@@ -158,7 +159,7 @@ export default function LatestNewsPage() {
           <div className="flex justify-center items-center py-32">
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-muted-foreground animate-pulse">Loading latest stories...</p>
+              <p className="text-muted-foreground animate-pulse">{t("latest_news.loading")}</p>
             </div>
           </div>
         ) : (

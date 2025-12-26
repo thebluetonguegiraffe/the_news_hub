@@ -8,21 +8,21 @@ import { useLanguage } from "./contexts/LanguageContext";
 
 const HeroSection = () => {
   const { t } = useLanguage();
-  
+
   return (
     <section className="bg-gradient-to-br from-primary/10 to-secondary/10 py-16 relative overflow-hidden">
       {/* Yellow accent elements */}
       <div className="absolute top-10 left-10 w-20 h-20 bg-[#f7c873]/20 rounded-full blur-xl"></div>
       <div className="absolute bottom-10 right-10 w-32 h-32 bg-[#f7c873]/15 rounded-full blur-xl"></div>
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center">
           <div className="inline-flex items-center gap-2 bg-[#f7c873]/20 text-[#1a2238] px-4 py-2 rounded-full mb-6">
             <Star className="w-4 h-4" />
-            <span className="text-sm font-medium">AI-Powered News</span>
+            <span className="text-sm font-medium">{t("home.hero.tagline")}</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            Welcome to <span className="text-[#3a5ba0]">The News Hub</span>
+            {t("home.hero.welcome")} <span className="text-[#3a5ba0]">{t("home.hero.brand")}</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
             {t("home.hero.subtitle")}
@@ -50,7 +50,7 @@ const HeroSection = () => {
 
 const FeaturesSection = () => {
   const { t } = useLanguage();
-  
+
   const features = [
     {
       icon: TrendingUp,
@@ -83,7 +83,7 @@ const FeaturesSection = () => {
             {t("features.subtitle")}
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <div key={index} className="bg-card border border-border rounded-lg p-6 text-center hover:shadow-md transition-shadow relative group">
@@ -107,42 +107,43 @@ const FeaturesSection = () => {
 
 
 const SourcesSection = () => {
+  const { t } = useLanguage();
 
   const sources = [
     {
       name: "The Washington Post",
       abbreviation: "TWP",
-      description: "Leading American daily newspaper",
+      description: t("sources.twp.description"),
       logo: "/images/WP.png"
     },
     {
       name: "The New York Times",
       abbreviation: "TNYT",
-      description: "International daily newspaper",
+      description: t("sources.nyt.description"),
       logo: "/images/nyt.png"
     },
     {
       name: "BBC News",
       abbreviation: "BBC",
-      description: "British public service broadcaster",
+      description: t("sources.bbc.description"),
       logo: "/images/BBC.jpg"
     },
-    { 
+    {
       name: "The Guardian News",
       abbreviation: "The Guardian",
-      description: "Global Independent journalism voicer",
+      description: t("sources.guardian.description"),
       logo: "/images/the_guardian.jpg"
     },
-    { 
+    {
       name: "Ara.cat",
       abbreviation: "Ara",
-      description: "Catalan news newspaper offering independent reporting.",
+      description: t("sources.ara.description"),
       logo: "/images/ara.png"
     },
-    { 
+    {
       name: "La Vanguardia",
       abbreviation: "La Vanguardia",
-      description: "Spanish daily covering national and global news.",
+      description: t("sources.lavanguardia.description"),
       logo: "/images/la-vanguardia.png"
     }
   ];
@@ -156,24 +157,24 @@ const SourcesSection = () => {
             <Newspaper className="w-8 h-8 text-[#f7c873]" />
           </div>
           <h2 className="text-3xl font-bold text-foreground mb-4">
-            Our Trusted News Sources
+            {t("sources.title")}
           </h2>
           <p className="text-muted-foreground text-lg">
-            We partner with the world's most reputable news organizations to bring you accurate, timely, and comprehensive coverage.
+            {t("sources.subtitle")}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {sources.map((source) => (
-            <div 
-              key={source.abbreviation} 
+            <div
+              key={source.abbreviation}
               className="bg-card flex flex-col items-center text-center p-6 border border-border rounded-lg shadow hover:shadow-md transition-shadow group"
             >
               <div className="w-20 h-20 overflow-hidden rounded-full bg-white flex items-center justify-center mb-4">
-                <img 
-                  src={source.logo} 
-                  alt={source.name} 
-                  className="w-full h-full object-contain p-2" 
+                <img
+                  src={source.logo}
+                  alt={source.name}
+                  className="w-full h-full object-contain p-2"
                 />
               </div>
               <h3 className="text-lg font-semibold">{source.name}</h3>
@@ -188,9 +189,9 @@ const SourcesSection = () => {
 
 const FAQSection = () => {
   const { t } = useLanguage();
-  
+
   const faqs = [
-      {
+    {
       question: t("faq.updates.question"),
       answer: t("faq.updates.answer")
     },
@@ -220,7 +221,7 @@ const FAQSection = () => {
             {t("faq.title")}
           </h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {faqs.map((faq, index) => (
             <div key={index} className="bg-card border border-border rounded-lg p-6 hover:border-[#f7c873] transition-colors group">

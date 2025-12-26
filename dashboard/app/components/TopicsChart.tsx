@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import iconMap from "./Mappers";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const TOP_N = 12;
 const defaultIcon = TrendingUp;
@@ -34,6 +35,7 @@ interface TopicsChartProps {
 }
 
 const TopicsChart = ({ rawData }: TopicsChartProps) => {
+    const { t, language } = useLanguage();
     const [activeTab, setActiveTab] = useState(0);
 
     const emptyTopic = useMemo(() => {
@@ -42,19 +44,21 @@ const TopicsChart = ({ rawData }: TopicsChartProps) => {
         for (let i = 6; i >= 0; i--) {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
+            let dateStr = d.toLocaleDateString(language, { weekday: 'short', day: 'numeric' });
+            dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1).replace(" de ", " ").replace(" del ", " ");
             history.push({
-                date: d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' }),
+                date: dateStr,
                 value: 0,
                 rawDate: d
             });
         }
         return {
-            name: "No Data",
+            name: t("topics_chart.no_data"),
             history,
             total: 0,
             Icon: defaultIcon
         };
-    }, []);
+    }, [t, language]);
 
     const processedData = useMemo(() => {
         if (!rawData || rawData.length === 0) return [];
@@ -114,8 +118,10 @@ const TopicsChart = ({ rawData }: TopicsChartProps) => {
 
             const fullHistory = allDaysInRange.map(dateObj => {
                 const time = dateObj.getTime();
+                let dateStr = dateObj.toLocaleDateString(language, { weekday: 'short', day: 'numeric' });
+                dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1).replace(" de ", " ").replace(" del ", " ");
                 return {
-                    date: dateObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' }),
+                    date: dateStr,
                     value: valueMap.get(time) || 0,
                     rawDate: dateObj
                 };
@@ -135,7 +141,7 @@ const TopicsChart = ({ rawData }: TopicsChartProps) => {
             .filter(t => t.total > 0)
             .sort((a, b) => b.total - a.total)
             .slice(0, TOP_N);
-    }, [rawData]);
+    }, [rawData, language, t]);
 
     const hasData = processedData.length > 0;
     const activeTopic = hasData ? (processedData[activeTab] || processedData[0]) : emptyTopic;
@@ -145,7 +151,7 @@ const TopicsChart = ({ rawData }: TopicsChartProps) => {
 
             <div className="flex flex-col gap-6">
                 <div>
-                    <h3 className="text-lg font-semibold text-foreground">Weekly top 12 topics evolution</h3>
+                    <h3 className="text-lg font-semibold text-foreground">{t("topics_chart.title", { count: TOP_N })}</h3>
                 </div>
 
                 {hasData && (
@@ -160,8 +166,8 @@ const TopicsChart = ({ rawData }: TopicsChartProps) => {
                                 <button
                                     onClick={() => setActiveTab(index)}
                                     className={`flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200 border-2 ${activeTab === index
-                                            ? 'bg-[#f7c873] text-[#1a2238] border-[#f7c873] shadow-md scale-105'
-                                            : 'bg-[#f7c873]/20 text-[#1a2238] border-transparent hover:bg-[#f7c873]/40'
+                                        ? 'bg-[#f7c873] text-[#1a2238] border-[#f7c873] shadow-md scale-105'
+                                        : 'bg-[#f7c873]/20 text-[#1a2238] border-transparent hover:bg-[#f7c873]/40'
                                         }`}
                                 >
                                     <topic.Icon className="w-6 h-6" />
@@ -180,7 +186,7 @@ const TopicsChart = ({ rawData }: TopicsChartProps) => {
                             {activeTopic.name}
                         </span>
                         <span className="text-xs text-muted-foreground mt-1">
-                            {activeTopic.total} total news items
+                            {activeTopic.total} {t("topics_chart.total_news")}
                         </span>
                     </div>
                 </div>
@@ -206,7 +212,7 @@ const TopicsChart = ({ rawData }: TopicsChartProps) => {
                             />
                             <Tooltip
                                 cursor={false}
-                                formatter={(value: number | undefined) => [value ?? 0, "Docs"]}
+                                formatter={(value: number | undefined) => [value ?? 0, t("topics_chart.docs")]}
                                 contentStyle={{
                                     borderRadius: '12px',
                                     border: 'none',
