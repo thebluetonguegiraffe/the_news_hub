@@ -9,7 +9,7 @@ import Footer from "../components/Footer";
 import { Article, getDaysFromDate } from "../components/Articles";
 import { useLanguage } from "../contexts/LanguageContext";
 
-import RobustImageComponent from "../components/RobustImage";
+import NewsList from "../components/NewsList";
 
 const HeroSection = ({
   onSearch,
@@ -129,8 +129,16 @@ const SearchResults = ({ query, summary, articles, isLoading }: { query: string;
   }
 
   const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>({});
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
+
   const handleImageError = (id: number) => {
     setImageErrors(prev => ({ ...prev, [id]: true }));
+  };
+
+  const toggleSource = (id: string) => {
+    setSelectedSources(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
   };
 
   if (articles.length === 0) return null;
@@ -144,70 +152,20 @@ const SearchResults = ({ query, summary, articles, isLoading }: { query: string;
           </h2>
 
           {/* Summary */}
-          <div className="inline-flex items-center gap-2 bg-[#f7c873]/20 text-[#1a2238] px-4 py-2 rounded-full mb-6">
+          <div className="inline-flex items-center gap-2 bg-[#f7c873]/20 text-[#1a2238] px-4 py-2 rounded-full">
             <AlignCenter className="w-4 h-4" />
             <span className="text-md font-medium">{t("askhub.results.summary")}</span>
           </div>
-
-          <p className="text-muted-foreground text-lg px-4 py-2">
-            {summary}
-          </p>
         </div>
+        <p className="text-muted-foreground text-lg px-4 py-2">
+          {summary}
+        </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {articles.map((article) => (
-            <div key={article.id} className="bg-card border border-border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <div className="aspect-video relative overflow-hidden"  >
-                {imageErrors[article.id] ? (
-                  <div className="w-full h-full bg-gradient-to-br from-[#f7c873]/20 to-[#f7c873]/10 flex items-center justify-center">
-                    <Newspaper className="w-12 h-12 text-[#f7c873]" />
-                  </div>
-                ) : (
-                  <RobustImageComponent
-                    images={article.image}
-                    alt={article.title}
-                    className="w-full h-full object-cover"
-                    fallback={
-                      <div className="w-full h-full bg-gradient-to-br from-[#f7c873]/20 to-[#f7c873]/10 flex items-center justify-center">
-                        <Newspaper className="w-12 h-12 text-[#f7c873]" />
-                      </div>
-                    }
-                  />
-                )}
-                <div className="absolute top-4 left-4">
-                  <span className="px-3 py-1 bg-[#f7c873] text-[#1a2238] text-xs font-semibold rounded-full">
-                    {article.topic}
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                  <Clock className="w-4 h-4" />
-                  {getDaysFromDate(article.date, t)}
-                </div>
-
-                <h3 className="text-xl font-semibold text-foreground mb-3 line-clamp-2">
-                  {article.title}
-                </h3>
-
-                <p className="text-muted-foreground mb-4 line-clamp-3">
-                  {article.excerpt}
-                </p>
-
-                <a
-                  href={article.url}
-                  className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t("askhub.results.read_more")}
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
+        <NewsList
+          articles={articles}
+          selectedSources={[]}
+          selectedTopics={[]}
+        />
       </div>
     </section>
   );

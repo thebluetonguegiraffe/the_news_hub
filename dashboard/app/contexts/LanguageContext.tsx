@@ -44,9 +44,9 @@ const translations = {
     // AskHub Page
     "askhub.hero.pill": "Aprende sobre todo",
     "askhub.hero.subtitle": "Haz preguntas sobre cualquier tema de actualidad y obtén respuestas inteligentes y precisas impulsadas por tecnología de IA avanzada.",
-    "askhub.search.placeholder": "Pregunta sobre cualquier tema, eventos actuales o noticias de última hora...",
+    "askhub.search.placeholder": "Pregunta sobre cualquier tema, eventos o noticia...",
     "askhub.search.button.searching": "Buscando...",
-    "askhub.search.button.default": "Preguntar a IA",
+    "askhub.search.button.default": "Preguntar",
 
     "askhub.results.searching_for": "Buscando",
     "askhub.results.analyzing": "Nuestra IA está analizando las últimas noticias y encontrando los artículos más relevantes para ti",
@@ -168,9 +168,9 @@ const translations = {
     // AskHub Page
     "askhub.hero.pill": "Learn about everything",
     "askhub.hero.subtitle": "Ask questions about any news topic and get intelligent, accurate answers powered by advanced AI technology.",
-    "askhub.search.placeholder": "Ask about any news topic, current events, or breaking news...",
+    "askhub.search.placeholder": "Ask about any topic, current events, or breaking news...",
     "askhub.search.button.searching": "Searching...",
-    "askhub.search.button.default": "Ask AI",
+    "askhub.search.button.default": "Ask",
 
     "askhub.results.searching_for": "Searching for",
     "askhub.results.analyzing": "Our AI is analyzing the latest news and finding the most relevant articles for you",
@@ -292,9 +292,9 @@ const translations = {
     // AskHub Page
     "askhub.hero.pill": "Aprèn sobre tot",
     "askhub.hero.subtitle": "Fes preguntes sobre qualsevol tema d'actualitat i obté respostes intel·ligents i precises impulsades per tecnologia d'IA avançada.",
-    "askhub.search.placeholder": "Pregunta sobre qualsevol tema, esdeveniments actuals o notícies d'última hora...",
+    "askhub.search.placeholder": "Pregunta sobre qualsevol tema, esdeveniment o notícia...",
     "askhub.search.button.searching": "Cercant...",
-    "askhub.search.button.default": "Preguntar a IA",
+    "askhub.search.button.default": "Preguntar",
 
     "askhub.results.searching_for": "Cercant",
     "askhub.results.analyzing": "La nostra IA està analitzant les últimes notícies i trobant els articles més rellevants per a tu",

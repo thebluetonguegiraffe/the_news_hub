@@ -49,7 +49,7 @@ const NewsList: React.FC<NewsListProps> = ({
   }, [articles, selectedSources, selectedTopics]);
 
   return (
-    <section className="py-12 bg-background">
+    <section className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {filteredArticles.length === 0 ? (
