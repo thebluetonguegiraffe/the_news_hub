@@ -16,6 +16,14 @@ import { useLanguage } from "@/app/contexts/LanguageContext";
 
 const formatDate = (date: Date): string => date.toISOString().split('T')[0];
 
+const capitalize = (str: string | undefined | null) => {
+  if (!str) return "";
+  return str
+    .split(' ')
+    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 interface TopicHeaderProps {
   title: string;
   description?: string;
@@ -45,9 +53,15 @@ const TopicHeader = ({ title, description, category }: TopicHeaderProps) => {
 };
 
 export default function ArticlePage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [articles, setArticles] = useState<Article[]>([]);
-  const [topicDescription, setTopicDescription] = useState<string>("");
+  const [topicData, setTopicData] = useState<{
+    description: string;
+    topic_es?: string;
+    topic_ca?: string;
+    description_es?: string;
+    description_ca?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const params = useParams();
@@ -67,7 +81,7 @@ export default function ArticlePage() {
 
       if (response.ok) {
         const data = await response.json();
-        setTopicDescription(data.description || data);
+        setTopicData(data);
       }
     } catch (error) {
       console.error("Error fetching topic description:", error);
@@ -105,7 +119,13 @@ export default function ArticlePage() {
         source: item.metadata.source,
         date: item.metadata.published_date,
         image: item.metadata.image?.split(',').map((url: string) => url.trim()) || [],
-        url: item.metadata.url
+        url: item.metadata.url,
+        title_es: item.metadata.title_es,
+        title_ca: item.metadata.title_ca,
+        excerpt_es: item.metadata.excerpt_es,
+        excerpt_ca: item.metadata.excerpt_ca,
+        topic_es: item.metadata.topic_es,
+        topic_ca: item.metadata.topic_ca,
       }));
 
       setArticles(transformedArticles || []);
@@ -133,8 +153,24 @@ export default function ArticlePage() {
     <div className="min-h-screen bg-background">
       <NavigationBar activePage="menu" />
       <TopicHeader
-        title={topicName}
-        description={topicDescription}
+        title={
+          capitalize(
+            language === "es"
+              ? topicData?.topic_es || topicName
+              : language === "ca"
+                ? topicData?.topic_ca || topicName
+                : topicName
+          )
+        }
+        description={
+          capitalize(
+            language === "es"
+              ? topicData?.description_es || topicData?.description
+              : language === "ca"
+                ? topicData?.description_ca || topicData?.description
+                : topicData?.description
+          )
+        }
       />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
         <div className="mb-8">

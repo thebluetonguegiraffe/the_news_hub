@@ -34,12 +34,24 @@ const HeaderSection = () => {
 };
 
 // --- Hot Topics Section ---
+const capitalize = (str: string | undefined | null) => {
+  if (!str) return "";
+  return str
+    .split(' ')
+    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 type Topic = {
   _id: string;
   name: string;
+  topic_es?: string;
+  topic_ca?: string;
   topics_per_day: Record<string, number>;
   count: number;
   description: string;
+  description_es?: string;
+  description_ca?: string;
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>> | null;
 };
 
@@ -51,7 +63,7 @@ function toLocalMidnightISOString(date: Date) {
 }
 
 const HotTopicsSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const today = new Date();
@@ -153,36 +165,52 @@ const HotTopicsSection = () => {
             <div className="flex items-center justify-between border-b border-gray-300 pb-8"></div>
             <div className="mt-8"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {topics.map((topic, index) => (
-                <div key={index} className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer group">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="inline-flex items-center justify-center w-12 h-12 bg-[#f7c873]/20 text-[#1a2238] rounded-lg group-hover:bg-[#f7c873] transition-colors">
-                      {topic.icon && <topic.icon className="w-6 h-6" />}
+              {topics.map((topic, index) => {
+                const displayName =
+                  language === "es"
+                    ? topic.topic_es || topic.name
+                    : language === "ca"
+                      ? topic.topic_ca || topic.name
+                      : topic.name;
+
+                const displayDescription =
+                  language === "es"
+                    ? topic.description_es || topic.description
+                    : language === "ca"
+                      ? topic.description_ca || topic.description
+                      : topic.description;
+
+                return (
+                  <div key={index} className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="inline-flex items-center justify-center w-12 h-12 bg-[#f7c873]/20 text-[#1a2238] rounded-lg group-hover:bg-[#f7c873] transition-colors">
+                        {topic.icon && <topic.icon className="w-6 h-6" />}
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+                          {topic.count} {t("hot_topics.card.news_count")}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                        {topic.count} {t("hot_topics.card.news_count")}
-                      </span>
+                    <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                      {capitalize(displayName)}
+                    </h3>
+                    <p className="text-muted-foreground mb-4 text-sm">
+                      {capitalize(displayDescription)}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <a
+                        href={`/topic/${topic.name}?from=${fromDate}&to=${toDate}`}
+                        className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t("hot_topics.card.read_more")} <ExternalLink className="w-4 h-4" />
+                      </a>
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                    {topic.name.charAt(0).toUpperCase() + topic.name.slice(1)}
-                  </h3>
-                  <p className="text-muted-foreground mb-4 text-sm">
-                    {topic.description.charAt(0).toUpperCase() + topic.description.slice(1)}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <a
-                      href={`/topic/${topic.name}?from=${fromDate}&to=${toDate}`}
-                      className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {t("hot_topics.card.read_more")} <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

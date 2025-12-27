@@ -16,8 +16,18 @@ import NewsFilter from "../components/NewsFilter";
 
 const formatDate = (date: Date): string => date.toISOString().split('T')[0];
 
+const capitalize = (str: string | undefined | null) => {
+  if (!str) return "";
+  return str
+    .split(' ')
+    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 interface Topic {
   name: string;
+  name_es?: string;
+  name_ca?: string;
 }
 
 const NewsHeader = () => {
@@ -44,7 +54,7 @@ const NewsHeader = () => {
 
 
 export default function LatestNewsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
@@ -100,35 +110,47 @@ export default function LatestNewsPage() {
       );
       if (!topics_response.ok) throw new Error(`HTTP error! Status: ${topics_response.status}`);
       const topics_data = await topics_response.json();
-      console.log("Fetched topics data:", topics_data);
 
-      const transformedTopics: Topic[] = topics_data.topics?.map((t: any) => ({
-        name: t.name
-          .split(' ')
-          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-          .join(' ')
-      })) || [];
+      const topicLookup: Record<string, { es?: string; ca?: string }> = {};
+
+      const transformedTopics: Topic[] = topics_data.topics?.map((t: any) => {
+        const englishName = capitalize(t.name);
+        const esName = capitalize(t.topic_es);
+        const caName = capitalize(t.topic_ca);
+
+        // Populate lookup
+        topicLookup[englishName] = { es: esName, ca: caName };
+
+        return {
+          name: englishName,
+          name_es: esName,
+          name_ca: caName
+        };
+      }) || [];
       setAvailableTopics(transformedTopics);
 
-      const transformedArticles = news_data.articles.map((item: any) => ({
-        id: item.id,
-        title: item.metadata.title,
-        excerpt: item.metadata.excerpt,
-        topic: item.metadata.topic
-          ? item.metadata.topic
-            .split(' ')
-            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(' ')
-          : "Uncategorized",
-        source: item.metadata.source,
-        date: item.metadata.published_date,
-        image: item.metadata.image?.split(',').map((url: string) => url.trim()) || [],
-        url: item.metadata.url,
-        title_es: item.metadata.title_es,
-        title_ca: item.metadata.title_ca,
-        excerpt_es: item.metadata.excerpt_es,
-        excerpt_ca: item.metadata.excerpt_ca,
-      }));
+      const transformedArticles = news_data.articles.map((item: any) => {
+        const topicName = item.metadata.topic
+          ? capitalize(item.metadata.topic)
+          : "Uncategorized";
+
+        const translations = topicLookup[topicName] || {};
+
+        return {
+          id: item.id,
+          title: item.metadata.title,
+          excerpt: item.metadata.excerpt,
+          topic: topicName,
+          source: item.metadata.source,
+          date: item.metadata.published_date,
+          image: item.metadata.image?.split(',').map((url: string) => url.trim()) || [],
+          url: item.metadata.url,
+          title_es: item.metadata.title_es,
+          title_ca: item.metadata.title_ca,
+          excerpt_es: item.metadata.excerpt_es,
+          excerpt_ca: item.metadata.excerpt_ca,
+        };
+      });
 
       setArticles(transformedArticles || []);
 
@@ -141,7 +163,7 @@ export default function LatestNewsPage() {
 
   useEffect(() => {
     retrieve_news();
-  }, []);
+  }, [language]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -174,7 +196,6 @@ export default function LatestNewsPage() {
           />
         )}
       </main>
-
       <Footer />
     </div>
   );

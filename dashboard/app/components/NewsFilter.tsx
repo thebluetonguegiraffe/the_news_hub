@@ -14,7 +14,7 @@ interface NewsFilterProps {
   selectedSources?: string[];
   toggleSource?: (id: string) => void;
   availableSources?: { id: string; name: string; icon: string }[];
-  availableTopics?: { name: string }[];
+  availableTopics?: { name: string; name_es?: string; name_ca?: string }[];
   selectedTopics?: string[];
   toggleTopic?: (name: string) => void;
   getTopicIcon?: (name: string) => React.ElementType;
@@ -30,7 +30,7 @@ const NewsFilter = ({
   toggleTopic,
   getTopicIcon = defaultGetTopicIcon
 }: NewsFilterProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [isTopicsOpen, setIsTopicsOpen] = useState(false);
 
@@ -114,6 +114,13 @@ const NewsFilter = ({
                       {availableTopics.map((topic) => {
                         const isSelected = selectedTopics.includes(topic.name);
                         const TopicIcon = getTopicIcon(topic.name);
+                        const displayName =
+                          language === "es"
+                            ? topic.name_es || topic.name
+                            : language === "ca"
+                              ? topic.name_ca || topic.name
+                              : topic.name;
+
                         return (
                           <div
                             key={topic.name}
@@ -124,7 +131,7 @@ const NewsFilter = ({
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isSelected ? 'bg-blue-200 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>
                               <TopicIcon className="w-4 h-4" />
                             </div>
-                            <span className={`text-sm ${isSelected ? 'font-semibold' : 'font-medium'}`}>{topic.name}</span>
+                            <span className={`text-sm ${isSelected ? 'font-semibold' : 'font-medium'}`}>{displayName}</span>
                           </div>
                         );
                       })}
