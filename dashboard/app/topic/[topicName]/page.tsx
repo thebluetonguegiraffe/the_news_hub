@@ -31,7 +31,12 @@ interface TopicHeaderProps {
 }
 
 const TopicHeader = ({ title, description, category }: TopicHeaderProps) => {
-  const IconComponent = iconMap[title] || iconMap[category || ""] || iconMap["Default"];
+  const normalize = (str: string) => str.toLowerCase().trim();
+  const iconKey = Object.keys(iconMap).find(k =>
+    normalize(k) === normalize(category || "") ||
+    normalize(k) === normalize(title)
+  );
+  const IconComponent = iconKey ? iconMap[iconKey] : iconMap["Default"] || iconMap["politics"]; // Fallback to something valid if Default missing
 
   return (
     <section className="bg-gradient-to-br from-primary/10 to-secondary/10 py-12 md:py-16">
@@ -162,6 +167,7 @@ export default function ArticlePage() {
                 : topicName
           )
         }
+        category={capitalize(topicName)}
         description={
           capitalize(
             language === "es"

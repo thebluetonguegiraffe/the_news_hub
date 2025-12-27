@@ -107,10 +107,14 @@ const HotTopicsSection = () => {
           const count = Object.values(topic.topics_per_day || {}).reduce(
             (sum: number, val: any) => sum + (typeof val === "number" ? val : 0), 0
           );
+
+          const normalize = (str: string) => str.toLowerCase().trim();
+          const iconKey = Object.keys(iconMap).find(k => normalize(k) === normalize(topic.name));
+
           return {
             ...topic,
             count,
-            icon: iconMap[topic.name] ?? defaultIcon,
+            icon: iconKey ? iconMap[iconKey] : defaultIcon,
           };
         });
         setTopics(topicsWithIcons);
