@@ -14,6 +14,17 @@ class TopicResponse(BaseModel):
 
 
 class TopicsRetriever:
+
+    PROJECTION_FIELDS = {
+        "_id": 1,
+        "description": 1,
+        "topics_per_day": 1,
+        "topic_ca": 1,
+        "topic_es": 1,
+        "description_ca": 1,
+        "description_es": 1,
+    }
+
     def __init__(self):
         self.mongo = CustomMongoClient
 
@@ -39,6 +50,10 @@ class TopicsRetriever:
                     "name": doc["_id"],
                     "description": doc.get("description"),
                     "topics_per_day": matched_topics_per_day,
+                    "topic_ca": doc.get("topic_ca"),
+                    "topic_es": doc.get("topic_es"),
+                    "description_ca": doc.get("description_ca"),
+                    "description_es": doc.get("description_es"),
                 }
                 period_topics.append(topic)
         return period_topics
@@ -71,16 +86,23 @@ class TopicsRetriever:
                         }
                     }
                 },
-                projection={"_id": 1, "description": 1, "topics_per_day": 1},
+                projection=self.PROJECTION_FIELDS,
             )
             mongo_results = list(results)
         parsed_topics = self.parse_mongo_results(mongo_results=mongo_results)
         return TopicResponse(topics=parsed_topics, from_date=from_date, to_date=to_date)
 
-    def get_description_by_id(self, topic_id: str) -> str:
+    def get_description_by_id(self, topic_id: str) -> Dict:
         with self.mongo() as client:
             db = client[mongo_configuration["db"]]
             collection = db[mongo_configuration["collection"]]
-            result = collection.find_one({"_id": topic_id}, {"description": 1, "_id": 0})
+            result = collection.find_one({"_id": topic_id}, self.PROJECTION_FIELDS)
 
-            return result.get("description") if result else None
+            return {
+                "topic": result["_id"],
+                "description": result.get("description"),
+                "topic_ca": result.get("topic_ca"),
+                "topic_es": result.get("topic_es"),
+                "description_ca": result.get("description_ca"),
+                "description_es": result.get("description_es"),
+            }
