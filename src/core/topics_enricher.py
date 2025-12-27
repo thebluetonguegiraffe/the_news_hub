@@ -5,6 +5,7 @@ import os
 import time
 from typing import Dict, List
 
+from deep_translator import GoogleTranslator
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from langchain.chat_models import init_chat_model
@@ -34,6 +35,8 @@ class TopicsEnricher:
         self.prompts = Prompts()
         self.mongo = CustomMongoClient
         self.cached_topics = self.retrieve_cached_topics()
+
+        self.translator = GoogleTranslator(source_lang="en")
 
     def clusterize_topics(self, date: str, dry_run: bool = False, overwrite: bool = False):
         if overwrite:
@@ -140,11 +143,16 @@ class TopicsEnricher:
         new_mongo_documents = []
         for topic in non_cached_topics:
             n_docs = topics.count(topic)
+            description = self.get_topic_description(topic=topic)
             new_mongo_documents.append(
                 {
                     "_id": topic,
-                    "description": self.get_topic_description(topic=topic),
+                    "description": description,
                     "topics_per_day": [{"date": date, "docs_number": n_docs}],
+                    "topic_ca": self.translator.translate(topic, target_lang="ca"),
+                    "topic_es": self.translator.translate(topic, target_lang="es"),
+                    "description_ca": self.translator.translate(description, target_lang="ca"),
+                    "description_es": self.translator.translate(description, target_lang="es"),
                 }
             )
 

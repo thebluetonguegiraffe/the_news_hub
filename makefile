@@ -3,16 +3,13 @@ export
 
 run-api-dev:
 	@echo "Starting FastAPI server..."
-	PYTHONPATH=$(PWD) uvicorn api.main:app --host 0.0.0.0 --port 7001 --reload
+	PYTHONPATH=. uvicorn api.main:app --host 0.0.0.0 --port 7001 --reload --reload-dir api
 
 deploy-api:
 	docker compose -f api/the-news-hub-api.yml up --build -d
 
 run-dashboard-dev:
 	@cd dashboard && npm run dev
-
-run-dashboard:
-	@cd dashboard && rm -rf .next && rm -rf node_modules/.cache && npm run build && npm start
 
 
 GITHUB_USER := thebluetonguegiraffe
