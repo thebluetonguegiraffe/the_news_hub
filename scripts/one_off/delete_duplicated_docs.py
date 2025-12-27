@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 import logging
 from config import chroma_configuration, project_root
-from src.vectorized_database import VectorizedDatabase
+from src.core.chroma_database import ChromaDatabase
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     collection_name = chroma_configuration["collection_name"]
 
     logger.info("Initializing vectorized database")
-    db_client = VectorizedDatabase(
+    db_client = ChromaDatabase(
         persist_directory=f"{project_root}/db/{db_path}", collection_name=collection_name
     )
 
