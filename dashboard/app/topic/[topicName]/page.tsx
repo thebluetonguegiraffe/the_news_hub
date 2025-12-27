@@ -28,9 +28,10 @@ interface TopicHeaderProps {
   title: string;
   description?: string;
   category?: string;
+  isLoading?: boolean;
 }
 
-const TopicHeader = ({ title, description, category }: TopicHeaderProps) => {
+const TopicHeader = ({ title, description, category, isLoading }: TopicHeaderProps) => {
   const normalize = (str: string) => str.toLowerCase().trim();
   const iconKey = Object.keys(iconMap).find(k =>
     normalize(k) === normalize(category || "") ||
@@ -45,12 +46,21 @@ const TopicHeader = ({ title, description, category }: TopicHeaderProps) => {
           <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-[#f7c873]/20 text-[#1a2238] shadow-md mb-6">
             {IconComponent && <IconComponent className="w-6 h-6" />}
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 capitalize">
-            {title}
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            {description || ""}
-          </p>
+          {isLoading ? (
+            <div className="space-y-4 w-full flex flex-col items-center animate-pulse">
+              <div className="h-10 md:h-14 bg-gray-300 rounded-lg w-3/4 md:w-1/2 max-w-lg opacity-50"></div>
+              <div className="h-6 bg-gray-300 rounded w-full max-w-2xl opacity-40"></div>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 capitalize">
+                {title}
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                {description || ""}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </section>
@@ -68,6 +78,7 @@ export default function ArticlePage() {
     description_ca?: string;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingTopic, setLoadingTopic] = useState(true);
 
   const params = useParams();
   const searchParams = useSearchParams();
@@ -78,6 +89,7 @@ export default function ArticlePage() {
 
   const retrieve_description = async () => {
     if (!topicName) return;
+    setLoadingTopic(true);
     try {
       const response = await fetch(`${API_URL}/topics/description/${encodeURIComponent(topicName)}`, {
         method: "GET",
@@ -90,6 +102,8 @@ export default function ArticlePage() {
       }
     } catch (error) {
       console.error("Error fetching topic description:", error);
+    } finally {
+      setLoadingTopic(false);
     }
   };
 
@@ -168,6 +182,7 @@ export default function ArticlePage() {
           )
         }
         category={capitalize(topicName)}
+        isLoading={loadingTopic}
         description={
           capitalize(
             language === "es"

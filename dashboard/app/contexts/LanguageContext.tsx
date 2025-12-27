@@ -389,12 +389,21 @@ const translations = {
 };
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguageState] = useState<Language>("en");
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    const saved = localStorage.getItem("language") as Language;
+    if (saved && ["es", "en", "ca"].includes(saved)) {
+      setLanguageState(saved);
+    }
     setIsClient(true);
   }, []);
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem("language", lang);
+  };
 
   const t = (key: string, args?: Record<string, string | number>): string => {
     if (!isClient) {
