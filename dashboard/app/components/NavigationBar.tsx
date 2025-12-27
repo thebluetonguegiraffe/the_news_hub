@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useLanguage } from "../contexts/LanguageContext";
 import { Globe } from "lucide-react";
 
+import Link from "next/link";
+import Image from "next/image";
+
+import { useLanguage } from "../contexts/LanguageContext";
+import logoImg from "../../public/images/the_news_hub_logo.png";
+
 interface NavigationBarProps {
-  activePage: "inicio" | "noticias" | "tema-caliente" | "ia";
+  activePage: "menu" | "latest-news" | "hot-topics" | "askhub";
 }
 
 const NavigationBar = ({ activePage }: NavigationBarProps) => {
@@ -43,14 +46,14 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-6">
               <Link href="/" className="flex items-center">
-                <Image
-                  src="/images/the_news_hub_logo.png"
-                  alt="The News Hub"
-                  width={120}
-                  height={40}
-                  className="h-10 w-auto"
-                  priority
-                />
+              <Image
+                src={logoImg} 
+                alt=""
+                width={32}
+                height={32}
+                className="object-contain"
+                priority
+              />
               </Link>
             </div>
           </div>
@@ -67,11 +70,11 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
           <div className="flex items-center space-x-6">
             <Link href="/" className="flex items-center">
               <Image
-                src="/images/the_news_hub_logo.png"
-                alt="The News Hub"
-                width={120}
-                height={40}
-                className="h-10 w-auto"
+                src={logoImg} 
+                alt=""
+                width={32}
+                height={32}
+                className="object-contain"
                 priority
               />
             </Link>
@@ -79,7 +82,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               <Link 
                 href="/latest-news" 
                 className={`px-4 py-2 rounded-full font-bold transition-colors ${
-                  isActive("noticias")
+                  isActive("latest-news")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -89,7 +92,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               <Link 
                 href="/hot-topics" 
                 className={`px-4 py-2 rounded-full font-bold transition-colors ${
-                  isActive("tema-caliente")
+                  isActive("hot-topics")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -99,7 +102,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               <Link 
                 href="/askhub" 
                 className={`px-4 py-2 rounded-full font-bold transition-colors ${
-                  isActive("ia")
+                  isActive("askhub")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -123,7 +126,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               
               {isLanguageMenuOpen && (
                 <div className="absolute right-0 mt-2 w-28 bg-card border border-border rounded-lg shadow-lg z-50">
-                  {/* <button
+                  <button
                     onClick={() => handleLanguageChange("es")}
                     className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
                       language === "es" ? "text-primary font-bold" : "text-foreground"
@@ -138,7 +141,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
                     }`}
                   >
                     Català
-                  </button> */}
+                  </button>
                   <button
                     onClick={() => handleLanguageChange("en")}
                     className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
@@ -179,7 +182,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               <Link 
                 href="/latest-news" 
                 className={`block px-3 py-2 rounded-full font-medium transition-colors ${
-                  isActive("noticias")
+                  isActive("lastes-news")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-foreground hover:text-primary"
                 }`}
@@ -189,7 +192,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               <Link 
                 href="/hot-topics" 
                 className={`block px-3 py-2 rounded-full font-medium transition-colors ${
-                  isActive("tema-caliente")
+                  isActive("hot-topics")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-foreground hover:text-primary"
                 }`}
@@ -199,7 +202,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               <Link 
                 href="/askhub" 
                 className={`block px-3 py-2 rounded-full font-medium transition-colors ${
-                  isActive("ia")
+                  isActive("askhub")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-foreground hover:text-primary"
                 }`}

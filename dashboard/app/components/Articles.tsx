@@ -7,9 +7,15 @@ export interface Article {
   date: string;
   image: string;
   url: string;
+  title_es?: string;
+  title_ca?: string;
+  excerpt_es?: string;
+  excerpt_ca?: string;
+  topic_es?: string;
+  topic_ca?: string;
 }
 
-export function getDaysFromDate(dateString: string): string {
+export function getDaysFromDate(dateString: string, t: (key: string, args?: Record<string, string | number>) => string): string {
   const givenDate = new Date(dateString);
   const today = new Date();
 
@@ -19,9 +25,10 @@ export function getDaysFromDate(dateString: string): string {
   const diffTime = today.getTime() - givenDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "1 day ago";
-  return `${diffDays} days ago`;
+  if (diffDays === 0) return t("dates.today");
+  if (diffDays === 1) return t("dates.yesterday");
+
+  return t("dates.days_ago", { count: diffDays });
 }
 
 

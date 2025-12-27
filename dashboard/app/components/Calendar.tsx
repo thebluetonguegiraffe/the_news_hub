@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { isYesterday } from 'date-fns';
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface CalendarProps {
   onDateSelect?: (date: Date) => void;
@@ -12,13 +13,25 @@ interface CalendarProps {
 }
 
 const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateRange }: CalendarProps) => {
+  const { language, t } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedSingleDate, setSelectedSingleDate] = useState<Date | null>(
-    selectedDate || null
-  );
-  const [dateRange, setDateRange] = useState<{ fromDate: Date; toDate: Date } | null>(
-    selectedDateRange || null
-  );
+
+  const [selectedSingleDate, setSelectedSingleDate] = useState<Date | null>(() => {
+    if (!selectedDate) return null;
+    const d = new Date(selectedDate);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  const [dateRange, setDateRange] = useState<{ fromDate: Date; toDate: Date } | null>(() => {
+    if (!selectedDateRange) return null;
+    const from = new Date(selectedDateRange.fromDate);
+    const to = new Date(selectedDateRange.toDate);
+    from.setHours(0, 0, 0, 0);
+    to.setHours(0, 0, 0, 0);
+    return { fromDate: from, toDate: to };
+  });
+
   const [isSelectingRange, setIsSelectingRange] = useState(false);
 
   const getDaysInMonth = (date: Date) => {
@@ -27,39 +40,39 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
+
     const startingDayOfWeek = firstDay.getDay();
+    const adjustedStartDay = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
 
     const days = [];
-    
-    // Add days from previous month
+
     const prevMonth = new Date(year, month - 1, 0);
     const daysInPrevMonth = prevMonth.getDate();
-    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-      days.push({
-        date: new Date(year, month - 1, daysInPrevMonth - i),
-        isCurrentMonth: false,
-        isToday: false
-      });
+    for (let i = adjustedStartDay - 1; i >= 0; i--) {
+      const d = new Date(year, month - 1, daysInPrevMonth - i);
+      d.setHours(0, 0, 0, 0);
+      days.push({ date: d, isCurrentMonth: false, isToday: false });
     }
 
-    // Add days from current month
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     for (let i = 1; i <= daysInMonth; i++) {
       const dayDate = new Date(year, month, i);
+      dayDate.setHours(0, 0, 0, 0);
       days.push({
         date: dayDate,
         isCurrentMonth: true,
-        isToday: dayDate.toDateString() === new Date().toDateString()
+        isToday: dayDate.getTime() === today.getTime()
       });
     }
 
-    // Add days from next month
-    const remainingDays = 42 - days.length; // 6 rows * 7 days
+    // Días del mes siguiente para completar la cuadrícula de 6 filas (42 días)
+    const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
-      days.push({
-        date: new Date(year, month + 1, i),
-        isCurrentMonth: false,
-        isToday: false
-      });
+      const d = new Date(year, month + 1, i);
+      d.setHours(0, 0, 0, 0);
+      days.push({ date: d, isCurrentMonth: false, isToday: false });
     }
 
     return days;
@@ -67,62 +80,52 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
 
   const handleDateClick = (date: Date) => {
     if (!date || !date.getTime()) return;
-    
+
     const clickedDate = new Date(date);
-    
-    if (isSelectingRange) {
-      // Second click - complete the range
-      if (dateRange?.fromDate && clickedDate >= dateRange.fromDate) {
-        const newRange = { fromDate: dateRange.fromDate, toDate: clickedDate };
-        setDateRange(newRange);
-        setIsSelectingRange(false);
-        
-        if (onDateRangeSelect) {
-          onDateRangeSelect(newRange.fromDate, newRange.toDate);
-        }
-      } else if (dateRange?.fromDate && clickedDate < dateRange.fromDate) {
-        // If second date is before first, swap them
-        const newRange = { fromDate: clickedDate, toDate: dateRange.fromDate };
-        setDateRange(newRange);
-        setIsSelectingRange(false);
-        
-        if (onDateRangeSelect) {
-          onDateRangeSelect(newRange.fromDate, newRange.toDate);
-        }
+    clickedDate.setHours(0, 0, 0, 0);
+
+    if (isSelectingRange && dateRange?.fromDate) {
+      let newRange;
+      if (clickedDate >= dateRange.fromDate) {
+        newRange = { fromDate: dateRange.fromDate, toDate: clickedDate };
+      } else {
+        newRange = { fromDate: clickedDate, toDate: dateRange.fromDate };
       }
+
+      setDateRange(newRange);
+      setIsSelectingRange(false);
+      if (onDateRangeSelect) onDateRangeSelect(newRange.fromDate, newRange.toDate);
+
     } else {
-      // First click - start range selection
-      setDateRange({ fromDate: clickedDate, toDate: clickedDate });
+      const newRange = { fromDate: clickedDate, toDate: clickedDate };
+      setDateRange(newRange);
       setIsSelectingRange(true);
       setSelectedSingleDate(clickedDate);
-      
-      if (onDateSelect) {
-        onDateSelect(clickedDate);
-      }
+      if (onDateSelect) onDateSelect(clickedDate);
     }
   };
 
   const isDateSelected = (date: Date) => {
+    const dateTime = date.getTime();
     if (dateRange) {
-      const dateTime = date.getTime();
       const fromTime = dateRange.fromDate.getTime();
       const toTime = dateRange.toDate.getTime();
       return dateTime >= fromTime && dateTime <= toTime;
     }
     if (selectedSingleDate) {
-      return date.toDateString() === selectedSingleDate.toDateString();
+      return dateTime === selectedSingleDate.getTime();
     }
     return false;
   };
 
   const isRangeStart = (date: Date) => {
     if (!dateRange) return false;
-    return date.toDateString() === dateRange.fromDate.toDateString();
+    return date.getTime() === dateRange.fromDate.getTime();
   };
 
   const isRangeEnd = (date: Date) => {
     if (!dateRange) return false;
-    return date.toDateString() === dateRange.toDate.toDateString();
+    return date.getTime() === dateRange.toDate.getTime();
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -136,11 +139,21 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
   };
 
   const formatMonthYear = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    let str = date.toLocaleDateString(language, { month: 'long', year: 'numeric' });
+    str = str.charAt(0).toUpperCase() + str.slice(1);
+    return str.replace(" de ", " ").replace(" d'", " ").replace(" del ", " ");
   };
 
   const days = getDaysInMonth(currentDate);
-  const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const dayNames = [
+    t("dates.mon"),
+    t("dates.tue"),
+    t("dates.wed"),
+    t("dates.thu"),
+    t("dates.fri"),
+    t("dates.sat"),
+    t("dates.sun")
+  ];
 
   return (
     <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
@@ -180,18 +193,18 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
           const isSelected = isDateSelected(day.date);
           const isStart = isRangeStart(day.date);
           const isEnd = isRangeEnd(day.date);
-          
+
           return (
             <button
               key={index}
               onClick={() => handleDateClick(day.date)}
               className={`
                 relative h-10 w-full rounded-lg text-sm font-medium transition-colors
-                ${!day.isCurrentMonth 
-                  ? 'text-muted-foreground/40' 
+                ${!day.isCurrentMonth
+                  ? 'text-muted-foreground/40'
                   : 'text-foreground hover:bg-muted'
                 }
-                ${isSelected 
+                ${isSelected
                   ? isStart || isEnd
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'bg-primary/20 text-primary'
@@ -210,4 +223,4 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
   );
 };
 
-export default Calendar; 
+export default Calendar;
