@@ -27,7 +27,7 @@ class ArticlesRetriever:
                     "metadata": metadata,
                 }
             )
-        items.sort(key=lambda x: x["metadata"].get("title", ""), reverse=True)
+        items.sort(key=lambda x: x["metadata"].get("timestamp", ""), reverse=True)
         return items
 
     def search(self, request: ArticleSearchRequest) -> ArticleResponse:
