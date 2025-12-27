@@ -73,6 +73,13 @@ const NewsList: React.FC<NewsListProps> = ({
                     ? article.excerpt_ca || article.excerpt
                     : article.excerpt;
 
+              const displayTopic =
+                language === "es"
+                  ? article.topic_es || article.topic
+                  : language === "ca"
+                    ? article.topic_ca || article.topic
+                    : article.topic;
+
               return (
                 <div key={article.id} className="bg-card border border-r rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 group">
                   <div className="aspect-video bg-muted relative overflow-hidden">
@@ -101,7 +108,7 @@ const NewsList: React.FC<NewsListProps> = ({
                     {/* Topic Badge */}
                     <div className="absolute top-3 left-3">
                       <span className="px-3 py-1 bg-[#f7c873] text-[#1a2238] text-xs font-bold rounded-full shadow-sm">
-                        {article.topic}
+                        {displayTopic.charAt(0).toUpperCase() + displayTopic.slice(1).toLowerCase()}
                       </span>
                     </div>
                   </div>

@@ -163,7 +163,7 @@ export default function LatestNewsPage() {
 
   useEffect(() => {
     retrieve_news();
-  }, [language]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

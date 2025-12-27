@@ -11,6 +11,8 @@ export interface Article {
   title_ca?: string;
   excerpt_es?: string;
   excerpt_ca?: string;
+  topic_es?: string;
+  topic_ca?: string;
 }
 
 export function getDaysFromDate(dateString: string, t: (key: string, args?: Record<string, string | number>) => string): string {
