@@ -89,8 +89,28 @@ const HeroSection = ({
   );
 };
 
-const SearchResults = ({ query, summary, articles, isLoading }: { query: string; summary: string, articles: Article[]; isLoading: boolean }) => {
+const SearchResults = ({ query, summary, articles, isLoading, error }: { query: string; summary: string, articles: Article[]; isLoading: boolean; error: string | null }) => {
   const { t } = useLanguage();
+
+
+  if (error) {
+    return (
+      <section className="py-16 bg-red-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 text-red-600 rounded-full mb-6">
+            <Clock className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-red-900 mb-4">
+            {t("askhub.error.rate_limit_title") || "Something went wrong"}
+          </h2>
+          <p className="text-red-700 text-lg max-w-2xl mx-auto">
+            {error}
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   if (!query) return null;
 
   if (isLoading) {
@@ -221,26 +241,40 @@ const HowItWorksSection = () => {
 };
 
 
-export default function AIPage() {
+export default function AskHubPage() {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [summary, setSummary] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     setArticles([]);
+    setError(null);
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/ask_hub/`, {
+      const response = await fetch(`/api/ask`, {
         method: "POST",
-        headers: DEFAULT_HEADERS,
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ question: query }),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+
+        // Handle specific error cases
+        if (response.status === 429 && errorData.code === 'RATE_LIMIT') {
+          throw new Error(t("askhub.error.rate_limit_msg", { max: errorData.max || 5 }));
+        } else if (response.status === 429) {
+          throw new Error(errorData.message || "Rate limit exceeded");
+        }
+
+        throw new Error(errorData.message || errorData.details || errorData.error || 'Unknown error occurred');
       }
 
       const data = await response.json();
@@ -262,8 +296,9 @@ export default function AIPage() {
       setArticles(transformedArticles || []);
       setSummary(data.summary || "No summary available for this query.");
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching search results:", error);
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -273,7 +308,7 @@ export default function AIPage() {
     <div className="min-h-screen bg-background">
       <NavigationBar activePage="askhub" />
       <HeroSection onSearch={handleSearch} />
-      <SearchResults query={searchQuery} summary={summary} articles={articles} isLoading={isLoading} />
+      <SearchResults query={searchQuery} summary={summary} articles={articles} isLoading={isLoading} error={error} />
       <HowItWorksSection />
       <Footer />
     </div>

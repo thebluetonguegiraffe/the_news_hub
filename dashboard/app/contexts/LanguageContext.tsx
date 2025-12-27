@@ -137,6 +137,8 @@ const translations = {
     "footer.resources": "Recursos",
     "footer.follow": "Síguenos",
     "footer.copyright": "© 2025 The News Hub. Todos los derechos reservados.",
+    "askhub.error.rate_limit_title": "Límite Alcanzado",
+    "askhub.error.rate_limit_msg": "Has alcanzado el límite gratuito para esta demostración ({max} peticiones/hora). Por favor, inténtalo más tarde.",
   },
   en: {
     // Navigation
@@ -261,6 +263,8 @@ const translations = {
     "footer.resources": "Resources",
     "footer.follow": "Follow Us",
     "footer.copyright": "© All rights reserved.",
+    "askhub.error.rate_limit_title": "Limit Reached",
+    "askhub.error.rate_limit_msg": "You have reached the free limit for this demo ({max} requests/hour). Please try again later.",
   },
   ca: {
     // Navigation
@@ -385,6 +389,8 @@ const translations = {
     "footer.resources": "Recursos",
     "footer.follow": "Segueix-nos",
     "footer.copyright": "© 2025 The News Hub. Tots els drets reservats.",
+    "askhub.error.rate_limit_title": "Límit Assolit",
+    "askhub.error.rate_limit_msg": "Has assolit el límit gratuït per a aquesta demostració ({max} peticions/hora). Si us plau, torna-ho a provar més tard.",
   },
 };
 

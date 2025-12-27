@@ -14,8 +14,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
-    // Hardcoded password - change this
+
     if (password === process.env.NEXT_PUBLIC_AUTH_PASSWORD) {
       // Set cookie
       document.cookie = 'authenticated=true; path=/; max-age=86400'; // 24h
@@ -30,7 +29,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header similar to your app */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
             The News Hub
@@ -40,16 +38,15 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Login card */}
         <div className="bg-card rounded-lg shadow-lg p-8 border border-border">
           <h2 className="text-2xl font-semibold text-card-foreground mb-6">
             Sign In
           </h2>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label 
-                htmlFor="password" 
+              <label
+                htmlFor="password"
                 className="block text-sm font-medium text-card-foreground mb-2"
               >
                 Password
