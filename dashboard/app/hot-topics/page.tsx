@@ -124,7 +124,6 @@ const HotTopicsSection = () => {
     };
     fetchTopics();
   }, [selectedDateRange]);
-  console.log("Selected Date Range:", selectedDate, selectedDateRange);
 
   return (
     <section className="py-16 bg-background">

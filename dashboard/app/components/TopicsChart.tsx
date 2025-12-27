@@ -27,6 +27,8 @@ interface TopicEntry {
 interface Topic {
     _id: string;
     name: string;
+    topic_es?: string;
+    topic_ca?: string;
     topics_per_day: TopicEntry[] | Record<string, number> | null;
 }
 
@@ -67,7 +69,14 @@ const TopicsChart = ({ rawData }: TopicsChartProps) => {
         let maxTime = -Infinity;
 
         const parsedTopics = rawData.map(topic => {
-            const name = topic.name || 'Unknown';
+            const originalName = topic.name || 'Unknown';
+            const displayName =
+                language === 'es'
+                    ? topic.topic_es || originalName
+                    : language === 'ca'
+                        ? topic.topic_ca || originalName
+                        : originalName;
+
             let rawEntries: { time: number; value: number }[] = [];
 
             const entries = topic.topics_per_day;
@@ -95,9 +104,9 @@ const TopicsChart = ({ rawData }: TopicsChartProps) => {
             }
 
             return {
-                name,
+                name: displayName,
                 rawEntries,
-                Icon: iconMap[name] ?? defaultIcon
+                Icon: iconMap[originalName] ?? defaultIcon
             };
         });
 

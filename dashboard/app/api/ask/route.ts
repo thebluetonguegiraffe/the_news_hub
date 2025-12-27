@@ -6,8 +6,6 @@ const rateLimit = new Map<string, number[]>();
 const WINDOW_MS = 60 * 60 * 1000; // 1 hour window
 
 const MAX_REQUESTS = parseInt(process.env.MAX_REQUESTS || '5', 10); // Default to 5 requests per hour if not set
-console.log(`[AskHub Config] Rate Limit: ${MAX_REQUESTS} requests/hour`);
-console.log(`[AskHub Config] Whitelist: ${process.env.WHITELISTED_IPS || 'None'}`);
 
 const cleanOldRequests = (timestamps: number[]) => {
     const now = Date.now();
@@ -31,7 +29,6 @@ export async function POST(request: Request) {
         const isWhitelisted = whitelistedIps.includes(ip) || whitelistedIps.includes('::1') && ip === '127.0.0.1'; // Simple local dev check
 
         if (isWhitelisted) {
-            console.log(`Bypassing rate limit for whitelisted IP: ${ip}`);
         } else {
             let timestamps = rateLimit.get(ip) || [];
             timestamps = cleanOldRequests(timestamps);
@@ -59,8 +56,6 @@ export async function POST(request: Request) {
             console.error("API Token missing on server");
             return NextResponse.json({ error: "Configuration Error: NEXT_PUBLIC_API_ACCESS_TOKEN is missing" }, { status: 500 });
         }
-
-        console.log(`Proxying request to ${API_URL}/ask_hub/`);
 
         const backendResponse = await fetch(`${API_URL}/ask_hub/`, {
             method: "POST",

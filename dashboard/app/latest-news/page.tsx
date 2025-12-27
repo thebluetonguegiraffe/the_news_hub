@@ -90,7 +90,6 @@ export default function LatestNewsPage() {
         to_date: formatDate(today)
       },
     };
-    console.log("Fetching news with payload:", payload);
     try {
       const news_response = await fetch(`${API_URL}/articles`, {
         method: "POST",
@@ -149,6 +148,8 @@ export default function LatestNewsPage() {
           title_ca: item.metadata.title_ca,
           excerpt_es: item.metadata.excerpt_es,
           excerpt_ca: item.metadata.excerpt_ca,
+          topic_es: translations.es || item.metadata.topic_es,
+          topic_ca: translations.ca || item.metadata.topic_ca,
         };
       });
 
