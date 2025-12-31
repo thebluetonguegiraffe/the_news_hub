@@ -6,7 +6,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 security = HTTPBearer(
     scheme_name="Bearer Token",
-    description="Ingresa tu token de API"
+    description="Add you API token"
 )
 
 API_TOKEN = os.getenv("API_TOKEN")

@@ -46,14 +46,14 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-6">
               <Link href="/" className="flex items-center">
-              <Image
-                src={logoImg} 
-                alt=""
-                width={32}
-                height={32}
-                className="object-contain"
-                priority
-              />
+                <Image
+                  src={logoImg}
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                  priority
+                />
               </Link>
             </div>
           </div>
@@ -70,7 +70,7 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
           <div className="flex items-center space-x-6">
             <Link href="/" className="flex items-center">
               <Image
-                src={logoImg} 
+                src={logoImg}
                 alt=""
                 width={32}
                 height={32}
@@ -79,33 +79,30 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
               />
             </Link>
             <div className="hidden md:flex items-center space-x-1">
-              <Link 
-                href="/latest-news" 
-                className={`px-4 py-2 rounded-full font-bold transition-colors ${
-                  isActive("latest-news")
+              <Link
+                href="/latest-news"
+                className={`px-4 py-2 rounded-full font-bold transition-colors ${isActive("latest-news")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 {t("nav.latest-news")}
               </Link>
-              <Link 
-                href="/hot-topics" 
-                className={`px-4 py-2 rounded-full font-bold transition-colors ${
-                  isActive("hot-topics")
+              <Link
+                href="/hot-topics"
+                className={`px-4 py-2 rounded-full font-bold transition-colors ${isActive("hot-topics")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 {t("nav.hot-topics")}
               </Link>
-              <Link 
-                href="/askhub" 
-                className={`px-4 py-2 rounded-full font-bold transition-colors ${
-                  isActive("askhub")
+              <Link
+                href="/askhub"
+                className={`px-4 py-2 rounded-full font-bold transition-colors ${isActive("askhub")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 {t("nav.ai-chatbot")}
               </Link>
@@ -123,43 +120,33 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
                 <Globe className="w-4 h-4" />
                 <span className="text-sm font-bold">{language.toUpperCase()}</span>
               </button>
-              
+
               {isLanguageMenuOpen && (
                 <div className="absolute right-0 mt-2 w-28 bg-card border border-border rounded-lg shadow-lg z-50">
                   <button
                     onClick={() => handleLanguageChange("es")}
-                    className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
-                      language === "es" ? "text-primary font-bold" : "text-foreground"
-                    }`}
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${language === "es" ? "text-primary font-bold" : "text-foreground"
+                      }`}
                   >
                     Español
                   </button>
                   <button
                     onClick={() => handleLanguageChange("ca")}
-                    className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
-                      language === "ca" ? "text-primary font-bold" : "text-foreground"
-                    }`}
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${language === "ca" ? "text-primary font-bold" : "text-foreground"
+                      }`}
                   >
                     Català
                   </button>
                   <button
                     onClick={() => handleLanguageChange("en")}
-                    className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${
-                      language === "en" ? "text-primary font-bold" : "text-foreground"
-                    }`}
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors ${language === "en" ? "text-primary font-bold" : "text-foreground"
+                      }`}
                   >
                     English
                   </button>
                 </div>
               )}
             </div>
-            
-            {/* <button className="px-4 py-2 text-foreground hover:text-primary transition-colors font-medium">
-              {t("nav.register")}
-            </button> */}
-            {/* <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium">
-              {t("nav.login")}
-            </button> */}
           </div>
 
           {/* Mobile menu button */}
@@ -179,33 +166,30 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-card border-t border-border">
-              <Link 
-                href="/latest-news" 
-                className={`block px-3 py-2 rounded-full font-medium transition-colors ${
-                  isActive("lastes-news")
+              <Link
+                href="/latest-news"
+                className={`block px-3 py-2 rounded-full font-medium transition-colors ${isActive("lastes-news")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-foreground hover:text-primary"
-                }`}
+                  }`}
               >
                 {t("nav.latest-news")}
               </Link>
-              <Link 
-                href="/hot-topics" 
-                className={`block px-3 py-2 rounded-full font-medium transition-colors ${
-                  isActive("hot-topics")
+              <Link
+                href="/hot-topics"
+                className={`block px-3 py-2 rounded-full font-medium transition-colors ${isActive("hot-topics")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-foreground hover:text-primary"
-                }`}
+                  }`}
               >
                 {t("nav.hot-topics")}
               </Link>
-              <Link 
-                href="/askhub" 
-                className={`block px-3 py-2 rounded-full font-medium transition-colors ${
-                  isActive("askhub")
+              <Link
+                href="/askhub"
+                className={`block px-3 py-2 rounded-full font-medium transition-colors ${isActive("askhub")
                     ? "bg-[#f7c873] text-[#1a2238]"
                     : "text-foreground hover:text-primary"
-                }`}
+                  }`}
               >
                 {t("nav.ai-chatbot")}
               </Link>
@@ -216,42 +200,33 @@ const NavigationBar = ({ activePage }: NavigationBarProps) => {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleLanguageChange("es")}
-                      className={`px-2 py-1 text-xs rounded ${
-                        language === "es" 
-                          ? "bg-primary text-primary-foreground" 
+                      className={`px-2 py-1 text-xs rounded ${language === "es"
+                          ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground"
-                      }`}
+                        }`}
                     >
                       ES
                     </button>
                     <button
                       onClick={() => handleLanguageChange("ca")}
-                      className={`px-2 py-1 text-xs rounded ${
-                        language === "ca" 
-                          ? "bg-primary text-primary-foreground" 
+                      className={`px-2 py-1 text-xs rounded ${language === "ca"
+                          ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground"
-                      }`}
+                        }`}
                     >
                       CA
                     </button>
                     <button
                       onClick={() => handleLanguageChange("en")}
-                      className={`px-2 py-1 text-xs rounded ${
-                        language === "en" 
-                          ? "bg-primary text-primary-foreground" 
+                      className={`px-2 py-1 text-xs rounded ${language === "en"
+                          ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground"
-                      }`}
+                        }`}
                     >
                       EN
                     </button>
                   </div>
                 </div>
-                {/* <button className="w-full px-3 py-2 text-foreground hover:text-primary transition-colors font-medium">
-                  {t("nav.register")}
-                </button>
-                <button className="w-full px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium">
-                  {t("nav.login")}
-                </button> */}
               </div>
             </div>
           </div>

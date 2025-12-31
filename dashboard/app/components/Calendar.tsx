@@ -67,7 +67,6 @@ const Calendar = ({ onDateSelect, onDateRangeSelect, selectedDate, selectedDateR
       });
     }
 
-    // Días del mes siguiente para completar la cuadrícula de 6 filas (42 días)
     const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
       const d = new Date(year, month + 1, i);
