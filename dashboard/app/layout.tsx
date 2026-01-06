@@ -10,8 +10,20 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "News Dashboard",
+  title: "The News Hub",
   description: "A modern dashboard for reading news articles and staying informed",
+  icons: {
+    icon: "/dashboard/app/favicon.ico",
+    apple: "/apple-touch-icon.png",
+    other: [
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "192x192",
+        url: "/android-chrome-192x192.png",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({

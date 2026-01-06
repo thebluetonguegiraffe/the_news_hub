@@ -3,7 +3,6 @@ import logging
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from api.config import settings
 from api.routers import ask_hub, topics, articles
 
@@ -43,11 +42,6 @@ app.include_router(ask_hub.router)
 @app.get("/")
 def root():
     return {"message": f"Welcome to {settings.PROJECT_NAME}"}
-
-
-@app.get('/favicon.ico')
-async def favicon():
-    return FileResponse('/home/ubuntu/the_news_hub/dashboard/app/favicon.ico')
 
 
 @app.get("/status")
