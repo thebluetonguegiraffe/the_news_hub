@@ -119,7 +119,8 @@ const translations = {
     "sources.guardian.description": "Periodico independiente famoso por sus investigaciones profundas en amplios temas.",
     "sources.ara.description": "Periódico catalán de referencia conocido por sus reportajes independientes.",
     "sources.lavanguardia.description": "Diario español con cobertura extensa nacional y global.",
-
+    "sources.elpais.description": "Diario global en español, referente en actualidad de España y América Latina.",
+    "sources.elperiodico.description": "Diario generalista editado en Barcelona con foco en actualidad catalana y española.",
     // FAQ
     "faq.title": "Preguntas Frecuentes",
     "faq.ai.question": "¿Cómo funciona AskHub?",
@@ -245,6 +246,8 @@ const translations = {
     "sources.guardian.description": "Independent investigative journalism committed to social and global issues.",
     "sources.ara.description": "Cutting-edge Catalan journalism focused on independent analysis and opinion.",
     "sources.lavanguardia.description": "A historic newspaper offering a balanced view of national and international affairs.",
+    "sources.elpais.description": "Leading global Spanish-language newspaper covering Spain and Latin America.",
+    "sources.elperiodico.description": "Barcelona-based daily newspaper focusing on Catalan and Spanish current affairs.",
 
     // FAQ
     "faq.title": "Frequently Asked Questions",
@@ -371,6 +374,8 @@ const translations = {
     "sources.guardian.description": "Periodisme independent d'investigació compromès amb temes socials i globals.",
     "sources.ara.description": "Periodisme català d'avantguarda centrat en l'anàlisi i l'opinió independent.",
     "sources.lavanguardia.description": "Diari històric amb una mirada equilibrada de l'actualitat nacional i internacional.",
+    "sources.elpais.description": "Diari global en espanyol, referent en actualitat d'Espanya i Amèrica Llatina.",
+    "sources.elperiodico.description": "Diari generalista editat a Barcelona amb focus en actualitat catalana i espanyola.",
 
     // FAQ
     "faq.title": "Preguntes Freqüents",

@@ -145,6 +145,18 @@ const SourcesSection = () => {
       abbreviation: "La Vanguardia",
       description: t("sources.lavanguardia.description"),
       logo: "/images/la-vanguardia.png"
+    },
+    {
+      name: "El País",
+      abbreviation: "El País",
+      description: t("sources.elpais.description"),
+      logo: "/images/el-país.png"
+    },
+    {
+      name: "El Periodico",
+      abbreviation: "El Periodico",
+      description: t("sources.elperiodico.description"),
+      logo: "/images/el-periodico.png"
     }
   ];
 
@@ -164,7 +176,7 @@ const SourcesSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {sources.map((source) => (
             <div
               key={source.abbreviation}
