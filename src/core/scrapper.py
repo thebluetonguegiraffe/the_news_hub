@@ -35,7 +35,7 @@ class BaseScrapper(ABC):
         valid_articles = [
             article["href"] for article in homepage_articles if self._is_valid_url(article["href"])
         ]
-        return valid_articles
+        return valid_articles[0:10]
 
     @classmethod
     def _is_valid_url(cls, url: str):
@@ -49,7 +49,8 @@ class BaseScrapper(ABC):
 
     def _get_topic(self, url: str):
         tokens = [s for s in url.split("/") if s]
-        return tokens[2]
+        topic = tokens[2]
+        return topic if topic in self.VALID_TOPICS else None
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.crawler.close()
@@ -87,18 +88,81 @@ class BaseScrapper(ABC):
 
 
 class AraScrapper(BaseScrapper):
-    STOP_WORDS = ["usuari", "privacitat", "firmes", "api", "publicitat"]
+    STOP_WORDS = [
+        "usuari", "privacitat", "firmes", "api", "publicitat", "gent", "famosos", "opinio",
+        "estils", "criatures", "media", "videojocs", "series", "blogs", "vins", "promocions",
+        "suscripcio", "serveis", "especials", "interactius"
+    ]
+    VALID_TOPICS = ["esports", "economia", "cultura"]
     VALID_URL_MAX_TOKENS = 4
     LANGUAGE = "ca"
 
 
 class VanguardiaScrapper(BaseScrapper):
-    STOP_WORDS = ["calculadoras", "videos", "juegos", "comprar", "sorteos"]
+    STOP_WORDS = [
+        "participacion", "retos", "concursos", "encuesta", "debates", "las-fotos-de-los-lectores",
+        "juegos", "sorteos", "calculadoras",
+        "magazine", "comer", "recetas", "vivo", "gente", "neo", "pop", "lacontra", "la-contra",
+        "series", "cine", "formacion", "vanguardia-dossier", "bolsillo", "natural", "longevity",
+        "mkt-roi", "club", "suscriptores", "horario-donde-ver", "en-directo", "vanguardia-eventos",
+        "comprar", "suscripciones", "ofertas",
+        "ctx", "epm", "brl", "asd", "home-lv", "home-vanguardia"
+    ]
+    STOP_WORDS = [
+        "calculadoras", "videos", "juegos", "comprar", "sorteos", "suscripciones", "ofertas"
+    ]
     VALID_URL_MAX_TOKENS = 4
     LANGUAGE = "es"
+    VALID_TOPICS = ["deportes", "economia", "cultura"]
+
+
+class ElPeriodicoScrapper(BaseScrapper):
+    STOP_WORDS = [
+        "-bc-", "-rm/", "sh-", "dv-", "shopping", "comprar", "ofertas", "sorteos", "mkt-roi",
+        "gente", "tele", "gastronomia", "gourmets", "restaurantes", "motor", "sucesos", "videos",
+        "vida-y-estilo", "ser-feliz", "que-hacer", "entre-todos", "podcast", "juegos", "series",
+        "servicios", "suscripciones", "calculadoras", "club", "horario-donde-ver", "en-directo",
+        "tarragona", "cerdanyola", "granollers", "badalona", "hospitalet", "santa-coloma",
+        "index.html", "ctx", "epm", "brl", "asd", "home-lv"
+    ]
+    VALID_URL_MAX_TOKENS = 5
+    LANGUAGE = "es"
+    VALID_TOPICS = ["deportes", "economía"]
+
+
+class ElPaisScrapper(BaseScrapper):
+    STOP_WORDS = [
+        "icon", "smoda", "elviajero", "eps", "ideas", "resultados", "suscripciones",
+        "estilo-de-vida", "aniversario", "comunicacion", "carta-del-corresponsal",
+        "historias-de-corresponsal", "el-roto", "peridis", "planeta-futuro", "materia-gris",
+        "videos", "gastronomia", "ofertas"
+    ]
+    VALID_URL_MAX_TOKENS = 4
+    LANGUAGE = "es"
+    VALID_TOPICS = ["deportes", "economía", "cultura", "educación", "tecnologia"]
+
+    @classmethod
+    def _is_valid_url(cls, url: str):
+        if any(word.lower() in url.lower() for word in cls.STOP_WORDS):
+            return False
+        path_only = url.split('?')[0].split('#')[0]
+        if not path_only.endswith('.html'):
+            return False
+        tokens = [s for s in url.split("/") if s]
+        return len(tokens) > cls.VALID_URL_MAX_TOKENS
+
+    def parse_article(self, result) -> Dict:
+        filtered_metadata = super().parse_article(result)
+        title = filtered_metadata[f"title_{self.LANGUAGE}"]
+        tokens = title.split("|")
+        if len(tokens) > 1:
+            filtered_metadata[f"title_{self.LANGUAGE}"] = tokens[0].strip()
+        return filtered_metadata
 
 
 SCRAPPER_MAPPER = {
     "diari_ara": ("https://www.ara.cat/", AraScrapper),
     "la_vanguardia": ("https://www.lavanguardia.com/", VanguardiaScrapper),
+    "el_pais": ("https://elpais.com/", ElPaisScrapper),
+    "el_periodico": ("https://www.elperiodico.com/es/", ElPeriodicoScrapper),
 }

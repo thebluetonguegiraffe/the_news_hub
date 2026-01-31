@@ -56,8 +56,8 @@ class ScrapperIngestor(BaseIngestor):
         articles_md = state["articles_md"]
 
         for md in articles_md:
-            topic = md.get("topic")
-            md["topic"] = self.translator.translate(topic, target_lang="en")
+            if topic := md.get("topic"):
+                md["topic"] = self.translator.translate(topic, target_lang="en")
 
         logger.info("Articles metadata translation completed.")
         return {"articles_md": articles_md}

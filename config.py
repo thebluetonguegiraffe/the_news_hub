@@ -4,7 +4,7 @@ chroma_configuration = {
     # "host": "localhost",
     # "port": 8000,
     "database": "the_news_hub",
-    "collection_name": "news"
+    "collection_name": "news_test"
 }
 
 mongo_configuration = {

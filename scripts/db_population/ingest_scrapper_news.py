@@ -5,7 +5,7 @@ import logging
 from dotenv import load_dotenv
 
 from src.ingestors.scrapper_ingestor import ScrapperIngestor
-from src.core.scrapper import SCRAPPER_MAPPER
+# from src.core.scrapper import SCRAPPER_MAPPER
 
 logging.basicConfig(
     level=logging.INFO,
@@ -31,5 +31,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    for source in SCRAPPER_MAPPER.keys():
-        asyncio.run(ScrapperIngestor(source=source, dry_run=args.dry_run).run())
+    # for source in SCRAPPER_MAPPER.keys():
+    #     asyncio.run(ScrapperIngestor(source=source, dry_run=args.dry_run).run())
+    asyncio.run(ScrapperIngestor(source="el_pais", dry_run=args.dry_run).run())
