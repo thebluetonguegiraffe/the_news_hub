@@ -35,7 +35,7 @@ class BaseScrapper(ABC):
         valid_articles = [
             article["href"] for article in homepage_articles if self._is_valid_url(article["href"])
         ]
-        return valid_articles[0:10]
+        return valid_articles
 
     @classmethod
     def _is_valid_url(cls, url: str):
