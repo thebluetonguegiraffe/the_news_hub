@@ -23,6 +23,10 @@ make push
 
 Notice that to authenticate with the **GitHub Container Registry (GHCR)** and push or pull your Docker images, you need a  **Personal Access Token (PAT)**.
 
+Additionally, note that to update a DAG file and have the changes reflected in Airflow, you must do one of the following:
+- Make the changes locally, commit them to GitHub, and then pull them on the VPS where the Airflow container is running (so the volume gets updated).
+- Make the changes directly on the DAG file in the VPS, which updates the volume and allows you to test the changes before committing them.
+
 ## API deploy
 
 ---
