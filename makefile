@@ -19,14 +19,36 @@ REGISTRY := ghcr.io
 FULL_IMAGE := $(REGISTRY)/$(GITHUB_USER)/$(IMAGE_NAME):$(TAG)
 LATEST_IMAGE := $(REGISTRY)/$(GITHUB_USER)/$(IMAGE_NAME):latest
 
+PLATFORMS=linux/aarch64
+
 cr-login:
 	@echo $(CR_PAT) | docker login $(REGISTRY) -u $(GITHUB_USER) --password-stdin
 
-build:
-	docker build -t $(FULL_IMAGE) -t $(LATEST_IMAGE) .
+add-translator:
+	@echo "Adding QEMU translators for cross-platform builds..."
+	docker run --privileged --rm tonistiigi/binfmt --install all
+
+setup-buildx:
+	docker buildx inspect $(BUILDER_NAME) > /dev/null 2>&1 || docker buildx create --name $(BUILDER_NAME) --use
+	docker buildx inspect --bootstrap
+
+build: setup-buildx
+	docker buildx build \
+		--platform $(PLATFORMS) \
+		-t $(FULL_IMAGE) \
+		-t $(LATEST_IMAGE) \
+		--load \
+		.
 
 build-no-cache:
-	docker build --no-cache -t $(FULL_IMAGE) -t $(LATEST_IMAGE) .
+build-no-cache: setup-buildx
+	docker buildx build \
+		--no-cache \
+		--platform $(PLATFORMS) \
+		-t $(FULL_IMAGE) \
+		-t $(LATEST_IMAGE) \
+		--load \
+		.
 
 push:
 	docker push $(FULL_IMAGE)
