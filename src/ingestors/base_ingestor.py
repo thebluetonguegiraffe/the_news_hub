@@ -37,6 +37,7 @@ class BaseIngestor(ABC):
 
             if not title or not description:
                 logger.info("Missing title or description in metadata, skipping translation.")
+                continue
 
             for language in self.dest_lang:
                 md[f"title_{language}"] = self.translator.translate(title, target_lang=language)

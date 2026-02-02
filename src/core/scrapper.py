@@ -11,6 +11,7 @@ logger.setLevel(logging.INFO)
 
 class BaseScrapper(ABC):
     METADATA_KEYS = ["title", "description", "author", "article:modified_time", "og:image"]
+    TOPIC_N_TOKENS = 2  # Default position of topic token in URL
 
     async def __aenter__(self):
         browser_config = BrowserConfig(
@@ -49,7 +50,7 @@ class BaseScrapper(ABC):
 
     def _get_topic(self, url: str):
         tokens = [s for s in url.split("/") if s]
-        topic = tokens[2]
+        topic = tokens[self.TOPIC_N_TOKENS]
         return topic if topic in self.VALID_TOPICS else None
 
     async def __aexit__(self, exc_type, exc_value, traceback):
@@ -59,6 +60,7 @@ class BaseScrapper(ABC):
         result = await self.crawler.arun(url=url, config=self.run_config)
         logger.info(f"Scraped article URL: {url}")
         parsed_result = self.parse_article(result)
+        parsed_result['url'] = url
         return parsed_result
 
     async def scrape_image(self, url):
@@ -127,7 +129,8 @@ class ElPeriodicoScrapper(BaseScrapper):
     ]
     VALID_URL_MAX_TOKENS = 5
     LANGUAGE = "es"
-    VALID_TOPICS = ["deportes", "economía"]
+    VALID_TOPICS = ["deportes", "economia"]
+    TOPIC_N_TOKENS = 3
 
 
 class ElPaisScrapper(BaseScrapper):
