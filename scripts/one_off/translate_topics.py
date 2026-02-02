@@ -1,6 +1,6 @@
 import argparse
 import logging
-from flask.cli import load_dotenv
+from dotenv import load_dotenv
 from src.core.mongo_client import CustomMongoClient
 from config import mongo_configuration
 from src.core.translator import GoogleTranslator
