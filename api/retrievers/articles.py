@@ -1,4 +1,5 @@
 import logging
+import random
 from typing import Dict, List
 
 from api.models.articles import ArticleResponse, ArticleSearchRequest
@@ -31,34 +32,59 @@ class ArticlesRetriever:
         return items
 
     def search(self, request: ArticleSearchRequest) -> ArticleResponse:
-
-        conditions = []
+        generic_conditions = []
         if request.topic:
-            conditions.append({"topic": request.topic})
-
-        if request.sources:
-            conditions.append({"source": {"$in": list(request.sources)}})
+            generic_conditions.append({"topic": request.topic})
 
         if request.date_range.from_date and request.date_range.to_date:
-            conditions.append({"timestamp": {"$gte": request.date_range.from_date.timestamp()}})
-            conditions.append({"timestamp": {"$lte": request.date_range.to_date.timestamp()}})
+            generic_conditions.append(
+                {"timestamp": {"$gte": request.date_range.from_date.timestamp()}}
+            )
+            generic_conditions.append(
+                {"timestamp": {"$lte": request.date_range.to_date.timestamp()}}
+            )
 
-        chroma_filter = {}
-        if len(conditions) > 1:
-            chroma_filter = {"$and": conditions}
-        elif len(conditions) == 1:
-            chroma_filter = conditions[0]
+        all_parsed_results = []
 
-        results = self.chroma_db.search_with_filter(
-            chroma_filter=chroma_filter,
-            limit=request.limit,
-        )
+        if not request.sources:
+            chroma_filter = {}
+            if len(generic_conditions) > 1:
+                chroma_filter = {"$and": generic_conditions}
+            elif len(generic_conditions) == 1:
+                chroma_filter = generic_conditions[0]
 
-        parsed_results = self.parse_chroma_results(results)
+            results = self.chroma_db.search_with_filter(
+                chroma_filter=chroma_filter,
+                limit=request.limit,
+            )
+            all_parsed_results = self.parse_chroma_results(results)
+
+        # distributed search across specified sources
+        else:
+            num_sources = len(request.sources)
+            limit_per_source = request.limit // num_sources
+
+            for source in request.sources:
+                source_conditions = list(generic_conditions)
+                source_conditions.append({"source": source})
+
+                if len(source_conditions) > 1:
+                    chroma_filter = {"$and": source_conditions}
+                else:
+                    chroma_filter = source_conditions[0]
+
+                results = self.chroma_db.search_with_filter(
+                    chroma_filter=chroma_filter,
+                    limit=limit_per_source,
+                )
+                source_results = self.parse_chroma_results(results)
+                all_parsed_results.extend(source_results)
+
+        random.shuffle(all_parsed_results)
 
         return ArticleResponse(
-            num_articles=len(parsed_results),
-            articles=parsed_results,
+            num_articles=len(all_parsed_results),
+            articles=all_parsed_results,
             topic=request.topic,
             source=request.sources,
             from_date=request.date_range.from_date,
