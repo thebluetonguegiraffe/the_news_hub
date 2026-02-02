@@ -63,16 +63,15 @@ class ScrapperIngestor(BaseIngestor):
         return {"articles_md": articles_md}
 
     def articles_db_insert_node(self, state: State) -> Dict:
-        article_urls = state["article_urls"]
         articles_md = state["articles_md"]
 
         chroma_docs = {}
-        for url, md in zip(article_urls, articles_md):
+        for md in articles_md:
             try:
                 doc = ChromaDoc(
                     document=md.get("title_en") + ". " + md.get("description_en"),
                     metadata=Metadata(
-                        url=url,
+                        url=md.get("url"),
                         topic=md.get("topic"),
                         title=md.get("title_en"),
                         title_es=md.get("title_es"),
@@ -88,7 +87,7 @@ class ScrapperIngestor(BaseIngestor):
                 # avoid duplicate docs
                 chroma_docs[doc.id] = doc
             except Exception as e:
-                logger.error(f"Error creating ChromaDoc for URL {url}: {e}")
+                logger.error(f"Error creating ChromaDoc for URL {md.get('url')}: {e}")
                 continue
 
         if not self.dry_run:

@@ -126,8 +126,8 @@ const AVAILABLE_SOURCES = [
   { id: "www.nytimes.com", name: "The New York Times", icon: "/images/nyt.png" },
   { id: "www.bbc.com", name: "BBC News", icon: "/images/BBC.jpg" },
   { id: "www.theguardian.com", name: "The Guardian", icon: "/images/the_guardian.jpg" },
-  { id: "elpais.com", name: "El País", icon: "/images/el-país.png" },
-  { id: "elperiodico.com", name: "El Periodico", icon: "/images/el-periodico.png" },
+  { id: "https://elpais.com/", name: "El País", icon: "/images/el-país.png" },
+  { id: "https://www.elperiodico.com/es/", name: "El Periodico", icon: "/images/el-periodico.png" },
 ];
 
 export { AVAILABLE_SOURCES };

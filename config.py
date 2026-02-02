@@ -4,13 +4,13 @@ chroma_configuration = {
     # "host": "localhost",
     # "port": 8000,
     "database": "the_news_hub",
-    "collection_name": "news"
+    "collection_name": "news_2026"
 }
 
 mongo_configuration = {
     "host": "mongodb://localhost:27017/",
     "db": "the_news_hub",
-    "collection": "topics",
+    "collection": "topics_2026",
 }
 
 embeddings_configuration = {
