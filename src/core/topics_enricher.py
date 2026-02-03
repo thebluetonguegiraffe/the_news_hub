@@ -21,7 +21,7 @@ logger.setLevel(logging.INFO)
 
 
 class TopicsEnricher:
-    PCA_COMPONENTS = 50
+    PCA_COMPONENTS = 100
     KMEANS_CLUSTERS = 20
 
     def __init__(self):
