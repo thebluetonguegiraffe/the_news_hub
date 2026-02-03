@@ -47,7 +47,7 @@ class ChromaDatabase:
             )
         else:
             self.client = CloudClient(
-                tenant='9afc23b2-89c9-463c-b136-cf99ce4b7853',
+                tenant="9afc23b2-89c9-463c-b136-cf99ce4b7853",
                 database=chroma_configuration["database"],
                 api_key=os.getenv("CHROMA_DB_TOKEN"),
             )
@@ -94,12 +94,18 @@ class ChromaDatabase:
         return results
 
     def search_with_filter(
-        self, chroma_filter: Dict, limit: int = None, include: List = ["documents", "metadatas"]
+        self,
+        chroma_filter: Dict,
+        limit: int = None,
+        include: List = ["documents", "metadatas"],
+        offset: int = 0,
     ) -> List[Dict]:
         if chroma_filter and any(chroma_filter.values()):
-            result = self.collection.get(where=chroma_filter, limit=limit, include=include)
+            result = self.collection.get(
+                where=chroma_filter, limit=limit, include=include, offset=offset
+            )
         else:
-            result = self.collection.get(limit=limit, include=include)
+            result = self.collection.get(limit=limit, include=include, offset=offset)
         return result
 
     def list_collections(self) -> list:

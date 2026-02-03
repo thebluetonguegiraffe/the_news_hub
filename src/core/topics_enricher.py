@@ -22,7 +22,7 @@ logger.setLevel(logging.INFO)
 
 class TopicsEnricher:
     PCA_COMPONENTS = 50
-    KMEANS_CLUSTERS = 15
+    KMEANS_CLUSTERS = 20
 
     def __init__(self):
         self.llm = init_chat_model(
@@ -45,17 +45,49 @@ class TopicsEnricher:
             # only docs that have no topic
             chroma_filter = {"$and": [{"ingestion_date": date}, {"topic": ""}]}
 
-        # retrieve chroma docs based on input date
-        chroma_results = self.chroma_db.search_with_filter(
-            chroma_filter=chroma_filter,
-            include=["embeddings", "metadatas", "documents"],
-        )
-        ids = chroma_results["ids"]
-        if not ids:
-            raise ValueError(f"No documents found for date {date}.")
+        all_ids = []
+        all_embeddings = []
+        all_metadatas = []
+        all_documents = []
+
+        logger.info(f"Starting document extraction process for date: {date}...")
+
+        offset = 0
+        limit = 300
+
+        while True:
+            batch = self.chroma_db.search_with_filter(
+                chroma_filter=chroma_filter,
+                include=["embeddings", "metadatas", "documents"],
+                limit=limit,
+                offset=offset,
+            )
+
+            ids = batch.get("ids", [])
+            if not ids:
+                raise ValueError(f"No documents found for date {date}.")
+
+            all_ids.extend(ids)
+            all_embeddings.extend(batch["embeddings"])
+            all_metadatas.extend(batch["metadatas"])
+            all_documents.extend(batch["documents"])
+
+            logger.info(f"{len(ids)} extracted docs...")
+
+            if len(ids) < limit:  # less than the limit, no more documents
+                break
+
+            offset += limit
 
         # create clusters using PCA
-        clusters = self.create_pca_clusters(chroma_results=chroma_results)
+        clusters = self.create_pca_clusters(
+            chroma_results={
+                "documents": all_documents,
+                "embeddings": all_embeddings,
+                "ids": all_ids,
+                "metadatas": all_metadatas,
+            }
+        )
 
         named_clusters = {}
         for cluster_id, cluster_content in clusters.items():
@@ -70,8 +102,7 @@ class TopicsEnricher:
                     ids=cluster_ids, metadatas=[{"topic": topic}] * len(cluster_ids)
                 )
                 logger.info(
-                    f"Topic updated for cluster {cluster_id}: {topic} - "
-                    f"{len(cluster_ids)} docs"
+                    f"Topic updated for cluster {cluster_id}: {topic} - " f"{len(cluster_ids)} docs"
                 )
 
     def populate_topics_database(self, date: str, dry_run: bool = False):
@@ -82,7 +113,7 @@ class TopicsEnricher:
             chroma_filter={"ingestion_date": date},
             include=["metadatas"],
         )
-        topics = [metadata['topic'] for metadata in chroma_results["metadatas"]]
+        topics = [metadata["topic"] for metadata in chroma_results["metadatas"]]
         self.update_mongo_topics_collection(topics=topics, date=date)
 
     @classmethod
@@ -113,11 +144,11 @@ class TopicsEnricher:
         )
         chain = prompt | self.llm
         topic = chain.invoke(
-                {
-                    "documents": ", ".join(cluster_docs),
-                    "cached_topics": ", ".join(self.cached_topics),
-                }
-            )
+            {
+                "documents": ", ".join(cluster_docs),
+                "cached_topics": ", ".join(self.cached_topics),
+            }
+        )
         logger.info("Sucess!")
         return topic.content.lower()
 
@@ -128,9 +159,7 @@ class TopicsEnricher:
             result = mongo_collection.find({}, {"_id": 1})
             if result:
                 retrieved_topics = [topic["_id"] for topic in result]
-                logger.info(
-                    f"{len(retrieved_topics)} topics successfully retrieved from Mongo DB"
-                )
+                logger.info(f"{len(retrieved_topics)} topics successfully retrieved from Mongo DB")
                 return retrieved_topics
             else:
                 logger.info("No cached topics to retrieve.")
@@ -162,9 +191,7 @@ class TopicsEnricher:
 
             # insert new topics
             if new_mongo_documents:
-                mongo_collection.insert_many(
-                    new_mongo_documents
-                )
+                mongo_collection.insert_many(new_mongo_documents)
                 logger.info(f"{len(new_mongo_documents)} new topics updated in MongoDB")
 
             # update existing topics
