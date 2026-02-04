@@ -47,7 +47,7 @@ class ChromaDatabase:
             )
         else:
             self.client = CloudClient(
-                tenant="9afc23b2-89c9-463c-b136-cf99ce4b7853",
+                tenant='9afc23b2-89c9-463c-b136-cf99ce4b7853',
                 database=chroma_configuration["database"],
                 api_key=os.getenv("CHROMA_DB_TOKEN"),
             )

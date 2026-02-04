@@ -32,7 +32,8 @@ ingest_news_scrapper = DockerOperator(
     command="""
     sh -c "
     echo 'RUNNING: python scripts/db_population/ingest_scrapper_news.py'
-    python scripts/db_population/ingest_scrapper_news.py
+    python scripts/db_population/ingest_scrapper_news.py --date
+     {{ (data_interval_end - macros.timedelta(hours=2)).strftime('%Y-%m-%dT%H:%M') }}
     "
     """,
     environment={
