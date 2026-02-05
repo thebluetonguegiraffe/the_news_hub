@@ -37,7 +37,7 @@ class ScrapperIngestor(BaseIngestor):
         articles_md = []
         async with self.scrapper() as scrapper:
             for url in article_urls:
-                if self._is_url_scraped(url):
+                if not self._is_url_scraped(url):
                     scraped_article = await scrapper.scrape_article(url)
                     title = scraped_article.get(f"title_{self.LANGUAGE}")
                     description = scraped_article.get(f"description_{self.LANGUAGE}")
