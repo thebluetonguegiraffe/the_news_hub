@@ -1,5 +1,5 @@
 import hashlib
-from datetime import datetime, time
+from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, model_validator
 
@@ -15,13 +15,12 @@ class Metadata(BaseModel):
     excerpt_ca: str
     image: List[str]
     source: str
+    ingestion_date: datetime
     published_date: Optional[datetime] = None
-    ingestion_date: datetime = None
-    modification_date: Optional[datetime] = None
+    modification_date: Optional[datetime] = None  # currently not used
     timestamp: Optional[float] = None
 
     def to_dict(self) -> dict:
-        modification_date = datetime.combine(datetime.today().date(), time(23, 55, 0))
         data = {
             "url": self.url,
             "topic": self.topic or "",  # API articles do not contain topic
@@ -33,22 +32,18 @@ class Metadata(BaseModel):
             "excerpt_ca": self.excerpt_ca.strip(),
             "image": ", ".join(self.image),
             "source": self.source.lower(),
+            "ingestion_date": self.ingestion_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
             "published_date": (
                 self.published_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
                 if self.published_date
-                else modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                else self.ingestion_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
             ),
-            "modification_date": modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
-            "ingestion_date": (
-                self.ingestion_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-                if self.ingestion_date
-                else modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+            "modification_date": (
+                self.modification_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                if self.modification_date
+                else None
             ),
-            "timestamp": (
-                self.ingestion_date.timestamp()
-                if self.ingestion_date
-                else modification_date.timestamp()
-            ),
+            "timestamp": self.ingestion_date.timestamp()
         }
         return data
 

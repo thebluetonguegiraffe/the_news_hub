@@ -83,7 +83,7 @@ class ScrapperIngestor(BaseIngestor):
                         image=[md.get("og:image")] if md.get("og:image") else [],
                         source=self.source,
                         published_date=md.get("article:modified_time"),
-                        modification_date=self.date,
+                        ingestion_date=self.date,
                     ),
                 )
                 # avoid duplicate docs
