@@ -4,6 +4,7 @@ import logging
 
 from dotenv import load_dotenv
 
+from scripts.db_population.ingest_api_news import valid_date
 from src.ingestors.scrapper_ingestor import ScrapperIngestor
 from src.core.scrapper import SCRAPPER_MAPPER
 
@@ -29,7 +30,14 @@ if __name__ == "__main__":
         help="Run the script without updating the database.",
         default=False,
     )
+    parser.add_argument(
+        "-d",
+        "--date",
+        required=True,
+        type=valid_date,
+        help="Date for the news articles in format YYYY-MM-DDTHH:MM",
+    )
 
     args = parser.parse_args()
     for source in SCRAPPER_MAPPER.keys():
-        asyncio.run(ScrapperIngestor(source=source, dry_run=args.dry_run).run())
+        asyncio.run(ScrapperIngestor(source=source, dry_run=args.dry_run, date=args.date).run())

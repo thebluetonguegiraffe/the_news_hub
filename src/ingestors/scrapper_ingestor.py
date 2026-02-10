@@ -19,9 +19,10 @@ class State(TypedDict):
 class ScrapperIngestor(BaseIngestor):
     DEST_LANGUAGES = {"en", "es", "ca"}
 
-    def __init__(self, source: str, dry_run: bool):
+    def __init__(self, source: str, dry_run: bool, date: str = None):
         self.source, self.scrapper = SCRAPPER_MAPPER[source]
         self.dry_run = dry_run
+        self.date = date
         self.LANGUAGE = self.scrapper.LANGUAGE
         super().__init__()
         self.dest_lang = self.DEST_LANGUAGES - {self.LANGUAGE}
@@ -82,6 +83,7 @@ class ScrapperIngestor(BaseIngestor):
                         image=[md.get("og:image")] if md.get("og:image") else [],
                         source=self.source,
                         published_date=md.get("article:modified_time"),
+                        ingestion_date=self.date,
                     ),
                 )
                 # avoid duplicate docs

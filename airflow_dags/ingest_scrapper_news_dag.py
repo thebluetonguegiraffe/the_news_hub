@@ -31,10 +31,10 @@ ingest_news_scrapper = DockerOperator(
     auto_remove=True,
     command="""
     sh -c "
-    echo 'RUNNING: python scripts/db_population/ingest_scrapper_news.py'
-    python scripts/db_population/ingest_scrapper_news.py
+    echo 'RUNNING: python scripts/db_population/ingest_scrapper_news.py' -d {{ data_interval_end.strftime('%Y-%m-%dT%H:%M:%S') }}  
+    python scripts/db_population/ingest_scrapper_news.py -d {{ data_interval_end.strftime('%Y-%m-%dT%H:%M:%S') }}
     "
-    """,
+    """,  # noqa
     environment={
         "PYTHONPATH": "/the_news_hub",
         "CHROMA_DB_TOKEN": "{{ var.value.CHROMA_DB_TOKEN }}",
