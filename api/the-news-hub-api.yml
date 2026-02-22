@@ -6,7 +6,7 @@ services:
         context: ..
         dockerfile: api/Dockerfile
     ports:
-      - "7010:7010"
+      - "127.0.0.1:7010:7010"
     container_name: the-news-hub-api
     env_file:
       - ../.env
