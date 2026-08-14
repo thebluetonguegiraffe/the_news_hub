@@ -6,17 +6,17 @@ from openai import OpenAI
 from chromadb import Documents, EmbeddingFunction, HttpClient, Embeddings, CloudClient
 
 from src.models.chroma_models import ChromaDoc
-from config import chroma_configuration
+from config import chroma_configuration, embeddings_configuration
 
 
 class CustomEmbedder(EmbeddingFunction):
 
     def __init__(self):
-        """Initialize the OpenAI client with GitHub AI endpoint."""
+        """Initialize the OpenAI-compatible client against the Mistral API."""
         self.open_ai_client = OpenAI(
-            base_url="https://models.github.ai/inference", api_key=os.getenv("GITHUB_TOKEN")
+            base_url=embeddings_configuration["endpoint"], api_key=os.getenv("MISTRAL_API_KEY")
         )
-        self.model = "openai/text-embedding-3-small"
+        self.model = embeddings_configuration["model"]
 
     def __call__(self, texts: Documents) -> Embeddings:
         if isinstance(texts, str):

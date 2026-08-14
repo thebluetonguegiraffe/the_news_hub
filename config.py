@@ -4,7 +4,7 @@ chroma_configuration = {
     # "host": "localhost",
     # "port": 8000,
     "database": "the_news_hub",
-    "collection_name": "news_2026"
+    "collection_name": "news_2026_mistral"
 }
 
 mongo_configuration = {
@@ -14,8 +14,8 @@ mongo_configuration = {
 }
 
 embeddings_configuration = {
-    "endpoint": "https://models.github.ai/inference",
-    "model": "openai/text-embedding-3-small",
+    "endpoint": "https://api.mistral.ai/v1",
+    "model": "mistral-embed",
 }
 
 news_api_configuration = {"url": "https://api.finlight.me/v2/", "endpoint": "articles/"}

@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -1078,6 +1078,17 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/91/9b/4a2ea29aeba62471211598dac5d96825bb49348fa07e906ea930394a83ce/docker-7.1.0.tar.gz", hash = "sha256:ad8c70e6e3f8926cb8a92619b832b4ea5299e2831c14284663184e200546fa6c", size = 117834, upload-time = "2024-05-23T11:13:57.216Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e3/26/57c6fb270950d476074c087527a558ccb6f4436657314bfb6cdf484114c4/docker-7.1.0-py3-none-any.whl", hash = "sha256:c96b93b7f0a746f9e77d325bcfb87422a3d8bd4f03136ae8a85b37f1898d5fc0", size = 147774, upload-time = "2024-05-23T11:13:55.01Z" },
+]
+
+[[package]]
+name = "dotenv"
+version = "0.9.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "python-dotenv" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b2/b7/545d2c10c1fc15e48653c91efde329a790f2eecfbbf2bd16003b5db2bab0/dotenv-0.9.9-py2.py3-none-any.whl", hash = "sha256:29cf74a087b31dafdb5a446b6d7e11cbce8ed2741540e2339c69fbef92c94ce9", size = 1892, upload-time = "2025-02-19T22:15:01.647Z" },
 ]
 
 [[package]]
@@ -4515,7 +4526,7 @@ wheels = [
 
 [[package]]
 name = "the-news-hub"
-version = "0.1.0"
+version = "0.1.1"
 source = { virtual = "." }
 dependencies = [
     { name = "apache-airflow-providers-docker" },
@@ -4524,6 +4535,7 @@ dependencies = [
     { name = "chromadb-client" },
     { name = "crawl4ai" },
     { name = "deep-translator" },
+    { name = "dotenv" },
     { name = "langchain" },
     { name = "langchain-chroma" },
     { name = "langchain-openai" },
@@ -4558,6 +4570,7 @@ requires-dist = [
     { name = "chromadb-client", specifier = ">=1.3.6" },
     { name = "crawl4ai", specifier = ">=0.7.4" },
     { name = "deep-translator", specifier = ">=1.11.4" },
+    { name = "dotenv", specifier = ">=0.9.9" },
     { name = "fastapi", marker = "extra == 'api'", specifier = ">=0.104.1" },
     { name = "ipykernel", marker = "extra == 'dev'" },
     { name = "langchain", specifier = ">=0.3.27" },
