@@ -30,6 +30,7 @@ class TopicsEnricher:
             model_provider="openai",
             api_key=os.getenv("MISTRAL_API_KEY"),
             base_url="https://api.mistral.ai/v1",
+            max_tokens=40,
         )
         self.chroma_db = ChromaDatabase(collection_name=chroma_configuration["collection_name"])
         self.prompts = Prompts()

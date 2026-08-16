@@ -48,6 +48,11 @@ class Prompts:
     Documents:
     {documents}
 
+    Output rules:
+    - Reply with the single topic word ONLY. No explanation, no reasoning, no parenthetical
+      commentary, no markdown formatting, no punctuation, no quotes.
+    - Do not repeat the word "topic" or the word "Proposed".
+
     Proposed topic:
     """
 
@@ -59,9 +64,11 @@ class Prompts:
     - Length: 10-12 words.
     - Format: [Noun Phrase] + [Formal Impact/Scope].
     - Forbidden: "is a", "refers to", "when", "like", "for example".
+    - Forbidden: markdown formatting (no bold, brackets, em-dashes), explanations of your
+      reasoning, or any text other than the description sentence itself.
 
     GOOD (Noun-led, Categorical):
-    - Topic: Infrastructure | Description: Foundational physical and organizational structures needed for the operation of society.  
+    - Topic: Infrastructure | Description: Foundational physical and organizational structures needed for the operation of society.
     - Topic: Logistics | Description: Strategic management of the movement and positioning of resources and goods.
 
     BAD (Verb-led, Informal):
@@ -69,7 +76,7 @@ class Prompts:
     - Topic: Logistics | Description: This is how companies move their products from one place to another.
 
     Topic: {topic}
-    Description:
+    Description (plain sentence only, no formatting or commentary):
     """  # noqa
 
     asked_frecuency_template = """You are a linguistic expert.
