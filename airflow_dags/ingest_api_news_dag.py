@@ -37,7 +37,7 @@ ingest_news = DockerOperator(
         "PYTHONPATH": "/the_news_hub",
         "CHROMA_DB_TOKEN": "{{ var.value.CHROMA_DB_TOKEN }}",
         "FINLIGHT_API_TOKEN": "{{ var.value.FINLIGHT_API_TOKEN }}",
-        "GITHUB_TOKEN": "{{ var.value.GITHUB_TOKEN }}",
+        "MISTRAL_API_KEY": "{{ var.value.MISTRAL_API_KEY }}",
     },
     network_mode="bridge",
     docker_url="unix://var/run/docker.sock",

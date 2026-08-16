@@ -25,7 +25,7 @@ class ChromaRAG:
         self.llm = init_chat_model(
             model=chat_configuration["ask_hub"],
             model_provider="openai",
-            api_key=os.getenv("GITHUB_TOKEN"),
+            api_key=os.getenv("MISTRAL_API_KEY"),
             base_url="https://models.github.ai/inference",
         )
         self.chroma_db = ChromaDatabase(collection_name=chroma_configuration["collection_name"])

@@ -38,7 +38,7 @@ topics_enrichement = DockerOperator(
     environment={
         "PYTHONPATH": "/the_news_hub",
         "CHROMA_DB_TOKEN": "{{ var.value.CHROMA_DB_TOKEN }}",
-        "GITHUB_TOKEN": "{{ var.value.GITHUB_TOKEN }}",
+        "MISTRAL_API_KEY": "{{ var.value.MISTRAL_API_KEY }}",
         "MONGO_URI_TOKEN": "{{ var.value.MONGO_URI_TOKEN }}",
     },
     network_mode="bridge",
