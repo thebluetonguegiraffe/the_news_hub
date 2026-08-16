@@ -21,7 +21,7 @@ embeddings_configuration = {
 news_api_configuration = {"url": "https://api.finlight.me/v2/", "endpoint": "articles/"}
 
 chat_configuration = {
-    "endpoint": "https://models.github.ai/inference/chat/completions",
-    "model": "openai/gpt-4.1-mini",
-    "ask_hub": "openai/gpt-4.1",
+    "endpoint": "https://api.mistral.ai/v1",
+    "model": "ministral-3b-latest",
+    "ask_hub": "ministral-3b-latest",
 }
