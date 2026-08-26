@@ -56,9 +56,15 @@ class ScrapperIngestor(BaseIngestor):
         super().translate_documents_node(state)
         articles_md = state["articles_md"]
 
-        for md in articles_md:
-            if topic := md.get("topic"):
-                md["topic"] = self.translator.translate(topic, target_lang="en")
+        with_topic = [md for md in articles_md if md.get("topic")]
+        topics = [md["topic"] for md in with_topic]
+        translations = self.translator.translate_batch(topics, target_lang="en")
+
+        for md, original, translated in zip(with_topic, topics, translations):
+            if not translated:
+                logger.warning(f"Falling back to untranslated topic for {md.get('url')}")
+                translated = original
+            md["topic"] = translated
 
         logger.info("Articles metadata translation completed.")
         return {"articles_md": articles_md}

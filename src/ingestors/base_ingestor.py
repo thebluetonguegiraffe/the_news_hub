@@ -27,23 +27,35 @@ class BaseIngestor(ABC):
 
     def translate_documents_node(self, state: Dict) -> Dict:
         """
-        Translate title and description fields of the documents
+        Translate title and description fields of the documents.
+
+        All articles are translated in one batch per field and language, so the
+        whole run costs a handful of requests instead of one per field. An
+        article whose translation fails keeps its original-language text rather
+        than bringing the whole ingestion down.
         """
         articles_md = state["articles_md"]
 
+        translatable = []
         for md in articles_md:
-            title = md.get(f"title_{self.LANGUAGE}")
-            description = md.get(f"description_{self.LANGUAGE}")
-
-            if not title or not description:
+            if md.get(f"title_{self.LANGUAGE}") and md.get(f"description_{self.LANGUAGE}"):
+                translatable.append(md)
+            else:
                 logger.info("Missing title or description in metadata, skipping translation.")
-                continue
 
-            for language in self.dest_lang:
-                md[f"title_{language}"] = self.translator.translate(title, target_lang=language)
-                md[f"description_{language}"] = self.translator.translate(
-                    description, target_lang=language
-                )
+        for language in self.dest_lang:
+            for field in ("title", "description"):
+                originals = [md[f"{field}_{self.LANGUAGE}"] for md in translatable]
+                translations = self.translator.translate_batch(originals, target_lang=language)
+
+                for md, original, translated in zip(translatable, originals, translations):
+                    if not translated:
+                        logger.warning(
+                            f"Falling back to untranslated {field}_{language} "
+                            f"for {md.get('url')}"
+                        )
+                        translated = original
+                    md[f"{field}_{language}"] = translated
 
         return {"articles_md": articles_md}
 

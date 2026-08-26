@@ -5,13 +5,13 @@ import os
 import time
 from typing import Dict, List
 
-from deep_translator import GoogleTranslator
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from langchain.chat_models import init_chat_model
 from langchain.prompts import ChatPromptTemplate
 
 from src.core.chroma_database import ChromaDatabase
+from src.core.translator import GoogleTranslator
 from config import chat_configuration, chroma_configuration, mongo_configuration
 from src.core.mongo_client import CustomMongoClient
 from src.utils.prompts import Prompts
@@ -167,22 +167,34 @@ class TopicsEnricher:
                 return []
 
     def update_mongo_topics_collection(self, topics: List[str], date: datetime) -> List[str]:
-        non_cached_topics = set(topics) - set(self.cached_topics)
+        non_cached_topics = list(set(topics) - set(self.cached_topics))
+        descriptions = [self.get_topic_description(topic=topic) for topic in non_cached_topics]
+
+        # translate every topic and description in one batch per language
+        translated = {}
+        for language in ("ca", "es"):
+            translated["topic", language] = self.translator.translate_batch(
+                non_cached_topics, target_lang=language
+            )
+            translated["description", language] = self.translator.translate_batch(
+                descriptions, target_lang=language
+            )
 
         # create new topics documents for MongoDB
         new_mongo_documents = []
-        for topic in non_cached_topics:
+        for index, topic in enumerate(non_cached_topics):
             n_docs = topics.count(topic)
-            description = self.get_topic_description(topic=topic)
+            description = descriptions[index]
             new_mongo_documents.append(
                 {
                     "_id": topic,
                     "description": description,
                     "topics_per_day": [{"date": date, "docs_number": n_docs}],
-                    "topic_ca": self.translator.translate(topic, target_lang="ca"),
-                    "topic_es": self.translator.translate(topic, target_lang="es"),
-                    "description_ca": self.translator.translate(description, target_lang="ca"),
-                    "description_es": self.translator.translate(description, target_lang="es"),
+                    # keep the original text when a translation is unavailable
+                    "topic_ca": translated["topic", "ca"][index] or topic,
+                    "topic_es": translated["topic", "es"][index] or topic,
+                    "description_ca": translated["description", "ca"][index] or description,
+                    "description_es": translated["description", "es"][index] or description,
                 }
             )
 
