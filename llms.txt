@@ -1,0 +1,3 @@
+# Smoke test
+
+This file was added by an LLM Lens fork+PR smoke test.
