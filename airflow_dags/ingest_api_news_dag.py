@@ -1,7 +1,6 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.operators.email import EmailOperator
 
 DOCKER_IMAGE_NAME = "ghcr.io/thebluetonguegiraffe/the_news_hub:latest"
 
@@ -48,18 +47,3 @@ ingest_news = DockerOperator(
     do_xcom_push=True,
     xcom_all=True,
 )
-
-notify_success = EmailOperator(
-    task_id="notify_success",
-    to="thebluetonguegiraffe@gmail.com",
-    subject="API News ingestion Dag Success for date {{ data_interval_end.strftime('%Y-%m-%dT%H:%M') }} ✅",  # noqa
-    html_content="""
-    <h3>Execution Report:</h3>
-    <pre style="background-color: #f4f4f4; padding: 10px; border: 1px solid #ddd;">
-    {{ ti.xcom_pull(task_ids='ingest_api_news') | join('\n') }}
-    </pre>
-    """,
-    dag=dag,
-)
-
-ingest_news >> notify_success
