@@ -5,7 +5,6 @@ import time
 from typing import Dict, List, Optional
 
 import requests
-from bs4 import BeautifulSoup
 
 
 logger = logging.getLogger("translator")
@@ -23,8 +22,12 @@ class RateLimitError(TranslationError):
 
 
 class GoogleTranslator:
+    # The JSON endpoint, not the translate.google.com/m HTML page the scraper
+    # used before: that host answers this server with a 302 to
+    # google.com/sorry/index (HTTP 429), so every translation failed. This one
+    # answers the same requests from the same IP normally, needs no API key,
+    # and returns the translation as data instead of markup to scrape.
     BASE_URL = "https://translate.googleapis.com/translate_a/single"
-    TRANSLATE_URL = "https://translate.google.com/m"
 
     # Google rejects requests over ~5000 chars. Stay well under it: the whole
     # batch travels in the query string, so the URL length counts too.
@@ -35,7 +38,7 @@ class GoogleTranslator:
     BACKOFF_BASE_SECONDS = 15
     BACKOFF_FACTOR = 2
     BACKOFF_CAP_SECONDS = 120
-    MIN_REQUEST_INTERVAL = 2.0
+    MIN_REQUEST_INTERVAL = 1.0
 
     # Once the retries for a single request are exhausted, the IP is blocked
     # rather than unlucky. Further requests fail fast for this long instead of
@@ -202,21 +205,25 @@ class GoogleTranslator:
                 f"still in cooldown for {self._blocked_until - time.monotonic():.0f}s"
             )
 
-        params = {"tl": target_lang, "q": text}
-        if self.source_lang:
-            params["sl"] = self.source_lang
+        params = {
+            "client": "gtx",
+            "dt": "t",
+            "sl": self.source_lang or "auto",
+            "tl": target_lang,
+            "q": text,
+        }
 
         for attempt in range(self.MAX_RETRIES):
             try:
                 self._throttle()
                 self.stats["requests"] += 1
-                response = self.session.get(self.TRANSLATE_URL, params=params, timeout=30)
+                response = self.session.get(self.BASE_URL, params=params, timeout=30)
 
                 if response.status_code == 429:
                     raise RateLimitError("HTTP 429")
                 response.raise_for_status()
 
-                return self._parse(response.text)
+                return self._parse(response)
 
             except (RateLimitError, requests.exceptions.RequestException) as e:
                 if attempt == self.MAX_RETRIES - 1:
@@ -249,17 +256,35 @@ class GoogleTranslator:
         except (TypeError, ValueError):
             return None
 
-    def _parse(self, html: str) -> str:
-        soup = BeautifulSoup(html, "html.parser")
-        element = soup.find("div", {"class": "result-container"}) or soup.find(
-            "div", {"class": "t0"}
+    @staticmethod
+    def _parse(response: requests.Response) -> str:
+        """
+        Pull the translated text out of the JSON payload.
+
+        Google splits the input into sentence-sized segments and keeps the
+        newlines inside them, so concatenating every segment rebuilds the
+        submitted text line for line. That is what lets a whole batch travel in
+        one request: the caller splits the result on newlines again and gets
+        one translation per input line.
+        """
+        try:
+            payload = response.json()
+        except ValueError:
+            # A block arrives as HTML (an abuse interstitial), not as JSON, so
+            # unparseable content means throttling rather than an empty result.
+            raise RateLimitError("response was not JSON (likely throttled)")
+
+        try:
+            segments = payload[0]
+        except (IndexError, KeyError, TypeError):
+            raise TranslationError(f"unexpected payload shape: {str(payload)[:120]}")
+
+        if not segments:
+            raise TranslationError("no translation in response")
+
+        return "".join(
+            segment[0] for segment in segments if segment and segment[0]
         )
-        if element is None:
-            # Google answers a block with HTTP 200 and an abuse interstitial
-            # instead of the result, so a missing container means throttling,
-            # not a text that has no translation.
-            raise RateLimitError("no result container in response (likely throttled)")
-        return element.get_text("\n")
 
     def _throttle(self):
         elapsed = time.monotonic() - self._last_request_at
