@@ -11,6 +11,7 @@ mongo_configuration = {
     "host": "mongodb://localhost:27017/",
     "db": "the_news_hub",
     "collection": "topics_2026",
+    "trends_collection": "trends_2026",
 }
 
 embeddings_configuration = {

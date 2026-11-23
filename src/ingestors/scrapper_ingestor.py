@@ -49,26 +49,6 @@ class ScrapperIngestor(BaseIngestor):
                     articles_md.append(scraped_article)
         return {"articles_md": articles_md}
 
-    def translate_documents_node(self, state: State) -> Dict:
-        """
-        Scrapped articles have also topic field that needs to be translated
-        """
-        super().translate_documents_node(state)
-        articles_md = state["articles_md"]
-
-        with_topic = [md for md in articles_md if md.get("topic")]
-        topics = [md["topic"] for md in with_topic]
-        translations = self.translator.translate_batch(topics, target_lang="en")
-
-        for md, original, translated in zip(with_topic, topics, translations):
-            if not translated:
-                logger.warning(f"Falling back to untranslated topic for {md.get('url')}")
-                translated = original
-            md["topic"] = translated
-
-        logger.info("Articles metadata translation completed.")
-        return {"articles_md": articles_md}
-
     def articles_db_insert_node(self, state: State) -> Dict:
         articles_md = state["articles_md"]
 
@@ -79,7 +59,7 @@ class ScrapperIngestor(BaseIngestor):
                     document=md.get("title_en") + ". " + md.get("description_en"),
                     metadata=Metadata(
                         url=md.get("url"),
-                        topic=md.get("topic"),
+                        section=md.get("topic"),
                         title=md.get("title_en"),
                         title_es=md.get("title_es"),
                         title_ca=md.get("title_ca"),
