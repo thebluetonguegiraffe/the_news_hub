@@ -23,13 +23,12 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score
 from langchain.chat_models import init_chat_model
 from langchain.prompts import ChatPromptTemplate
 
 from src.core.chroma_database import ChromaDatabase, CustomEmbedder
 from src.core.translator import GoogleTranslator
-from src.taxonomy import CATEGORY_LABELS, NEWS_CATEGORIES, UNCLASSIFIED_CATEGORY
+from src.taxonomy import CATEGORY_LABELS, CATEGORY_NAMES, NEWS_CATEGORIES, UNCLASSIFIED_CATEGORY
 from src.utils.rate_limit import call_with_retry
 from config import chat_configuration, chroma_configuration, mongo_configuration
 from src.core.mongo_client import CustomMongoClient
@@ -46,10 +45,28 @@ class TopicsEnricher:
     # Clustering is only meaningful with a handful of documents per cluster.
     MIN_DOCS_TO_CLUSTER = 8
     MIN_CLUSTERS = 2
-    MAX_CLUSTERS = 25
+    # Clustering is local and cheap, so the cap only exists to bound the work on
+    # a very large bucket. It used to be 25, which forced ~44 documents into a
+    # single cluster on a 310-document day and made one story's label spread
+    # over every unrelated article beside it.
+    MAX_CLUSTERS = 80
     TARGET_DOCS_PER_CLUSTER = 4
     PCA_COMPONENTS = 50
     MIN_DOCS_FOR_PCA = 20
+
+    # A trend is a story several articles cover, so a cluster of one or two is
+    # not one. The budget caps the LLM calls per bucket: the largest clusters
+    # are labelled first, which is where the day's actual trends are.
+    MIN_DOCS_PER_TREND = 3
+    MAX_TRENDS_PER_BUCKET = 30
+
+    # How far below the bucket's median similarity-to-centroid a cluster may sit
+    # before it is treated as a grab-bag of leftovers rather than a story. The
+    # embeddings are tightly concentrated (most documents score 0.84-1.00
+    # against their centroid), so an absolute floor separates nothing: measured
+    # on real buckets, coherent clusters averaged 0.89-0.93 while the leftover
+    # cluster averaged 0.86, about 0.05 under the median.
+    COHERENCE_MARGIN = 0.04
 
     # A document whose best category is not clearly better than the runner-up is
     # left as UNCLASSIFIED_CATEGORY rather than forced into a wrong bucket.
@@ -176,27 +193,46 @@ class TopicsEnricher:
             reduced = PCA(n_components=n_components, random_state=42).fit_transform(reduced)
             reduced = self._normalise(reduced)
 
-        k_max = max(self.MIN_CLUSTERS, min(self.MAX_CLUSTERS,
-                                           n_samples // self.TARGET_DOCS_PER_CLUSTER))
+        # k comes straight from the document count instead of a silhouette
+        # sweep. The sweep cost one k-means fit per candidate k and still chose
+        # badly: measured across real buckets the score rose monotonically with
+        # k (0.089 at k=7, 0.129 at k=77), so inside the old 2..25 window it was
+        # picking between values that were all equally poor, and it settled on
+        # k=7 for a 310-document bucket. A fixed target size gives clusters that
+        # hold one story each, which is what a trend label needs.
+        k = max(self.MIN_CLUSTERS, min(self.MAX_CLUSTERS,
+                                       n_samples // self.TARGET_DOCS_PER_CLUSTER))
         # k can never exceed the number of documents: that was the ValueError
         # that failed the DAG whenever a bucket was thin.
-        k_max = min(k_max, n_samples - 1)
+        k = min(k, n_samples - 1)
 
-        best_labels, best_score, best_k = None, -1.0, None
-        for k in range(self.MIN_CLUSTERS, k_max + 1):
-            labels = KMeans(n_clusters=k, random_state=42, n_init=10).fit_predict(reduced)
-            if len(set(labels)) < 2:
+        labels = KMeans(n_clusters=k, random_state=42, n_init=10).fit_predict(reduced)
+        logger.info(f"clustered {n_samples} docs into k={k}")
+        return labels
+
+    def cluster_coherence(
+        self, embeddings: np.ndarray, labels: np.ndarray
+    ) -> Tuple[Dict[int, float], float, np.ndarray]:
+        """
+        Average similarity of each cluster's documents to their own centroid.
+
+        Returns the per-cluster averages, the median over all documents and the
+        per-document scores. The median is the reference point: what matters is
+        whether a cluster is loose *for this bucket*, not its absolute score.
+        """
+        unit = self._normalise(embeddings)
+        similarities = np.zeros(len(unit), dtype=np.float32)
+        coherence: Dict[int, float] = {}
+        for cluster_id in set(int(label) for label in labels):
+            positions = np.where(labels == cluster_id)[0]
+            if not len(positions):
                 continue
-            score = silhouette_score(reduced, labels)
-            if score > best_score:
-                best_labels, best_score, best_k = labels, score, k
-
-        if best_labels is None:
-            logger.warning("Could not form clusters; treating all documents as one cluster.")
-            return np.zeros(n_samples, dtype=int)
-
-        logger.info(f"chose k={best_k} for {n_samples} docs (silhouette {best_score:.3f})")
-        return best_labels
+            centroid = unit[positions].mean(axis=0)
+            centroid /= max(float(np.linalg.norm(centroid)), 1e-12)
+            scores = unit[positions] @ centroid
+            similarities[positions] = scores
+            coherence[cluster_id] = float(scores.mean())
+        return coherence, float(np.median(similarities)), similarities
 
     # ------------------------------------------------------------------ labels
 
@@ -207,6 +243,8 @@ class TopicsEnricher:
         Returns None when the call cannot be completed, so the caller keeps the
         category it already assigned instead of losing the document.
         """
+        # The caller passes the documents closest to the centroid first, so the
+        # 12 the model sees describe the cluster's core rather than its edge.
         headlines = "\n".join(f"- {document}" for document in cluster_documents[:12])
         prompt = ChatPromptTemplate.from_messages([("system", self.prompts.TREND_LABEL_TEMPLATE)])
         chain = prompt | self.llm
@@ -281,22 +319,65 @@ class TopicsEnricher:
         for position, label in enumerate(labels):
             clusters[int(label)].append(position)
 
-        # Step 3: concrete trend labels per cluster. Best effort: a failure here
-        # costs a trend label, never the category written in step 1.
+        coherence, median_similarity, similarities = self.cluster_coherence(
+            embeddings, labels
+        )
+        floor = median_similarity - self.COHERENCE_MARGIN
 
+        # Step 3: choose which clusters get a trend. A label is only meaningful
+        # for a cluster that several articles share and that holds together: the
+        # leftovers k-means has to put somewhere would otherwise be handed the
+        # name of whichever story dominated them.
+        candidates = [
+            cluster_id
+            for cluster_id, positions in clusters.items()
+            if len(positions) >= self.MIN_DOCS_PER_TREND
+            and coherence.get(cluster_id, 0.0) >= floor
+        ]
+        too_small = sum(
+            1 for positions in clusters.values()
+            if len(positions) < self.MIN_DOCS_PER_TREND
+        )
+        incoherent = len(clusters) - len(candidates) - too_small
+        # Largest first, so the budget is spent on the day's biggest stories.
+        candidates.sort(key=lambda cluster_id: -len(clusters[cluster_id]))
+        selected = candidates[: self.MAX_TRENDS_PER_BUCKET]
+        logger.info(
+            f"{len(clusters)} clusters: {len(selected)} to label "
+            f"(skipped {too_small} too small, {incoherent} below coherence "
+            f"{floor:.3f}, {len(candidates) - len(selected)} over budget)"
+        )
+
+        # Step 4: concrete trend labels. Best effort: a failure here costs a
+        # trend label, never the category written in step 1. Every document is
+        # written, with an empty trend where none applies, so a re-run cannot
+        # leave yesterday's label on an article that no longer belongs to it.
+        trends_by_position: Dict[int, str] = {}
         named, failed = 0, 0
-        for cluster_id, positions in clusters.items():
-            trend = self.label_cluster([documents[position] for position in positions])
+        for cluster_id in selected:
+            positions = clusters[cluster_id]
+            # Closest to the centroid first: those headlines define the story.
+            ordered = sorted(positions, key=lambda position: -similarities[position])
+            trend = self.label_cluster([documents[position] for position in ordered])
             if not trend:
                 failed += 1
                 continue
             named += 1
-            logger.info(f"cluster {cluster_id}: {trend!r} ({len(positions)} docs)")
-            if not dry_run:
-                self._write_metadata(
-                    [ids[position] for position in positions],
-                    [{"trend": trend}] * len(positions),
-                )
+            logger.info(
+                f"cluster {cluster_id}: {trend!r} ({len(positions)} docs, "
+                f"coherence {coherence[cluster_id]:.3f})"
+            )
+            for position in positions:
+                trends_by_position[position] = trend
+
+        if not dry_run:
+            self._write_metadata(
+                ids,
+                [
+                    {"trend": trends_by_position.get(position, "")}
+                    for position in range(len(ids))
+                ],
+            )
 
         logger.info(f"trends named for {named} clusters, {failed} could not be labelled")
 
@@ -393,6 +474,13 @@ class TopicsEnricher:
 
         with self.mongo() as client:
             collection = client[mongo_configuration["db"]][mongo_configuration["trends_collection"]]
+            # The rows are keyed by (label, date), so a re-run that names the
+            # day's stories differently would leave the previous labels behind
+            # and the API would serve both. This bucket's trends are rewritten
+            # from scratch instead.
+            removed = collection.delete_many({"date": date}).deleted_count
+            if removed:
+                logger.info(f"removed {removed} previously recorded trends for {date}")
             for trend, data in trends.items():
                 dominant = max(data["categories"].items(), key=lambda item: item[1])[0]
                 collection.update_one(
@@ -435,9 +523,9 @@ class TopicsEnricher:
 
         translated = {}
         for language in ("ca", "es"):
-            translated["topic", language] = self.translator.translate_batch(
-                missing, target_lang=language
-            )
+            # The category names are stated in the taxonomy rather than
+            # translated: a bare word comes back unreliably, and a label written
+            # once with $setOnInsert is not worth guessing at.
             translated["description", language] = self.translator.translate_batch(
                 descriptions, target_lang=language
             )
@@ -445,10 +533,11 @@ class TopicsEnricher:
         payload = {}
         for index, category in enumerate(missing):
             description = descriptions[index]
+            names = CATEGORY_NAMES.get(category, {})
             payload[category] = {
                 "description": description,
-                "topic_ca": translated["topic", "ca"][index] or category,
-                "topic_es": translated["topic", "es"][index] or category,
+                "topic_ca": names.get("ca") or category,
+                "topic_es": names.get("es") or category,
                 "description_ca": translated["description", "ca"][index] or description,
                 "description_es": translated["description", "es"][index] or description,
             }

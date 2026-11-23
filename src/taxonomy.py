@@ -102,3 +102,32 @@ NEWS_CATEGORIES = {
 UNCLASSIFIED_CATEGORY = "general"
 
 CATEGORY_LABELS = tuple(NEWS_CATEGORIES.keys())
+
+# Display names per language. The taxonomy is a fixed, known list, so the names
+# are stated rather than machine-translated: asking the translation endpoint for
+# a bare word is unreliable (it returned "politica" without the accent, and
+# "negocio" for the business desk) and there is nothing to gain from guessing at
+# a label that only has to be written once.
+CATEGORY_NAMES = {
+    "politics": {"es": "política", "ca": "política"},
+    "economy": {"es": "economía", "ca": "economia"},
+    "business": {"es": "empresas", "ca": "empreses"},
+    "technology": {"es": "tecnología", "ca": "tecnologia"},
+    "science": {"es": "ciencia", "ca": "ciència"},
+    "health": {"es": "salud", "ca": "salut"},
+    "environment": {"es": "medio ambiente", "ca": "medi ambient"},
+    "justice": {"es": "justicia", "ca": "justícia"},
+    "conflict": {"es": "conflictos", "ca": "conflictes"},
+    "society": {"es": "sociedad", "ca": "societat"},
+    "sports": {"es": "deportes", "ca": "esports"},
+    "culture": {"es": "cultura", "ca": "cultura"},
+    "education": {"es": "educación", "ca": "educació"},
+    "housing": {"es": "vivienda", "ca": "habitatge"},
+    "transport": {"es": "transporte", "ca": "transport"},
+    "media": {"es": "medios de comunicación", "ca": "mitjans de comunicació"},
+    UNCLASSIFIED_CATEGORY: {"es": "general", "ca": "general"},
+}
+
+assert set(CATEGORY_NAMES) == set(CATEGORY_LABELS) | {UNCLASSIFIED_CATEGORY}, (
+    "every category needs a display name in both languages"
+)

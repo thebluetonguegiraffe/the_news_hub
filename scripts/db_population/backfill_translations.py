@@ -20,9 +20,11 @@ import logging
 
 from dotenv import load_dotenv
 
-from config import chroma_configuration
+from config import chroma_configuration, mongo_configuration
 from src.core.chroma_database import ChromaDatabase
+from src.core.mongo_client import CustomMongoClient
 from src.core.translator import GoogleTranslator
+from src.taxonomy import CATEGORY_LABELS, CATEGORY_NAMES, UNCLASSIFIED_CATEGORY
 from scripts.db_population.backfill_topics import recent_buckets
 
 
@@ -108,10 +110,89 @@ def collect_work(records: list) -> tuple:
     return work, unknown_sources
 
 
+def backfill_categories(dry_run: bool) -> None:
+    """
+    Re-translate the canonical category labels and descriptions.
+
+    The enricher writes these with $setOnInsert, so the categories first stored
+    while the endpoint was refusing us kept the English name as their Catalan
+    and Spanish label and would never be corrected by a later run. This sets
+    them unconditionally, which is safe because the labels come from the
+    taxonomy and the English description is the source of truth.
+    """
+    wanted = sorted(list(CATEGORY_LABELS) + [UNCLASSIFIED_CATEGORY])
+    translator = GoogleTranslator(source_lang="en")
+
+    with CustomMongoClient() as client:
+        collection = client[mongo_configuration["db"]][mongo_configuration["collection"]]
+        stored = list(collection.find({"_id": {"$in": wanted}}))
+
+        pending = []
+        for document in stored:
+            label = document["_id"]
+            description = document.get("description") or ""
+            names = CATEGORY_NAMES.get(label, {})
+            needs_label = any(
+                document.get(f"topic_{language}") != names.get(language)
+                for language in ("ca", "es")
+            )
+            needs_description = bool(description) and any(
+                not document.get(f"description_{language}")
+                or document.get(f"description_{language}") == description
+                for language in ("ca", "es")
+            )
+            if needs_label or needs_description:
+                pending.append((label, description))
+
+        if not pending:
+            logger.info("categories: nothing to translate")
+            return
+
+        logger.info(f"categories: {len(pending)} to translate")
+        if dry_run:
+            logger.info(f"categories: would translate {[label for label, _ in pending]}")
+            return
+
+        descriptions = [description for _, description in pending]
+        translations = {}
+        for language in ("ca", "es"):
+            # Only the descriptions are translated: they are full sentences,
+            # which is what the endpoint is good at.
+            translations["description", language] = translator.translate_batch(
+                descriptions, target_lang=language
+            )
+
+        written = 0
+        for index, (label, description) in enumerate(pending):
+            update = {}
+            names = CATEGORY_NAMES.get(label, {})
+            for language in ("ca", "es"):
+                if names.get(language):
+                    update[f"topic_{language}"] = names[language]
+                translated_description = translations["description", language][index]
+                if translated_description:
+                    update[f"description_{language}"] = translated_description
+            if not update:
+                continue
+            collection.update_one({"_id": label}, {"$set": update})
+            written += 1
+            logger.info(
+                f"   {label}: ca={update.get('topic_ca')!r} es={update.get('topic_es')!r}"
+            )
+        logger.info(f"categories: {written} updated")
+    translator.log_stats()
+
+
 def main() -> None:
     load_dotenv()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--days", type=int, default=7, help="How many days back to scan.")
+    parser.add_argument(
+        "--scope",
+        choices=("all", "documents", "categories"),
+        default="all",
+        help="Translate the articles, the category labels, or both.",
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -119,6 +200,11 @@ def main() -> None:
         help="Report what would change without writing to the database.",
     )
     args = parser.parse_args()
+
+    if args.scope in ("all", "categories"):
+        backfill_categories(dry_run=args.dry_run)
+    if args.scope == "categories":
+        return
 
     chroma_db = ChromaDatabase(collection_name=chroma_configuration["collection_name"])
     collection = chroma_db.collection
