@@ -29,7 +29,7 @@ from langchain.prompts import ChatPromptTemplate
 
 from src.core.chroma_database import ChromaDatabase, CustomEmbedder
 from src.core.translator import GoogleTranslator
-from src.taxonomy import NEWS_CATEGORIES, UNCLASSIFIED_CATEGORY
+from src.taxonomy import CATEGORY_LABELS, NEWS_CATEGORIES, UNCLASSIFIED_CATEGORY
 from src.utils.rate_limit import call_with_retry
 from config import chat_configuration, chroma_configuration, mongo_configuration
 from src.core.mongo_client import CustomMongoClient
@@ -340,9 +340,29 @@ class TopicsEnricher:
         self._update_categories(categories=categories, date=date)
         self._update_trends(trends=trends, date=date)
 
+    def _prune_legacy_topics(self, date: str) -> None:
+        """
+        Drop this bucket's counts from the free-form topics used before.
+
+        Those documents are now counted under a canonical category, so leaving
+        the old entry in place would have the API report the same articles twice
+        for that day, once under 'empire' and once under 'politics'.
+        """
+        with self.mongo() as client:
+            collection = client[mongo_configuration["db"]][mongo_configuration["collection"]]
+            result = collection.update_many(
+                filter={"_id": {"$nin": list(CATEGORY_LABELS) + [UNCLASSIFIED_CATEGORY]}},
+                update={"$pull": {"topics_per_day": {"date": date}}},
+            )
+        if result.modified_count:
+            logger.info(
+                f"pruned {date} from {result.modified_count} pre-taxonomy topics"
+            )
+
     def _update_categories(self, categories: List[str], date: str) -> None:
         counts = self._counts(categories)
         descriptions = self._category_descriptions(sorted(counts))
+        self._prune_legacy_topics(date)
 
         with self.mongo() as client:
             collection = client[mongo_configuration["db"]][mongo_configuration["collection"]]
