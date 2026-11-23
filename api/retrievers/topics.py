@@ -61,7 +61,11 @@ class TopicsRetriever:
     def get_topics_by_date_range(self, from_date: datetime, to_date: datetime) -> TopicResponse:
 
         if not from_date and not to_date:
-            today = datetime.now(timezone.utc)
+            # Naive, like the dates RangeDate builds and like the registry dates
+            # parse_mongo_results compares them against: mixing an aware default
+            # in here made every call without a date range fail with
+            # "can't compare offset-naive and offset-aware datetimes".
+            today = datetime.now(timezone.utc).replace(tzinfo=None)
             yesterday = today - timedelta(days=1)
 
             start_point = yesterday.replace(hour=23, minute=55, second=0, microsecond=0)
@@ -90,7 +94,11 @@ class TopicsRetriever:
             )
             mongo_results = list(results)
         parsed_topics = self.parse_mongo_results(mongo_results=mongo_results)
-        return TopicResponse(topics=parsed_topics, from_date=from_date, to_date=to_date)
+        # The resolved range, not the arguments: those are None when the caller
+        # passes no dates, which the response model does not accept.
+        return TopicResponse(
+            topics=parsed_topics, from_date=self.from_date, to_date=self.to_date
+        )
 
     def get_description_by_id(self, topic_id: str) -> Dict:
         with self.mongo() as client:
