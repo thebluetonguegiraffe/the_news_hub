@@ -35,25 +35,37 @@ class Prompts:
     Topic:
     """
 
-    TOPIC_GENERATION_TEMPLATE = """You are a topic assignor.
+    TREND_LABEL_TEMPLATE = """You are a news desk editor naming today's story clusters.
 
-    Given the following documents, you have to propose a single topic that fits
-    the documents content. The topic should be a single word without containing the quote "topic:" .
-    You should try to propose the following general topics but if you can not, you can propose your
-    own topic.
+    Below are headlines that were grouped together because they cover the same
+    story. Name that specific story.
 
-    The general topics are:
-    {cached_topics}
+    Rules:
+    - 2 to 5 words naming the concrete event, place, organisation or people
+      involved. Use proper nouns when the headlines contain them.
+    - Describe what actually happened, not an abstract theme.
+    - Lowercase. No quotes, no markdown, no punctuation, no trailing period.
+    - Never add a year or a date that the headlines do not state.
+    - Output the label and nothing else.
 
-    Documents:
+    GOOD (concrete, names the story):
+    - anthropic stock market debut
+    - bangladesh election protests
+    - bank of england headquarters refurbishment
+    - storm claudia floods in valencia
+
+    BAD (abstract, unusable as a label):
+    - glory
+    - resilience
+    - empire
+    - elite
+    - the economy
+    - important news about technology
+
+    Headlines:
     {documents}
 
-    Output rules:
-    - Reply with the single topic word ONLY. No explanation, no reasoning, no parenthetical
-      commentary, no markdown formatting, no punctuation, no quotes.
-    - Do not repeat the word "topic" or the word "Proposed".
-
-    Proposed topic:
+    Label:
     """
 
     TOPIC_DESCRIPTION_TEMPLATE = """

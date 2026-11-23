@@ -2,7 +2,7 @@ import logging
 import random
 import re
 import time
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -29,10 +29,19 @@ class GoogleTranslator:
     # Google rejects requests over ~5000 chars. Stay well under it: the whole
     # batch travels in the query string, so the URL length counts too.
     MAX_BATCH_CHARS = 3500
+
     # Blocks last minutes, not seconds, so back off hard instead of hammering.
-    MAX_RETRIES = 3
-    BACKOFF_BASE_SECONDS = 10
-    MIN_REQUEST_INTERVAL = 1.5
+    MAX_RETRIES = 5
+    BACKOFF_BASE_SECONDS = 15
+    BACKOFF_FACTOR = 2
+    BACKOFF_CAP_SECONDS = 120
+    MIN_REQUEST_INTERVAL = 2.0
+
+    # Once the retries for a single request are exhausted, the IP is blocked
+    # rather than unlucky. Further requests fail fast for this long instead of
+    # sleeping through the backoff again and again: an ingestion run with many
+    # batches used to spend hours waiting on an endpoint that kept refusing.
+    BLOCK_COOLDOWN_SECONDS = 600
 
     USER_AGENT = (
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -44,8 +53,10 @@ class GoogleTranslator:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": self.USER_AGENT})
         self.source_lang = source_lang
-        self._cache = {}
+        self._cache: Dict = {}
         self._last_request_at = 0.0
+        self._blocked_until = 0.0
+        self.stats = {"requests": 0, "translated": 0, "failed": 0, "skipped_while_blocked": 0}
 
     def translate(self, text: str, target_lang: str) -> str:
         """Translate a single string. Raises TranslationError on failure."""
@@ -90,13 +101,34 @@ class GoogleTranslator:
             for index, translated in self._translate_chunk(chunk, target_lang):
                 results[index] = translated
 
+        missing = sum(1 for index, _ in pending if results[index] is None)
+        if missing:
+            logger.warning(
+                f"{missing}/{len(pending)} texts could not be translated to "
+                f"{target_lang} (blocked={self.is_blocked})"
+            )
         return results
 
+    @property
+    def is_blocked(self) -> bool:
+        return time.monotonic() < self._blocked_until
+
+    def log_stats(self) -> None:
+        """Report what the endpoint actually delivered, so silent gaps surface."""
+        logger.info(f"translator stats: {self.stats}")
+
     def _translate_chunk(self, chunk, target_lang):
-        """Translate one chunk, falling back to one-by-one if the batch fails."""
+        """Translate one chunk, falling back to one-by-one only when that can help."""
         texts = [text for _, text in chunk]
         try:
             translations = self._request("\n".join(texts), target_lang).split("\n")
+        except RateLimitError:
+            # Splitting a throttled batch into N single requests multiplies the
+            # load on an endpoint that is already refusing us and deepens the
+            # block, so report the whole chunk as untranslated instead.
+            logger.warning(f"Batch of {len(texts)} hit the rate limit; skipping the chunk.")
+            self.stats["failed"] += len(texts)
+            return [(index, None) for index, _ in chunk]
         except Exception as e:
             logger.warning(f"Batch of {len(texts)} failed ({e}); retrying one by one.")
             return self._translate_individually(chunk, target_lang)
@@ -115,9 +147,11 @@ class GoogleTranslator:
         for (index, text), translated in zip(chunk, translations):
             translated = translated.strip()
             if not translated:
+                self.stats["failed"] += 1
                 resolved.append((index, None))
                 continue
             self._cache[(text, self.source_lang, target_lang)] = translated
+            self.stats["translated"] += 1
             resolved.append((index, translated))
         return resolved
 
@@ -128,16 +162,21 @@ class GoogleTranslator:
                 translated = self._request(text, target_lang).strip()
             except TranslationError as e:
                 logger.warning(f"Could not translate {text[:60]!r}: {e}")
+                self.stats["failed"] += 1
                 resolved.append((index, None))
                 continue
             except Exception:
                 # translate_batch must never take the caller down: report the
                 # item as untranslated and keep the traceback for debugging.
                 logger.exception(f"Unexpected error translating {text[:60]!r}")
+                self.stats["failed"] += 1
                 resolved.append((index, None))
                 continue
             if translated:
                 self._cache[(text, self.source_lang, target_lang)] = translated
+                self.stats["translated"] += 1
+            else:
+                self.stats["failed"] += 1
             resolved.append((index, translated or None))
         return resolved
 
@@ -157,6 +196,12 @@ class GoogleTranslator:
 
     def _request(self, text: str, target_lang: str) -> str:
         """Send one translation request, retrying with a long backoff if blocked."""
+        if self.is_blocked:
+            self.stats["skipped_while_blocked"] += 1
+            raise RateLimitError(
+                f"still in cooldown for {self._blocked_until - time.monotonic():.0f}s"
+            )
+
         params = {"tl": target_lang, "q": text}
         if self.source_lang:
             params["sl"] = self.source_lang
@@ -164,6 +209,7 @@ class GoogleTranslator:
         for attempt in range(self.MAX_RETRIES):
             try:
                 self._throttle()
+                self.stats["requests"] += 1
                 response = self.session.get(self.TRANSLATE_URL, params=params, timeout=30)
 
                 if response.status_code == 429:
@@ -174,10 +220,34 @@ class GoogleTranslator:
 
             except (RateLimitError, requests.exceptions.RequestException) as e:
                 if attempt == self.MAX_RETRIES - 1:
-                    raise TranslationError(f"Failed after {self.MAX_RETRIES} attempts: {e}")
-                sleep_time = self.BACKOFF_BASE_SECONDS * (3**attempt) * random.uniform(0.8, 1.2)
+                    # Stop paying the backoff on every later batch of this run.
+                    self._blocked_until = time.monotonic() + self.BLOCK_COOLDOWN_SECONDS
+                    logger.warning(
+                        f"Translation endpoint unavailable after {self.MAX_RETRIES} attempts; "
+                        f"pausing translations for {self.BLOCK_COOLDOWN_SECONDS}s."
+                    )
+                    raise RateLimitError(f"Failed after {self.MAX_RETRIES} attempts: {e}")
+                sleep_time = min(
+                    self.BACKOFF_BASE_SECONDS * (self.BACKOFF_FACTOR**attempt),
+                    self.BACKOFF_CAP_SECONDS,
+                ) * random.uniform(0.8, 1.2)
+                retry_after = self._retry_after(e)
+                if retry_after:
+                    sleep_time = max(sleep_time, retry_after)
                 logger.info(f"Request failed ({e}). Waiting {sleep_time:.1f}s before retry...")
                 time.sleep(sleep_time)
+
+    @staticmethod
+    def _retry_after(error: Exception) -> Optional[float]:
+        """Respect an explicit Retry-After rather than guessing a backoff."""
+        response = getattr(error, "response", None)
+        if response is None:
+            return None
+        value = response.headers.get("Retry-After") if response.headers else None
+        try:
+            return float(value) if value else None
+        except (TypeError, ValueError):
+            return None
 
     def _parse(self, html: str) -> str:
         soup = BeautifulSoup(html, "html.parser")
@@ -225,12 +295,3 @@ class GoogleTranslator:
             raise TranslationError(f"Network error: {str(e)}")
         except (KeyError, IndexError, ValueError) as e:
             raise TranslationError(f"Failed to parse response: {str(e)}")
-
-
-if __name__ == "__main__":
-    translator = GoogleTranslator("en")
-
-    print("=== Google Translator Demo ===\n")
-
-    result = translator.translate("Hello, how are you?", target_lang="es")
-    print(f"Translation: {result}")

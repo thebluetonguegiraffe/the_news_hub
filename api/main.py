@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.config import settings
-from api.routers import ask_hub, topics, articles
+from api.routers import ask_hub, topics, articles, trends
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,6 +35,7 @@ app.add_middleware(
 
 # Routers
 app.include_router(topics.router)
+app.include_router(trends.router)
 app.include_router(articles.router)
 app.include_router(ask_hub.router)
 

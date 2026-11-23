@@ -6,7 +6,9 @@ from pydantic import BaseModel, model_validator
 
 class Metadata(BaseModel):
     url: str
-    topic: Optional[str] = None
+    topic: Optional[str] = None  # canonical category, filled by the enricher
+    trend: Optional[str] = None  # concrete daily story label, filled by the enricher
+    section: Optional[str] = None  # the publisher's own rubric, kept for reference
     title: str
     title_es: str
     title_ca: str
@@ -23,7 +25,10 @@ class Metadata(BaseModel):
     def to_dict(self) -> dict:
         data = {
             "url": self.url,
-            "topic": self.topic or "",  # API articles do not contain topic
+            # Both are filled in later by the enrichment DAG, never at ingestion.
+            "topic": self.topic or "",
+            "trend": self.trend or "",
+            "section": (self.section or "").strip().lower(),
             "title": self.title.strip(),
             "title_es": self.title_es.strip(),
             "title_ca": self.title_ca.strip(),

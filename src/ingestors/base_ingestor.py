@@ -57,6 +57,11 @@ class BaseIngestor(ABC):
                         translated = original
                     md[f"{field}_{language}"] = translated
 
+        # Surfaces how much of the batch actually came back translated, so a
+        # throttled endpoint shows up in the logs instead of silently leaving
+        # original-language text in the _es/_ca fields.
+        self.translator.log_stats()
+
         return {"articles_md": articles_md}
 
     def finish_graph(self, state: Dict) -> Dict:
