@@ -46,7 +46,7 @@ All data is indexed in  **ChromaDB**, an open-source vector database. This trans
 
 ### Ingestion Orchestration - Scheduled Workflows with Airflow DAGs
 
-To maintain real-time integrity on  **The News Hub** , the ingestion pipeline utilizes a decoupled orchestration layer for maximum reliability. Data population is managed by **Apache Airflow DAGs** on a  **dedicated VPS** , ensuring high availability and zero resource contention with the core application.
+To maintain real-time integrity on  **The News Hub** , the ingestion pipeline utilizes a decoupled orchestration layer for maximum reliability. Data population is managed by **Apache Airflow DAGs** on a  **dedicated VPS** , ensuring high availability and zero resource contention with the core application. The Airflow deployment itself lives in a separate repo: [dockerized_airflow](https://github.com/thebluetonguegiraffe/dockerized_airflow).
 
 * **Scheduling:** Tasks execute **twice daily** to balance data freshness with efficiency.
 * **Containerized Updates:** Airflow runs via **Docker** with a **mounted volume** for DAGs, allowing for "hot-swapping" logic and updates without system downtime.
